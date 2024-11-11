@@ -10,25 +10,6 @@
  *
  */
 
-/**@file
- *
- * @defgroup ble_sdk_srv_nus Nordic UART Service
- * @{
- * @ingroup  ble_sdk_srv
- * @brief    Nordic UART Service implementation.
- *
- * @details The Nordic UART Service is a simple GATT-based service with TX and RX characteristics.
- *          Data received from the peer is passed to the application, and the data received
- *          from the application of this service is sent to the peer as Handle Value
- *          Notifications. This module demonstrates how to implement a custom GATT-based
- *          service and characteristics using the S110 SoftDevice. The service
- *          is used by the application to send and receive ASCII text strings to and from the
- *          peer.
- *
- * @note The application must propagate S110 SoftDevice events to the Nordic UART Service module
- *       by calling the ble_nus_on_ble_evt() function from the ble_stack_handler callback.
- */
-
 #ifndef EPD_BLE_H__
 #define EPD_BLE_H__
 
@@ -42,13 +23,13 @@
 
 enum EPD_CMDS
 {
-		EPD_CMD_SET_PINS,
-		EPD_CMD_INIT,
-		EPD_CMD_CLEAR,
-		EPD_CMD_SEND_COMMAND,
-		EPD_CMD_SEND_DATA,
-		EPD_CMD_DISPLAY,
-		EPD_CMD_SLEEP,
+    EPD_CMD_SET_PINS,
+    EPD_CMD_INIT,
+    EPD_CMD_CLEAR,
+    EPD_CMD_SEND_COMMAND,
+    EPD_CMD_SEND_DATA,
+    EPD_CMD_DISPLAY,
+    EPD_CMD_SLEEP,
 };
 
 /* Forward declaration of the epd_driver_t type. */
@@ -57,9 +38,9 @@ typedef struct epd_driver_s epd_driver_t;
 /**< epd driver DIs. */
 enum EPD_DRIVER_IDS
 {
-		EPD_DRIVER_4IN2 = 1,
-		EPD_DRIVER_4IN2_V2,
-		EPD_DRIVER_4IN2B_V2,
+    EPD_DRIVER_4IN2 = 1,
+    EPD_DRIVER_4IN2_V2,
+    EPD_DRIVER_4IN2B_V2,
 };
 
 /**@brief EPD driver structure.
@@ -68,13 +49,13 @@ enum EPD_DRIVER_IDS
  */
 struct epd_driver_s
 {
-		uint8_t id;                                       /**< driver ID. */
-		void (*init)(void);                               /**< Initialize the e-Paper register */
-		void (*clear)(void);                              /**< Clear screen */
-		void (*send_command)(UBYTE Reg);                  /**< send command */
-		void (*send_data)(UBYTE Data);                    /**< send data */
-		void (*display)(void);                            /**< Sends the image buffer in RAM to e-Paper and displays */
-		void (*sleep)(void);                              /**< Enter sleep mode */
+    uint8_t id;                                       /**< driver ID. */
+    void (*init)(void);                               /**< Initialize the e-Paper register */
+    void (*clear)(void);                              /**< Clear screen */
+    void (*send_command)(UBYTE Reg);                  /**< send command */
+    void (*send_data)(UBYTE Data);                    /**< send data */
+    void (*display)(void);                            /**< Sends the image buffer in RAM to e-Paper and displays */
+    void (*sleep)(void);                              /**< Enter sleep mode */
 };
 
 /* Forward declaration of the ble_epd_t type. */
@@ -91,7 +72,7 @@ struct ble_epd_s
     ble_gatts_char_handles_t char_handles;            /**< Handles related to the EPD characteristic (as provided by the S110 SoftDevice). */
     uint16_t                 conn_handle;             /**< Handle of the current connection (as provided by the S110 SoftDevice). BLE_CONN_HANDLE_INVALID if not in a connection. */
     bool                     is_notification_enabled; /**< Variable to indicate if the peer has enabled notification of the RX characteristic.*/
-		epd_driver_t             *driver;                 /**< current EPD driver */
+    epd_driver_t             *driver;                 /**< current EPD driver */
 };
 
 /**@brief Function for initializing the EPD Service.
