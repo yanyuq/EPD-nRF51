@@ -19,7 +19,7 @@
 #include <stdbool.h>
 #include "DEV_Config.h"
 
-#define BLE_EPD_MAX_DATA_LEN (GATT_MTU_SIZE_DEFAULT - 3) /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
+#define BLE_EPD_MAX_DATA_LEN (GATT_MTU_SIZE_DEFAULT - 3) /**< Maximum length of data (in bytes) that can be transmitted to the peer. */
 
 enum EPD_CMDS
 {
