@@ -34,6 +34,8 @@ function handleError(error) {
 async function sendCommand(cmd) {
 	if (writeCharacteristic) {
 		await writeCharacteristic.writeValue(cmd);
+	} else {
+		addLog("服务不可用，请检查蓝牙连接");
 	}
 }
 
@@ -119,7 +121,10 @@ function preConnect() {
 	}
 	else {
 		connectTrys = 0;
-		navigator.bluetooth.requestDevice({ optionalServices: ['62750001-d828-918d-fb46-b6c11c675aec'], acceptAllDevices: true }).then(device => {
+		navigator.bluetooth.requestDevice({
+			optionalServices: ['62750001-d828-918d-fb46-b6c11c675aec'],
+			acceptAllDevices: true
+		}).then(device => {
 			device.addEventListener('gattserverdisconnected', disconnect);
 			bleDevice = device;
 			connect();
@@ -152,7 +157,6 @@ function connect() {
 			document.getElementById("connectbutton").innerHTML = '断开';
 			updateButtonStatus();
 			writeCharacteristic = characteristic;
-			return;
 		}).catch(handleError);
 	}
 }
