@@ -4,20 +4,16 @@ let Theservice;
 let writeCharacteristic;
 let reconnectTrys = 0;
 
-let imgArray = "";
-let imgArrayLen = 0;
+let canvas;
+let epdDriver;
+let startTime;
 let chunkSize = 38;
-let uploadPart = 0;
-let totalPart = 0;
 
 function resetVariables() {
 	gattServer = null;
 	Theservice = null;
 	writeCharacteristic = null;
 	document.getElementById("log").value = '';
-	imgArray = "";
-	imgArrayLen = 0;
-	uploadPart = 0;
 }
 
 function handleError(error) {
@@ -47,56 +43,57 @@ async function sendcmd(cmdTXT) {
 	await sendCommand(cmd);
 }
 
-function setDriver() {
-	let driver = document.getElementById("epddriver").value;
+async function setDriver() {
+	epdDriver = document.getElementById("epddriver").value;
 	let pins = document.getElementById("epdpins").value;
-	sendcmd("00" + pins).then(() => {
-		sendcmd("01" + driver);
-	});
+	await sendcmd("00" + pins);
 }
 
-function clearscreen() {
+async function clearscreen() {
 	if(confirm('确认清除屏幕内容?')) {
-		sendcmd("01").then(() => {
-			sendcmd("02").then(() => {
-				sendcmd("06");
-			})
-		}).catch(handleError);
+		await sendcmd("01" + epdDriver);
+		await sendcmd("02");
+		await sendcmd("06");
 	}
 }
 
-function sendimg(cmdIMG) {
-	startTime = new Date().getTime();
-	imgArray = cmdIMG.replace(/(?:\r\n|\r|\n|,|0x| )/g, '');
-	imgArrayLen = imgArray.length;
-	uploadPart = 0;
-	totalPart = Math.round(imgArrayLen / chunkSize);
-	console.log('Sending image ' + imgArrayLen);
-	sendcmd("01").then(() => {
-		sendCommand(hexToBytes("0313")).then(() => {
-			sendIMGpart();
-		});
-	}).catch(handleError);
-}
+async function sendIMGArray(imgArray, type = 'bw'){
+	const count = Math.round(imgArray.length / chunkSize);
+	let chunkIdx = 0;
 
-function sendIMGpart() {
-	if (imgArray.length > 0) {
-		let currentPart = imgArray.substring(0, chunkSize);
+	for (let i = 0; i < imgArray.length; i += chunkSize) {
 		let currentTime = (new Date().getTime() - startTime) / 1000.0;
-		imgArray = imgArray.substring(chunkSize);
-		setStatus('正在发送块: ' + (uploadPart++) + "/" + totalPart + ", 用时: " + currentTime + "s");
-		addLog('Sending Part: ' + currentPart);
-		sendCommand(hexToBytes("04" + currentPart)).then(() => {
-			sendIMGpart();
-		})
-	} else {
-		sendCommand(hexToBytes("05")).then(() => {
-			let sendTime = (new Date().getTime() - startTime) / 1000.0;
-			addLog("Done! Time used: " + sendTime + "s");
-			setStatus("发送完成！耗时: " + sendTime + "s");
-			sendcmd("06");
-		})
+		let chunk = imgArray.substring(i, i + chunkSize);
+		setStatus('正在发送' + (type === 'bwr' ? "红色" : '黑白') + '块: '
+			+ (chunkIdx+1) + "/" + (count+1) + ", 用时: " + currentTime + "s");
+		addLog('Sending chunk: ' + chunk);
+		await sendCommand(hexToBytes("04" + chunk))
+		chunkIdx++;
 	}
+}
+
+async function sendimg(cmdIMG) {
+	startTime = new Date().getTime();
+	let imgArray = cmdIMG.replace(/(?:\r\n|\r|\n|,|0x| )/g, '');
+	const bwArrLen = (canvas.width/8) * canvas.height * 2;
+
+	await sendcmd("01" + epdDriver);
+	if (imgArray.length == bwArrLen * 2) {
+		await sendcmd("0310");
+		await sendIMGArray(imgArray.slice(0, bwArrLen - 1));
+		await sendcmd("0313");
+		await sendIMGArray(imgArray.slice(bwArrLen), 'bwr');
+	} else {
+		await sendcmd("0313");
+		await sendIMGArray(imgArray);
+	}
+	await sendcmd("05");
+
+	let sendTime = (new Date().getTime() - startTime) / 1000.0;
+	addLog("Done! Time used: " + sendTime + "s");
+	setStatus("发送完成！耗时: " + sendTime + "s");
+
+	await sendcmd("06");
 }
 
 function updateButtonStatus() {
@@ -222,7 +219,6 @@ async function update_image () {
 
 function clear_canvas() {
 	if(confirm('确认清除画布内容?')) {
-		const canvas = document.getElementById('canvas');
 		const ctx = canvas.getContext("2d");
 		ctx.fillStyle = 'white';
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -231,7 +227,6 @@ function clear_canvas() {
 }
 
 function convert_dithering() {
-	const canvas = document.getElementById('canvas');
 	const ctx = canvas.getContext("2d");
 	const mode = document.getElementById('dithering').value;
 	if (mode.startsWith('bwr')) {
@@ -243,9 +238,10 @@ function convert_dithering() {
 }
 
 document.body.onload = () => {
-	updateButtonStatus();
+	epdDriver = document.getElementById("epddriver").value;
+	canvas = document.getElementById('canvas');
 
-	const canvas = document.getElementById('canvas');
+	updateButtonStatus();
 	bytes2canvas(hexToBytes(document.getElementById('cmdIMAGE').value), canvas);
 
 	document.getElementById('dithering').value = 'none';

@@ -115,6 +115,7 @@ function bytes2canvas(bytes, canvas) {
   }
   let len = buffer.length;
 
+  // bw
   for (let y = 0; y < canvas.height; y++) {
     for (let x = 0; x < canvas.width; x++) {
       const index = (canvas.width * y + x) * 4;
@@ -127,6 +128,7 @@ function bytes2canvas(bytes, canvas) {
     }
   }
 
+  // bwr
   if (buffer.length * 2 == len) {
     for (let y = 0; y < canvas.height; y++) {
     for (let x = 0; x < canvas.width; x++) {
