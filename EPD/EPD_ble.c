@@ -60,7 +60,7 @@ static void epd_config_load(epd_config_t *cfg)
 static void epd_config_save(epd_config_t *cfg)
 {   
     nrf_nvmc_page_erase(BLE_EPD_CONFIG_ADDR);
-    nrf_nvmc_write_words(BLE_EPD_CONFIG_ADDR, (uint32_t*)cfg, sizeof(epd_config_t) / sizeof(uint32_t));
+    nrf_nvmc_write_bytes(BLE_EPD_CONFIG_ADDR, (uint8_t*)cfg, sizeof(epd_config_t) / sizeof(uint8_t));
 }
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_CONNECTED event from the S110 SoftDevice.
@@ -178,6 +178,7 @@ static void on_write(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
         if (ble_srv_is_notification_enabled(p_evt_write->data))
         {
             p_epd->is_notification_enabled = true;
+            ble_epd_string_send(p_epd, (uint8_t *)&p_epd->config, sizeof(epd_config_t));
         }
         else
         {

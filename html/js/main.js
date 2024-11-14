@@ -1,7 +1,7 @@
 let bleDevice;
 let gattServer;
-let Theservice;
-let writeCharacteristic;
+let epdService;
+let epdCharacteristic;
 let reconnectTrys = 0;
 
 let canvas;
@@ -10,29 +10,29 @@ let chunkSize = 38;
 
 function resetVariables() {
 	gattServer = null;
-	Theservice = null;
-	writeCharacteristic = null;
+	epdService = null;
+	epdCharacteristic = null;
 	document.getElementById("log").value = '';
 }
 
-function handleError(error) {
+async function handleError(error) {
 	console.log(error);
 	resetVariables();
 	if (bleDevice == null)
 		return;
 	if (reconnectTrys <= 5) {
 		reconnectTrys++;
-		connect();
+		await connect();
 	}
 	else {
-		addLog("Was not able to connect, aborting");
+		addLog("连接失败！");
 		reconnectTrys = 0;
 	}
 }
 
 async function sendCommand(cmd) {
-	if (writeCharacteristic) {
-		await writeCharacteristic.writeValue(cmd);
+	if (epdCharacteristic) {
+		await epdCharacteristic.writeValue(cmd);
 	} else {
 		addLog("服务不可用，请检查蓝牙连接");
 	}
@@ -40,7 +40,7 @@ async function sendCommand(cmd) {
 
 async function sendcmd(cmdTXT) {
 	let cmd = hexToBytes(cmdTXT);
-	addLog('Send CMD: ' + cmdTXT);
+	addLog(`发送命令: ${cmdTXT}`);
 	await sendCommand(cmd);
 }
 
@@ -67,10 +67,9 @@ async function sendIMGArray(imgArray, type = 'bw'){
 	for (let i = 0; i < imgArray.length; i += chunkSize) {
 		let currentTime = (new Date().getTime() - startTime) / 1000.0;
 		let chunk = imgArray.substring(i, i + chunkSize);
-		setStatus('正在发送' + (type === 'bwr' ? "红色" : '黑白') + '块: '
-			+ (chunkIdx+1) + "/" + (count+1) + ", 用时: " + currentTime + "s");
-		addLog('Sending chunk: ' + chunk);
-		await sendCommand(hexToBytes("04" + chunk))
+		setStatus(`发送${type === 'bwr' ? "红色" : '黑白'}块: ${chunkIdx+1}/${count+1}, 用时: ${currentTime}s`);
+		addLog(`发送块: ${chunk}`);
+		await sendCommand(hexToBytes(`04${chunk}`))
 		chunkIdx++;
 	}
 }
@@ -93,8 +92,8 @@ async function sendimg(cmdIMG) {
 	await sendcmd("05");
 
 	let sendTime = (new Date().getTime() - startTime) / 1000.0;
-	addLog("Done! Time used: " + sendTime + "s");
-	setStatus("发送完成！耗时: " + sendTime + "s");
+	addLog(`发送完成！耗时: ${sendTime}s`);
+	setStatus(`发送完成！耗时: ${sendTime}s`);
 
 	await sendcmd("06");
 }
@@ -110,55 +109,62 @@ function updateButtonStatus() {
 
 function disconnect() {
 	resetVariables();
-	addLog('Disconnected.');
+	addLog('已断开连接.');
 	document.getElementById("connectbutton").innerHTML = '连接';
 	updateButtonStatus();
 }
 
-function preConnect() {
+async function preConnect() {
 	if (gattServer != null && gattServer.connected) {
 		if (bleDevice != null && bleDevice.gatt.connected)
 			bleDevice.gatt.disconnect();
 	}
 	else {
 		connectTrys = 0;
-		navigator.bluetooth.requestDevice({
+		bleDevice = await navigator.bluetooth.requestDevice({
 			optionalServices: ['62750001-d828-918d-fb46-b6c11c675aec'],
 			acceptAllDevices: true
-		}).then(device => {
-			device.addEventListener('gattserverdisconnected', disconnect);
-			bleDevice = device;
-			connect();
-		}).catch(handleError);
+		});
+		await bleDevice.addEventListener('gattserverdisconnected', disconnect);
+		try {
+			await connect();
+		} catch (e) {
+			await handleError(e);
+		}
 	}
 }
 
-function reConnect() {
+async function reConnect() {
 	connectTrys = 0;
 	if (bleDevice != null && bleDevice.gatt.connected)
 		bleDevice.gatt.disconnect();
 	resetVariables();
-	addLog("Reconnect");
-	setTimeout(function () { connect(); }, 300);
+	addLog("正在重连");
+	setTimeout(async function () { await connect(); }, 300);
 }
 
-function connect() {
-	if (writeCharacteristic == null) {
-		addLog("Connecting to: " + bleDevice.name);
-		bleDevice.gatt.connect().then(server => {
-			addLog('> Found GATT Server');
-			gattServer = server;
-			return gattServer.getPrimaryService('62750001-d828-918d-fb46-b6c11c675aec');
-		}).then(service => {
-			addLog('> Found Service');
-			Theservice = service;
-			return Theservice.getCharacteristic('62750002-d828-918d-fb46-b6c11c675aec');
-		}).then(characteristic => {
-			addLog('> Found Characteristic');
-			document.getElementById("connectbutton").innerHTML = '断开';
-			updateButtonStatus();
-			writeCharacteristic = characteristic;
-		}).catch(handleError);
+async function connect() {
+	if (epdCharacteristic == null) {
+		addLog("正在连接: " + bleDevice.name);
+
+		gattServer = await bleDevice.gatt.connect();
+		addLog('> 找到 GATT Server');
+
+		epdService = await gattServer.getPrimaryService('62750001-d828-918d-fb46-b6c11c675aec');
+		addLog('> 找到 EPD Service');
+
+		epdCharacteristic = await epdService.getCharacteristic('62750002-d828-918d-fb46-b6c11c675aec');
+		addLog('> 找到 Characteristic');
+
+		await epdCharacteristic.startNotifications();
+		epdCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
+			addLog(`> 收到配置：${bytesToHex(event.target.value.buffer.slice(0,8))}`);
+			document.getElementById("epdpins").value = bytesToHex(event.target.value.buffer.slice(0, 7));
+			document.getElementById("epddriver").value = bytesToHex(event.target.value.buffer.slice(7, 8));
+		});
+
+		document.getElementById("connectbutton").innerHTML = '断开';
+		updateButtonStatus();
 	}
 }
 

@@ -26,14 +26,14 @@
 /**< EPD Service Configs */
 typedef struct
 {
-    uint32_t mosi_pin;
-    uint32_t sclk_pin;
-    uint32_t cs_pin;
-    uint32_t dc_pin;
-    uint32_t rst_pin;
-    uint32_t busy_pin;
-    uint32_t bs_pin;
-    uint32_t driver_id;
+    uint8_t mosi_pin;
+    uint8_t sclk_pin;
+    uint8_t cs_pin;
+    uint8_t dc_pin;
+    uint8_t rst_pin;
+    uint8_t busy_pin;
+    uint8_t bs_pin;
+    uint8_t driver_id;
 } epd_config_t;
 
 /**< EPD Service command IDs. */
