@@ -15,6 +15,7 @@
 #include "nordic_common.h"
 #include "nrf.h"
 #include "nrf_log.h"
+#include "nrf_nvmc.h"
 #include "ble.h"
 #include "ble_hci.h"
 #include "ble_srv_common.h"
@@ -46,6 +47,7 @@
 #define DEAD_BEEF                        0xDEADBEEF                                     /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 static uint16_t                          m_conn_handle = BLE_CONN_HANDLE_INVALID;       /**< Handle of the current connection. */
+static ble_uuid_t                        m_adv_uuids[] = {{BLE_UUID_EPD_SERVICE, EPD_SERVICE_UUID_TYPE}};  /**< Universally unique service identifier. */
 static ble_epd_t                         m_epd;                                         /**< Structure to identify the EPD Service. */
 
 /**@brief Callback function for asserts in the SoftDevice.
@@ -324,19 +326,24 @@ static void advertising_init(void)
 {
     uint32_t      err_code;
     ble_advdata_t advdata;
+    ble_advdata_t scanrsp;
 
     // Build advertising data struct to pass into @ref ble_advertising_init.
     memset(&advdata, 0, sizeof(advdata));
 
     advdata.name_type          = BLE_ADVDATA_FULL_NAME;
     advdata.flags              = BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
+    
+    memset(&scanrsp, 0, sizeof(scanrsp));
+    scanrsp.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
+    scanrsp.uuids_complete.p_uuids  = m_adv_uuids;
 
     ble_adv_modes_config_t options = {0};
     options.ble_adv_fast_enabled  = BLE_ADV_FAST_ENABLED;
     options.ble_adv_fast_interval = APP_ADV_INTERVAL;
     options.ble_adv_fast_timeout  = APP_ADV_TIMEOUT_IN_SECONDS;
 
-    err_code = ble_advertising_init(&advdata, NULL, &options, on_adv_evt, NULL);
+    err_code = ble_advertising_init(&advdata, &scanrsp, &options, on_adv_evt, NULL);
     APP_ERROR_CHECK(err_code);
 }
 

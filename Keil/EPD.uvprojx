@@ -389,14 +389,14 @@
               <FilePath>..\main.c</FilePath>
             </File>
             <File>
-              <FileName>nrf_drv_config.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\config\nrf_drv_config.h</FilePath>
-            </File>
-            <File>
               <FileName>bsp.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\config\bsp.h</FilePath>
+            </File>
+            <File>
+              <FileName>nrf_drv_config.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\config\nrf_drv_config.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -482,6 +482,11 @@
               <FileName>nrf_drv_twi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\components\drivers_nrf\twi_master\nrf_drv_twi.c</FilePath>
+            </File>
+            <File>
+              <FileName>nrf_nvmc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\drivers_nrf\hal\nrf_nvmc.c</FilePath>
             </File>
             <File>
               <FileName>pstorage.c</FileName>
@@ -936,14 +941,14 @@
               <FilePath>..\main.c</FilePath>
             </File>
             <File>
-              <FileName>nrf_drv_config.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\config\nrf_drv_config.h</FilePath>
-            </File>
-            <File>
               <FileName>bsp.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\config\bsp.h</FilePath>
+            </File>
+            <File>
+              <FileName>nrf_drv_config.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\config\nrf_drv_config.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -1029,6 +1034,11 @@
               <FileName>nrf_drv_twi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\components\drivers_nrf\twi_master\nrf_drv_twi.c</FilePath>
+            </File>
+            <File>
+              <FileName>nrf_nvmc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\drivers_nrf\hal\nrf_nvmc.c</FilePath>
             </File>
             <File>
               <FileName>pstorage.c</FileName>
@@ -1483,14 +1493,14 @@
               <FilePath>..\main.c</FilePath>
             </File>
             <File>
-              <FileName>nrf_drv_config.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\config\nrf_drv_config.h</FilePath>
-            </File>
-            <File>
               <FileName>bsp.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\config\bsp.h</FilePath>
+            </File>
+            <File>
+              <FileName>nrf_drv_config.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\config\nrf_drv_config.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -1576,6 +1586,11 @@
               <FileName>nrf_drv_twi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\components\drivers_nrf\twi_master\nrf_drv_twi.c</FilePath>
+            </File>
+            <File>
+              <FileName>nrf_nvmc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\drivers_nrf\hal\nrf_nvmc.c</FilePath>
             </File>
             <File>
               <FileName>pstorage.c</FileName>

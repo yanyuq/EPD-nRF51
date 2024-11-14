@@ -13,15 +13,16 @@
 #include <string.h>
 #include "nordic_common.h"
 #include "ble_srv_common.h"
+#include "nrf_nvmc.h"
 #include "nrf_log.h"
 #include "EPD_4in2.h"
 #include "EPD_4in2_V2.h"
 #include "EPD_4in2b_V2.h"
 #include "EPD_ble.h"
 
+#define BLE_EPD_CONFIG_ADDR                (NRF_FICR->CODEPAGESIZE * (NRF_FICR->CODESIZE - 1)) // Last page of the flash
 #define BLE_EPD_BASE_UUID                  {{0XEC, 0X5A, 0X67, 0X1C, 0XC1, 0XB6, 0X46, 0XFB, \
                                              0X8D, 0X91, 0X28, 0XD8, 0X22, 0X36, 0X75, 0X62}}
-#define BLE_UUID_EPD_SERVICE               0x0001
 #define BLE_UUID_EPD_CHARACTERISTIC        0x0002
 
 #define ARRAY_SIZE(arr)                    (sizeof(arr) / sizeof((arr)[0]))
@@ -38,6 +39,29 @@ static epd_driver_t epd_drivers[] = {
      EPD_4IN2B_V2_SendCommand, EPD_4IN2B_V2_SendData,
      EPD_4IN2B_V2_UpdateDisplay, EPD_4IN2B_V2_Sleep},
 };
+
+static epd_driver_t *epd_driver_get(uint8_t id)
+{
+    for (uint8_t i = 0; i < ARRAY_SIZE(epd_drivers); i++)
+    {
+      if (epd_drivers[i].id == id)
+      {
+          return &epd_drivers[i];
+      }
+    }
+    return NULL;
+}
+
+static void epd_config_load(epd_config_t *cfg)
+{
+    memcpy(cfg, (void *)BLE_EPD_CONFIG_ADDR, sizeof(epd_config_t));
+}
+
+static void epd_config_save(epd_config_t *cfg)
+{   
+    nrf_nvmc_page_erase(BLE_EPD_CONFIG_ADDR);
+    nrf_nvmc_write_words(BLE_EPD_CONFIG_ADDR, (uint32_t*)cfg, sizeof(epd_config_t) / sizeof(uint32_t));
+}
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_CONNECTED event from the S110 SoftDevice.
  *
@@ -72,31 +96,35 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
     {
       case EPD_CMD_SET_PINS:
           if (length < 8) return;
-          NRF_LOG_PRINTF("[EPD]: MOSI=0x%02x SCLK=0x%02x CS=0x%02x DC=0x%02x RST=0x%02x BUSY=0x%02x BS=0x%02x\n",
-                          p_data[1], p_data[2], p_data[3], p_data[4], p_data[5], p_data[6], p_data[7]);
-          EPD_MOSI_PIN = p_data[1];
-          EPD_SCLK_PIN = p_data[2];
-          EPD_CS_PIN = p_data[3];
-          EPD_DC_PIN = p_data[4];
-          EPD_RST_PIN = p_data[5];
-          EPD_BUSY_PIN = p_data[6];
-          EPD_BS_PIN = p_data[7];
+
           DEV_Module_Exit();
+
+          EPD_MOSI_PIN = p_epd->config.mosi_pin = p_data[1];
+          EPD_SCLK_PIN = p_epd->config.sclk_pin = p_data[2];
+          EPD_CS_PIN = p_epd->config.cs_pin = p_data[3];
+          EPD_DC_PIN = p_epd->config.dc_pin = p_data[4];
+          EPD_RST_PIN = p_epd->config.rst_pin = p_data[5];
+          EPD_BUSY_PIN = p_epd->config.busy_pin = p_data[6];
+          EPD_BS_PIN = p_epd->config.bs_pin = p_data[7];
+          epd_config_save(&p_epd->config);
+          
+          NRF_LOG_PRINTF("[EPD]: MOSI=0x%02x SCLK=0x%02x CS=0x%02x DC=0x%02x RST=0x%02x BUSY=0x%02x BS=0x%02x\n",
+                         EPD_MOSI_PIN, EPD_SCLK_PIN, EPD_CS_PIN, EPD_DC_PIN, EPD_RST_PIN, EPD_BUSY_PIN, EPD_BS_PIN);
           DEV_Module_Init();
           break;
 
       case EPD_CMD_INIT:
           if (length > 1)
           {
-              for (uint8_t i = 0; i < ARRAY_SIZE(epd_drivers); i++)
+              epd_driver_t *driver = epd_driver_get(p_data[1]);
+              if (driver != NULL)
               {
-                  if (epd_drivers[i].id == p_data[1])
-                  {
-                      p_epd->driver = &epd_drivers[i];
-                  }
+                  p_epd->driver = driver;
+                  p_epd->config.driver_id = driver->id;
+                  epd_config_save(&p_epd->config);
               }
           }
-          if (p_epd->driver == NULL) p_epd->driver= &epd_drivers[0];
+
           NRF_LOG_PRINTF("[EPD]: DRIVER=%d\n", p_epd->driver->id);
           p_epd->driver->init();
           break;
@@ -266,6 +294,44 @@ uint32_t ble_epd_init(ble_epd_t * p_epd)
     // Initialize the service structure.
     p_epd->conn_handle             = BLE_CONN_HANDLE_INVALID;
     p_epd->is_notification_enabled = false;
+
+    // Load epd config
+    epd_config_load(&p_epd->config);
+    bool save_config = false;
+    if (p_epd->config.mosi_pin == 0xFF && p_epd->config.sclk_pin == 0xFF &&
+        p_epd->config.cs_pin == 0xFF && p_epd->config.dc_pin == 0xFF &&
+        p_epd->config.rst_pin == 0xFF && p_epd->config.busy_pin == 0xFF &&
+        p_epd->config.bs_pin == 0xFF)
+    {
+        p_epd->config.mosi_pin = EPD_MOSI_PIN;
+        p_epd->config.sclk_pin = EPD_SCLK_PIN;
+        p_epd->config.cs_pin = EPD_CS_PIN;
+        p_epd->config.dc_pin = EPD_DC_PIN;
+        p_epd->config.rst_pin = EPD_RST_PIN;
+        p_epd->config.busy_pin = EPD_BUSY_PIN;
+        p_epd->config.bs_pin = EPD_BS_PIN;
+        save_config = true;
+    }
+    else
+    {
+        EPD_MOSI_PIN = p_epd->config.mosi_pin;
+        EPD_SCLK_PIN = p_epd->config.sclk_pin;
+        EPD_CS_PIN = p_epd->config.cs_pin;
+        EPD_DC_PIN = p_epd->config.dc_pin;
+        EPD_RST_PIN = p_epd->config.rst_pin;
+        EPD_BUSY_PIN = p_epd->config.busy_pin;
+        EPD_BS_PIN = p_epd->config.bs_pin;
+    }
+    p_epd->driver = epd_driver_get(p_epd->config.driver_id);
+    if (p_epd->driver == NULL)
+    {
+        p_epd->driver = &epd_drivers[0];
+        p_epd->config.driver_id = p_epd->driver->id;
+        save_config = true;
+    }
+    if (save_config) {
+        epd_config_save(&p_epd->config);
+    }
 
     // Add the service.
     return epd_service_init(p_epd);

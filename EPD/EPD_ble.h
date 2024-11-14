@@ -19,8 +19,24 @@
 #include <stdbool.h>
 #include "DEV_Config.h"
 
-#define BLE_EPD_MAX_DATA_LEN (GATT_MTU_SIZE_DEFAULT - 3) /**< Maximum length of data (in bytes) that can be transmitted to the peer. */
+#define BLE_UUID_EPD_SERVICE  0x0001
+#define EPD_SERVICE_UUID_TYPE BLE_UUID_TYPE_VENDOR_BEGIN
+#define BLE_EPD_MAX_DATA_LEN  (GATT_MTU_SIZE_DEFAULT - 3) /**< Maximum length of data (in bytes) that can be transmitted to the peer. */
 
+/**< EPD Service Configs */
+typedef struct
+{
+    uint32_t mosi_pin;
+    uint32_t sclk_pin;
+    uint32_t cs_pin;
+    uint32_t dc_pin;
+    uint32_t rst_pin;
+    uint32_t busy_pin;
+    uint32_t bs_pin;
+    uint32_t driver_id;
+} epd_config_t;
+
+/**< EPD Service command IDs. */
 enum EPD_CMDS
 {
     EPD_CMD_SET_PINS,
@@ -32,10 +48,7 @@ enum EPD_CMDS
     EPD_CMD_SLEEP,
 };
 
-/* Forward declaration of the epd_driver_t type. */
-typedef struct epd_driver_s epd_driver_t;
-
-/**< epd driver DIs. */
+/**< EPD driver IDs. */
 enum EPD_DRIVER_IDS
 {
     EPD_DRIVER_4IN2 = 1,
@@ -47,7 +60,7 @@ enum EPD_DRIVER_IDS
  *
  * @details This structure contains epd driver functions.
  */
-struct epd_driver_s
+typedef struct
 {
     uint8_t id;                                       /**< driver ID. */
     void (*init)(void);                               /**< Initialize the e-Paper register */
@@ -56,16 +69,13 @@ struct epd_driver_s
     void (*send_data)(UBYTE Data);                    /**< send data */
     void (*display)(void);                            /**< Sends the image buffer in RAM to e-Paper and displays */
     void (*sleep)(void);                              /**< Enter sleep mode */
-};
-
-/* Forward declaration of the ble_epd_t type. */
-typedef struct ble_epd_s ble_epd_t;
+} epd_driver_t;
 
 /**@brief EPD Service structure.
  *
  * @details This structure contains status information related to the service.
  */
-struct ble_epd_s
+typedef struct
 {
     uint8_t                  uuid_type;               /**< UUID type for EPD Service Base UUID. */
     uint16_t                 service_handle;          /**< Handle of EPD Service (as provided by the S110 SoftDevice). */
@@ -73,7 +83,8 @@ struct ble_epd_s
     uint16_t                 conn_handle;             /**< Handle of the current connection (as provided by the S110 SoftDevice). BLE_CONN_HANDLE_INVALID if not in a connection. */
     bool                     is_notification_enabled; /**< Variable to indicate if the peer has enabled notification of the RX characteristic.*/
     epd_driver_t             *driver;                 /**< current EPD driver */
-};
+    epd_config_t             config;                  /**< EPD config */
+} ble_epd_t;
 
 /**@brief Function for initializing the EPD Service.
  *

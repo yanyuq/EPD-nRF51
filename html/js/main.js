@@ -5,7 +5,6 @@ let writeCharacteristic;
 let reconnectTrys = 0;
 
 let canvas;
-let epdDriver;
 let startTime;
 let chunkSize = 38;
 
@@ -46,14 +45,16 @@ async function sendcmd(cmdTXT) {
 }
 
 async function setDriver() {
-	epdDriver = document.getElementById("epddriver").value;
+	let epdDriver = document.getElementById("epddriver").value;
 	let pins = document.getElementById("epdpins").value;
 	await sendcmd("00" + pins);
+	await sendcmd("01" + epdDriver);
+	await sendcmd("06");
 }
 
 async function clearscreen() {
 	if(confirm('确认清除屏幕内容?')) {
-		await sendcmd("01" + epdDriver);
+		await sendcmd("01");
 		await sendcmd("02");
 		await sendcmd("06");
 	}
@@ -79,7 +80,7 @@ async function sendimg(cmdIMG) {
 	let imgArray = cmdIMG.replace(/(?:\r\n|\r|\n|,|0x| )/g, '');
 	const bwArrLen = (canvas.width/8) * canvas.height * 2;
 
-	await sendcmd("01" + epdDriver);
+	await sendcmd("01");
 	if (imgArray.length == bwArrLen * 2) {
 		await sendcmd("0310");
 		await sendIMGArray(imgArray.slice(0, bwArrLen - 1));
@@ -197,8 +198,7 @@ function intToHex(intIn) {
 
 function updateImageData(canvas) {
 	document.getElementById('cmdIMAGE').value = bytesToHex(canvas2bytes(canvas, 'bw'));
-	if (document.getElementById("epddriver").value == '03' &&
-		document.getElementById('dithering').value.startsWith('bwr')) {
+	if (document.getElementById('dithering').value.startsWith('bwr')) {
 		document.getElementById('cmdIMAGE').value += bytesToHex(canvas2bytes(canvas, 'bwr'));
 	}
 }
@@ -242,7 +242,6 @@ function convert_dithering() {
 }
 
 document.body.onload = () => {
-	epdDriver = document.getElementById("epddriver").value;
 	canvas = document.getElementById('canvas');
 
 	updateButtonStatus();
