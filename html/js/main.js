@@ -76,6 +76,7 @@ async function sendIMGArray(imgArray, type = 'bw'){
 
 async function sendimg(cmdIMG) {
 	startTime = new Date().getTime();
+	let epdDriver = document.getElementById("epddriver").value;
 	let imgArray = cmdIMG.replace(/(?:\r\n|\r|\n|,|0x| )/g, '');
 	const bwArrLen = (canvas.width/8) * canvas.height * 2;
 
@@ -86,7 +87,7 @@ async function sendimg(cmdIMG) {
 		await sendcmd("0313");
 		await sendIMGArray(imgArray.slice(bwArrLen), 'bwr');
 	} else {
-		await sendcmd("0313");
+		await sendcmd(epdDriver === "03" ? "0310" : "0313");
 		await sendIMGArray(imgArray);
 	}
 	await sendcmd("05");

@@ -92,7 +92,7 @@ function canvas2bytes(canvas, type='bw') {
       if (type !== 'bwr') {
         buffer.push(imageData.data[index] > 0 && imageData.data[index+1] > 0 && imageData.data[index+2] > 0 ? 1 : 0);
       } else {
-        buffer.push(imageData.data[index] > 0 && imageData.data[index+1] === 0 && imageData.data[index+2] === 0 ? 1 : 0);
+        buffer.push(imageData.data[index] > 0 && imageData.data[index+1] === 0 && imageData.data[index+2] === 0 ? 0 : 1);
       }
 
       if (buffer.length === 8) {
