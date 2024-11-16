@@ -39,24 +39,20 @@ async function sendCommand(cmd) {
 }
 
 async function sendcmd(cmdTXT) {
-	let cmd = hexToBytes(cmdTXT);
 	addLog(`发送命令: ${cmdTXT}`);
-	await sendCommand(cmd);
+	await sendCommand(hexToBytes(cmdTXT));
 }
 
 async function setDriver() {
-	let epdDriver = document.getElementById("epddriver").value;
-	let pins = document.getElementById("epdpins").value;
+	const epdDriver = document.getElementById("epddriver").value;
+	const pins = document.getElementById("epdpins").value;
 	await sendcmd("00" + pins);
 	await sendcmd("01" + epdDriver);
-	await sendcmd("06");
 }
 
 async function clearscreen() {
 	if(confirm('确认清除屏幕内容?')) {
-		await sendcmd("01");
 		await sendcmd("02");
-		await sendcmd("06");
 	}
 }
 
@@ -76,11 +72,10 @@ async function sendIMGArray(imgArray, type = 'bw'){
 
 async function sendimg(cmdIMG) {
 	startTime = new Date().getTime();
-	let epdDriver = document.getElementById("epddriver").value;
-	let imgArray = cmdIMG.replace(/(?:\r\n|\r|\n|,|0x| )/g, '');
+	const epdDriver = document.getElementById("epddriver").value;
+	const imgArray = cmdIMG.replace(/(?:\r\n|\r|\n|,|0x| )/g, '');
 	const bwArrLen = (canvas.width/8) * canvas.height * 2;
 
-	await sendcmd("01");
 	if (imgArray.length == bwArrLen * 2) {
 		await sendcmd("0310");
 		await sendIMGArray(imgArray.slice(0, bwArrLen - 1));
@@ -92,16 +87,14 @@ async function sendimg(cmdIMG) {
 	}
 	await sendcmd("05");
 
-	let sendTime = (new Date().getTime() - startTime) / 1000.0;
+	const sendTime = (new Date().getTime() - startTime) / 1000.0;
 	addLog(`发送完成！耗时: ${sendTime}s`);
 	setStatus(`发送完成！耗时: ${sendTime}s`);
-
-	await sendcmd("06");
 }
 
 function updateButtonStatus() {
-	let connected = gattServer != null && gattServer.connected;
-	let status = connected ? null : 'disabled';
+	const connected = gattServer != null && gattServer.connected;
+	const status = connected ? null : 'disabled';
 	document.getElementById("sendcmdbutton").disabled = status;
 	document.getElementById("clearscreenbutton").disabled = status;
 	document.getElementById("sendimgbutton").disabled = status;
@@ -117,8 +110,10 @@ function disconnect() {
 
 async function preConnect() {
 	if (gattServer != null && gattServer.connected) {
-		if (bleDevice != null && bleDevice.gatt.connected)
+		if (bleDevice != null && bleDevice.gatt.connected) {
+			await sendcmd("06");
 			bleDevice.gatt.disconnect();
+		}
 	}
 	else {
 		connectTrys = 0;
@@ -159,10 +154,12 @@ async function connect() {
 
 		await epdCharacteristic.startNotifications();
 		epdCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
-			addLog(`> 收到配置：${bytesToHex(event.target.value.buffer.slice(0,8))}`);
+			addLog(`> 收到配置：${bytesToHex(event.target.value.buffer)}`);
 			document.getElementById("epdpins").value = bytesToHex(event.target.value.buffer.slice(0, 7));
 			document.getElementById("epddriver").value = bytesToHex(event.target.value.buffer.slice(7, 8));
 		});
+
+		await sendcmd("01");
 
 		document.getElementById("connectbutton").innerHTML = '断开';
 		updateButtonStatus();
@@ -174,8 +171,8 @@ function setStatus(statusText) {
 }
 
 function addLog(logTXT) {
-	var today = new Date();
-	var time = ("0" + today.getHours()).slice(-2) + ":" + ("0" + today.getMinutes()).slice(-2) + ":" + ("0" + today.getSeconds()).slice(-2) + " : ";
+	const today = new Date();
+	const time = ("0" + today.getHours()).slice(-2) + ":" + ("0" + today.getMinutes()).slice(-2) + ":" + ("0" + today.getSeconds()).slice(-2) + " : ";
 	document.getElementById("log").innerHTML += time + logTXT + '<br>';
 	console.log(time + logTXT);
 	while ((document.getElementById("log").innerHTML.match(/<br>/g) || []).length > 10) {
@@ -198,15 +195,21 @@ function bytesToHex(data) {
 }
 
 function intToHex(intIn) {
-	var stringOut = "";
-	stringOut = ("0000" + intIn.toString(16)).substr(-4)
+	let stringOut = ("0000" + intIn.toString(16)).substr(-4)
 	return stringOut.substring(2, 4) + stringOut.substring(0, 2);
 }
 
 function updateImageData(canvas) {
+	const epdDriver = document.getElementById("epddriver").value;
+	const dithering = document.getElementById('dithering').value;
 	document.getElementById('cmdIMAGE').value = bytesToHex(canvas2bytes(canvas, 'bw'));
-	if (document.getElementById('dithering').value.startsWith('bwr')) {
-		document.getElementById('cmdIMAGE').value += bytesToHex(canvas2bytes(canvas, 'bwr'));
+	if (epdDriver === '03') {
+		if (dithering.startsWith('bwr')) {
+			document.getElementById('cmdIMAGE').value += bytesToHex(canvas2bytes(canvas, 'bwr'));
+		} else {
+			const count = document.getElementById('cmdIMAGE').value.length;
+			document.getElementById('cmdIMAGE').value += 'F'.repeat(count);
+		}
 	}
 }
 

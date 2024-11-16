@@ -187,6 +187,9 @@ static void conn_params_init(void)
  */
 static void sleep_mode_enter(void)
 {
+    // Prepare wakeup pin
+    ble_epd_sleep_prepare(&m_epd);
+
     // Go to system-off mode (this function will not return; wakeup will cause a reset).
     uint32_t err_code = sd_power_system_off();
     APP_ERROR_CHECK(err_code);

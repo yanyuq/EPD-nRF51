@@ -34,18 +34,24 @@ typedef struct
     uint8_t busy_pin;
     uint8_t bs_pin;
     uint8_t driver_id;
+    uint8_t wakeup_pin;
+    uint8_t led_pin;
 } epd_config_t;
 
 /**< EPD Service command IDs. */
 enum EPD_CMDS
 {
-    EPD_CMD_SET_PINS,
-    EPD_CMD_INIT,
-    EPD_CMD_CLEAR,
-    EPD_CMD_SEND_COMMAND,
-    EPD_CMD_SEND_DATA,
-    EPD_CMD_DISPLAY,
-    EPD_CMD_SLEEP,
+    EPD_CMD_SET_PINS,                                 /**< set EPD pin mapping. */
+    EPD_CMD_INIT,                                     /**< init EPD display driver */
+    EPD_CMD_CLEAR,                                    /**< clear EPD screen */
+    EPD_CMD_SEND_COMMAND,                             /**< send command to EPD */
+    EPD_CMD_SEND_DATA,                                /**< send data to EPD */
+    EPD_CMD_DISPLAY,                                  /**< diaplay EPD ram on screen */
+    EPD_CMD_SLEEP,                                    /**< EPD enter sleep mode */
+
+    EPD_CMD_SET_CONFIG = 0x90,                        /**< set full EPD config */
+    EPD_CMD_SYS_RESET  = 0x91,                        /**< MCU reset */
+    EPD_CMD_SYS_SLEEP  = 0x92,                        /**< MCU enter sleep mode */
 };
 
 /**< EPD driver IDs. */
@@ -85,6 +91,12 @@ typedef struct
     epd_driver_t             *driver;                 /**< current EPD driver */
     epd_config_t             config;                  /**< EPD config */
 } ble_epd_t;
+
+/**@brief Function for preparing sleep mode.
+ *
+ * @param[in] p_epd       EPD Service structure.
+ */
+void ble_epd_sleep_prepare(ble_epd_t * p_epd);
 
 /**@brief Function for initializing the EPD Service.
  *
