@@ -398,6 +398,11 @@
               <FileType>5</FileType>
               <FilePath>..\config\nrf_drv_config.h</FilePath>
             </File>
+            <File>
+              <FileName>pstorage_platform.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\config\pstorage_platform.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -477,11 +482,6 @@
               <FileName>nrf_drv_spi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\components\drivers_nrf\spi_master\nrf_drv_spi.c</FilePath>
-            </File>
-            <File>
-              <FileName>nrf_nvmc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\components\drivers_nrf\hal\nrf_nvmc.c</FilePath>
             </File>
             <File>
               <FileName>pstorage.c</FileName>
@@ -886,7 +886,7 @@
               <MiscControls></MiscControls>
               <Define>BLE_STACK_SUPPORT_REQD S110 SWI_DISABLE0 SOFTDEVICE_PRESENT NRF51 DEBUG NRF_LOG_USES_RTT=1</Define>
               <Undefine></Undefine>
-              <IncludePath>..\config;..\EPD;..\components\toolchain;..\components\drivers_nrf\config;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\gpiote;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\pstorage;..\components\drivers_nrf\pstorage\config;..\components\drivers_ext\segger_rtt;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s110\headers</IncludePath>
+              <IncludePath>..\config;..\EPD;..\components\toolchain;..\components\drivers_nrf\config;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\gpiote;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\pstorage;..\components\drivers_ext\segger_rtt;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s110\headers</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -944,6 +944,11 @@
               <FileName>nrf_drv_config.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\config\nrf_drv_config.h</FilePath>
+            </File>
+            <File>
+              <FileName>pstorage_platform.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\config\pstorage_platform.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -1024,11 +1029,6 @@
               <FileName>nrf_drv_spi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\components\drivers_nrf\spi_master\nrf_drv_spi.c</FilePath>
-            </File>
-            <File>
-              <FileName>nrf_nvmc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\components\drivers_nrf\hal\nrf_nvmc.c</FilePath>
             </File>
             <File>
               <FileName>pstorage.c</FileName>
@@ -1492,6 +1492,11 @@
               <FileType>5</FileType>
               <FilePath>..\config\nrf_drv_config.h</FilePath>
             </File>
+            <File>
+              <FileName>pstorage_platform.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\config\pstorage_platform.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1571,11 +1576,6 @@
               <FileName>nrf_drv_spi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\components\drivers_nrf\spi_master\nrf_drv_spi.c</FilePath>
-            </File>
-            <File>
-              <FileName>nrf_nvmc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\components\drivers_nrf\hal\nrf_nvmc.c</FilePath>
             </File>
             <File>
               <FileName>pstorage.c</FileName>

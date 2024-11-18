@@ -36,6 +36,8 @@ typedef struct
     uint8_t driver_id;
     uint8_t wakeup_pin;
     uint8_t led_pin;
+    
+    uint8_t reserved[6];
 } epd_config_t;
 
 /**< EPD Service command IDs. */

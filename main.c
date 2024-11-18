@@ -23,6 +23,7 @@
 #include "ble_advertising.h"
 #include "ble_conn_params.h"
 #include "softdevice_handler.h"
+#include "pstorage.h"
 #include "app_error.h"
 #include "app_timer.h"
 #include "EPD_ble.h"
@@ -30,8 +31,8 @@
 #define IS_SRVC_CHANGED_CHARACT_PRESENT  1                                              /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
 #define DEVICE_NAME                      "NRF_EPD"                                      /**< Name of device. Will be included in the advertising data. */
-#define APP_ADV_INTERVAL                300                                             /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS      180                                             /**< The advertising timeout (in units of seconds). */
+#define APP_ADV_INTERVAL                 300                                            /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
+#define APP_ADV_TIMEOUT_IN_SECONDS       180                                            /**< The advertising timeout (in units of seconds). */
 #define APP_TIMER_PRESCALER              0                                              /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_OP_QUEUE_SIZE          4                                              /**< Size of timer operation queues. */
 
@@ -81,6 +82,9 @@ static void timers_init(void)
 static void services_init(void)
 {
     uint32_t       err_code;
+
+    err_code = pstorage_init();
+    APP_ERROR_CHECK(err_code);
 
     memset(&m_epd, 0, sizeof(ble_epd_t));
     err_code = ble_epd_init(&m_epd);
@@ -293,6 +297,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
  */
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
+    pstorage_sys_event_handler(sys_evt);
     ble_advertising_on_sys_evt(sys_evt);
 }
 

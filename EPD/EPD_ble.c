@@ -15,9 +15,9 @@
 #include "ble_srv_common.h"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
-#include "nrf_nvmc.h"
 #include "nrf_soc.h"
 #include "nrf_log.h"
+#include "pstorage.h"
 #include "EPD_4in2.h"
 #include "EPD_4in2_V2.h"
 #include "EPD_4in2b_V2.h"
@@ -30,6 +30,8 @@
 
 #define ARRAY_SIZE(arr)                    (sizeof(arr) / sizeof((arr)[0]))
 #define EPD_CONFIG_SIZE                    (sizeof(epd_config_t) / sizeof(uint8_t))
+
+static pstorage_handle_t     m_flash_handle;
 
 /** EPD drivers */
 static epd_driver_t epd_drivers[] = {
@@ -56,15 +58,20 @@ static epd_driver_t *epd_driver_get(uint8_t id)
     return NULL;
 }
 
-static void epd_config_load(epd_config_t *cfg)
+static uint32_t epd_config_load(epd_config_t *cfg)
 {
-    memcpy(cfg, (void *)BLE_EPD_CONFIG_ADDR, sizeof(epd_config_t));
+    return pstorage_load((uint8_t *)cfg, &m_flash_handle, sizeof(epd_config_t), 0);
 }
 
-static void epd_config_save(epd_config_t *cfg)
-{   
-    nrf_nvmc_page_erase(BLE_EPD_CONFIG_ADDR);
-    nrf_nvmc_write_bytes(BLE_EPD_CONFIG_ADDR, (uint8_t*)cfg, EPD_CONFIG_SIZE);
+static uint32_t epd_config_save(epd_config_t *cfg)
+{
+    uint32_t    err_code;
+    err_code = pstorage_clear(&m_flash_handle, sizeof(epd_config_t));
+    if (err_code != NRF_SUCCESS)
+    {
+        return err_code;
+    }
+    return pstorage_store(&m_flash_handle, (uint8_t *)cfg, sizeof(epd_config_t), 0);
 }
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_CONNECTED event from the S110 SoftDevice.
@@ -74,6 +81,10 @@ static void epd_config_save(epd_config_t *cfg)
  */
 static void on_connect(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 {
+    if (p_epd->config.led_pin != 0xFF)
+    {
+        nrf_gpio_pin_toggle(p_epd->config.led_pin);
+    }
     p_epd->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
     DEV_Module_Init();
 }
@@ -87,6 +98,10 @@ static void on_connect(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 static void on_disconnect(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 {
     UNUSED_PARAMETER(p_ble_evt);
+    if (p_epd->config.led_pin != 0xFF)
+    {
+        nrf_gpio_pin_toggle(p_epd->config.led_pin);
+    }
     p_epd->conn_handle = BLE_CONN_HANDLE_INVALID;
     DEV_Module_Exit();
 }
@@ -95,6 +110,8 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
 {
     if (p_data == NULL || length <= 0) return;
     NRF_LOG_PRINTF("[EPD]: CMD=0x%02x, LEN=%d\n", p_data[0], length);
+
+    uint32_t    err_code;
 
     switch (p_data[0])
     {
@@ -110,7 +127,8 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
           EPD_RST_PIN = p_epd->config.rst_pin = p_data[5];
           EPD_BUSY_PIN = p_epd->config.busy_pin = p_data[6];
           EPD_BS_PIN = p_epd->config.bs_pin = p_data[7];
-          epd_config_save(&p_epd->config);
+          err_code = epd_config_save(&p_epd->config);
+          NRF_LOG_PRINTF("epd_config_save: %d\n", err_code);
           
           NRF_LOG_PRINTF("[EPD]: MOSI=0x%02x SCLK=0x%02x CS=0x%02x DC=0x%02x RST=0x%02x BUSY=0x%02x BS=0x%02x\n",
                          EPD_MOSI_PIN, EPD_SCLK_PIN, EPD_CS_PIN, EPD_DC_PIN, EPD_RST_PIN, EPD_BUSY_PIN, EPD_BS_PIN);
@@ -125,7 +143,8 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
               {
                   p_epd->driver = driver;
                   p_epd->config.driver_id = driver->id;
-                  epd_config_save(&p_epd->config);
+                  err_code = epd_config_save(&p_epd->config);
+                  NRF_LOG_PRINTF("epd_config_save: %d\n", err_code);
               }
           }
 
@@ -225,12 +244,10 @@ void ble_epd_on_ble_evt(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
-            nrf_gpio_pin_toggle(p_epd->config.led_pin);
             on_connect(p_epd, p_ble_evt);
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
-            nrf_gpio_pin_toggle(p_epd->config.led_pin);
             on_disconnect(p_epd, p_ble_evt);
             break;
 
@@ -349,9 +366,24 @@ static void epd_config_init(ble_epd_t * p_epd)
 void ble_epd_sleep_prepare(ble_epd_t * p_epd)
 {
     // Turn off led
-    nrf_gpio_pin_set(p_epd->config.led_pin);
+    if (p_epd->config.led_pin != 0xFF)
+    {
+        nrf_gpio_pin_set(p_epd->config.led_pin);
+    }
     // Prepare wakeup pin
-    nrf_gpio_cfg_sense_input(p_epd->config.wakeup_pin, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_HIGH);
+    if (p_epd->config.wakeup_pin != 0xFF)
+    {
+        nrf_gpio_cfg_sense_input(p_epd->config.wakeup_pin, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_HIGH);
+    }
+}
+
+static void pstorage_callback(pstorage_handle_t * p_handle,
+                                  uint8_t             op_code,
+                                  uint32_t            result,
+                                  uint8_t           * p_data,
+                                  uint32_t            data_len)
+{
+    NRF_LOG_PRINTF("pstorage_callback: op_code=%d, result=%d\n", op_code, result);
 }
 
 uint32_t ble_epd_init(ble_epd_t * p_epd)
@@ -364,16 +396,33 @@ uint32_t ble_epd_init(ble_epd_t * p_epd)
     // Initialize the service structure.
     p_epd->conn_handle             = BLE_CONN_HANDLE_INVALID;
     p_epd->is_notification_enabled = false;
+    
+    uint32_t                err_code;
+    pstorage_module_param_t param;
 
-    // Load epd config
-    epd_config_load(&p_epd->config);
-    epd_config_init(p_epd);
+    param.block_count = 1;
+    param.block_size = sizeof(epd_config_t);
+    param.cb = pstorage_callback;
+
+    err_code = pstorage_register(&param, &m_flash_handle);
+    if (err_code == NRF_SUCCESS)
+    {
+        // Load epd config
+        err_code = epd_config_load(&p_epd->config);
+        if (err_code == NRF_SUCCESS)
+        {
+            epd_config_init(p_epd);
+        }
+    }
 
     // Init led pin
-    nrf_gpio_cfg_output(p_epd->config.led_pin);
-    nrf_gpio_pin_clear(p_epd->config.led_pin);
-    nrf_delay_ms(50);
-    nrf_gpio_pin_set(p_epd->config.led_pin);
+    if (p_epd->config.led_pin != 0xFF)
+    {
+        nrf_gpio_cfg_output(p_epd->config.led_pin);
+        nrf_gpio_pin_clear(p_epd->config.led_pin);
+        nrf_delay_ms(50);
+        nrf_gpio_pin_set(p_epd->config.led_pin);
+    }
 
     // Add the service.
     return epd_service_init(p_epd);
