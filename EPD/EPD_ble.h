@@ -54,6 +54,7 @@ enum EPD_CMDS
     EPD_CMD_SET_CONFIG = 0x90,                        /**< set full EPD config */
     EPD_CMD_SYS_RESET  = 0x91,                        /**< MCU reset */
     EPD_CMD_SYS_SLEEP  = 0x92,                        /**< MCU enter sleep mode */
+    EPD_CMD_CFG_ERASE  = 0x99,                        /**< Erase config and reset */
 };
 
 /**< EPD driver IDs. */

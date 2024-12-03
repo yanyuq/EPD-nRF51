@@ -63,11 +63,15 @@ static uint32_t epd_config_load(epd_config_t *cfg)
     return pstorage_load((uint8_t *)cfg, &m_flash_handle, sizeof(epd_config_t), 0);
 }
 
+static uint32_t epd_config_clear(epd_config_t *cfg)
+{
+    return pstorage_clear(&m_flash_handle, sizeof(epd_config_t));
+}
+
 static uint32_t epd_config_save(epd_config_t *cfg)
 {
-    uint32_t    err_code;
-    err_code = pstorage_clear(&m_flash_handle, sizeof(epd_config_t));
-    if (err_code != NRF_SUCCESS)
+    uint32_t err_code;
+    if ((err_code = epd_config_clear(cfg)) != NRF_SUCCESS)
     {
         return err_code;
     }
@@ -191,6 +195,11 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
       case EPD_CMD_SYS_SLEEP:
           ble_epd_sleep_prepare(p_epd);
           sd_power_system_off();
+          break;
+      
+      case EPD_CMD_CFG_ERASE:
+          epd_config_clear(&p_epd->config);
+          NVIC_SystemReset();
           break;
 
       default:
@@ -355,6 +364,11 @@ static void epd_config_init(ble_epd_t * p_epd)
     {
         p_epd->driver = &epd_drivers[0];
         p_epd->config.driver_id = p_epd->driver->id;
+        save_config = true;
+    }
+    if (p_epd->config.wakeup_pin == 0xFF)
+    {
+        p_epd->config.wakeup_pin = 7;
         save_config = true;
     }
     if (save_config)
