@@ -228,8 +228,7 @@ void EPD_4IN2_Clear(void)
     UWORD Width, Height;
     Width = (EPD_4IN2_WIDTH % 8 == 0)? (EPD_4IN2_WIDTH / 8 ): (EPD_4IN2_WIDTH / 8 + 1);
     Height = EPD_4IN2_HEIGHT;
-		EPD_4IN2_SendCommand(0x92);	
-		EPD_4IN2_SetLut();
+
     EPD_4IN2_SendCommand(0x10);
     for (UWORD j = 0; j < Height; j++) {
         for (UWORD i = 0; i < Width; i++) {
@@ -256,8 +255,14 @@ void EPD_4IN2_Display(UBYTE *Image)
     UWORD Width, Height;
     Width = (EPD_4IN2_WIDTH % 8 == 0)? (EPD_4IN2_WIDTH / 8 ): (EPD_4IN2_WIDTH / 8 + 1);
     Height = EPD_4IN2_HEIGHT;
-		EPD_4IN2_SendCommand(0x92);	
-		EPD_4IN2_SetLut();
+
+	EPD_4IN2_SendCommand(0x10);
+    for (UWORD j = 0; j < Height; j++) {
+        for (UWORD i = 0; i < Width; i++) {
+            EPD_4IN2_SendData(0x00);
+        }
+    }
+
     EPD_4IN2_SendCommand(0x13);
     for (UWORD j = 0; j < Height; j++) {
         for (UWORD i = 0; i < Width; i++) {

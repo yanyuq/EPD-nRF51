@@ -27,6 +27,9 @@
 #include "app_error.h"
 #include "app_timer.h"
 #include "EPD_ble.h"
+#ifdef DEBUG
+#include "EPD_Test.h"
+#endif
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT  1                                              /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
@@ -385,6 +388,10 @@ int main(void)
     APP_ERROR_CHECK(err_code);
 
     NRF_LOG_PRINTF("done.\n");
+
+#ifdef DEBUG
+    EPD_4in2_test();
+#endif
 
     for (;;)
     {
