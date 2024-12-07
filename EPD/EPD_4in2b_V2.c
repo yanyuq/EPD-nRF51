@@ -86,7 +86,7 @@ void EPD_4IN2B_V2_ReadBusy(void)
 function :	Turn On Display
 parameter:
 ******************************************************************************/
-static void EPD_4IN2B_V2_TurnOnDisplay(void)
+void EPD_4IN2B_V2_TurnOnDisplay(void)
 {
     EPD_4IN2B_V2_SendCommand(0x12); // DISPLAY_REFRESH
     DEV_Delay_ms(100);
@@ -162,49 +162,6 @@ void EPD_4IN2B_V2_Display(const UBYTE *blackimage, const UBYTE *ryimage)
     EPD_4IN2B_V2_TurnOnDisplay();
 }
 
-/******************************************************************************
-function :	Sends the image buffer in RAM to e-Paper and displays
-parameter:
-******************************************************************************/
-void EPD_4IN2B_V2_Display_Half(const UBYTE *blackimage, UBYTE Region)
-{
-    UWORD Width, Height;
-    Width = (EPD_4IN2B_V2_WIDTH % 8 == 0)? (EPD_4IN2B_V2_WIDTH / 8 ): (EPD_4IN2B_V2_WIDTH / 8 + 1);
-    Height = EPD_4IN2B_V2_HEIGHT;
-	
-	if(Region == 1){
-		EPD_4IN2B_V2_SendCommand(0x10);
-		for (UWORD j = 0; j < Height/2; j++) {
-				for (UWORD i = 0; i < Width; i++) {
-						EPD_4IN2B_V2_SendData(blackimage[i + j * Width]);
-				}
-		}
-	}else if(Region == 2){
-		for (UWORD j = 0; j < Height/2; j++) {
-				for (UWORD i = 0; i < Width; i++) {
-						EPD_4IN2B_V2_SendData(blackimage[i + j * Width]);
-				}
-		}
-	}else if(Region == 3){
-		EPD_4IN2B_V2_SendCommand(0x13);
-		for (UWORD j = 0; j < Height/2; j++) {
-				for (UWORD i = 0; i < Width; i++) {
-						EPD_4IN2B_V2_SendData(blackimage[i + j * Width]);
-				}
-		}
-	}else if(Region == 4){
-		for (UWORD j = 0; j < Height/2; j++) {
-				for (UWORD i = 0; i < Width; i++) {
-						EPD_4IN2B_V2_SendData(blackimage[i + j * Width]);
-				}
-		}
-	}   
-}
-
-void EPD_4IN2B_V2_UpdateDisplay(void)
-{
-	EPD_4IN2B_V2_TurnOnDisplay();
-}
 /******************************************************************************
 function :	Enter sleep mode
 parameter:

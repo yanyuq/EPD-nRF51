@@ -74,9 +74,9 @@ void DEV_SPI_WriteByte(UBYTE value)
 
 UBYTE DEV_SPI_ReadByte(void)
 {
-  UBYTE value;
-  nrf_drv_spi_transfer(&spi, NULL, 0, &value, 1);
-  return value;
+    UBYTE value;
+    nrf_drv_spi_transfer(&spi, NULL, 0, &value, 1);
+    return value;
 }
 
 void DEV_Module_Exit(void)

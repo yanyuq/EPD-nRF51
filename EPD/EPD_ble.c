@@ -37,13 +37,13 @@ static pstorage_handle_t     m_flash_handle;
 static epd_driver_t epd_drivers[] = {
     {EPD_DRIVER_4IN2, EPD_4IN2_Init, EPD_4IN2_Clear, 
      EPD_4IN2_SendCommand, EPD_4IN2_SendData,
-     EPD_4IN2_UpdateDisplay, EPD_4IN2_Sleep},
+     EPD_4IN2_TurnOnDisplay, EPD_4IN2_Sleep},
     {EPD_DRIVER_4IN2_V2, EPD_4IN2_V2_Init, EPD_4IN2_V2_Clear,
      EPD_4IN2_V2_SendCommand, EPD_4IN2_V2_SendData,
-     EPD_4IN2_V2_UpdateDisplay, EPD_4IN2_V2_Sleep},
+     EPD_4IN2_V2_TurnOnDisplay, EPD_4IN2_V2_Sleep},
     {EPD_DRIVER_4IN2B_V2, EPD_4IN2B_V2_Init, EPD_4IN2B_V2_Clear,
      EPD_4IN2B_V2_SendCommand, EPD_4IN2B_V2_SendData,
-     EPD_4IN2B_V2_UpdateDisplay, EPD_4IN2B_V2_Sleep},
+     EPD_4IN2B_V2_TurnOnDisplay, EPD_4IN2B_V2_Sleep},
 };
 
 static epd_driver_t *epd_driver_get(uint8_t id)

@@ -8,66 +8,6 @@
 * | Date        :   2019-06-13
 * | Info        :
 * -----------------------------------------------------------------------------
-* V3.0(2019-06-13):
-* 1.Change:
-*    lut_vcomDC[]  => EPD_4IN2_lut_vcomDC[]
-*    lut_ww[] => EPD_4IN2_lut_ww[]
-*    lut_bw[] => EPD_4IN2_lut_bw[]
-*    lut_wb[] => EPD_4IN2_lut_wb[]
-*    lut_bb[] => EPD_4IN2_lut_bb[]
-*    EPD_Reset() => EPD_4IN2_Reset()
-*    EPD_SendCommand() => EPD_4IN2_SendCommand()
-*    EPD_SendData() => EPD_4IN2_SendData()
-*    EPD_WaitUntilIdle() => EPD_4IN2_ReadBusy()
-*    EPD_SetFullReg() => EPD_4IN2_SetFullReg()
-*    EPD_SetPartReg() => EPD_4IN2_SetPartReg()
-*    EPD_TurnOnDisplay() => EPD_4IN2_TurnOnDisplay()
-*    EPD_Init() => EPD_4IN2_Init()
-*    EPD_Clear() => EPD_4IN2_Clear()
-*    EPD_Display() => EPD_4IN2_Display()
-*    EPD_Sleep() => EPD_4IN2_Sleep()
-* 2.remove commands define:
-*    #define PANEL_SETTING                               0x00
-*    #define POWER_SETTING                               0x01
-*    #define POWER_OFF                                   0x02
-*    #define POWER_OFF_SEQUENCE_SETTING                  0x03
-*    #define POWER_ON                                    0x04
-*    #define POWER_ON_MEASURE                            0x05
-*    #define BOOSTER_SOFT_START                          0x06
-*    #define DEEP_SLEEP                                  0x07
-*    #define DATA_START_TRANSMISSION_1                   0x10
-*    #define DATA_STOP                                   0x11
-*    #define DISPLAY_REFRESH                             0x12
-*    #define DATA_START_TRANSMISSION_2                   0x13
-*    #define VCOM_LUT                                    0x20
-*    #define W2W_LUT                                     0x21
-*    #define B2W_LUT                                     0x22
-*    #define W2B_LUT                                     0x23
-*    #define B2B_LUT                                     0x24
-*    #define PLL_CONTROL                                 0x30
-*    #define TEMPERATURE_SENSOR_CALIBRATION              0x40
-*    #define TEMPERATURE_SENSOR_SELECTION                0x41
-*    #define TEMPERATURE_SENSOR_WRITE                    0x42
-*    #define TEMPERATURE_SENSOR_READ                     0x43
-*    #define VCOM_AND_DATA_INTERVAL_SETTING              0x50
-*    #define LOW_POWER_DETECTION                         0x51
-*    #define TCON_SETTING                                0x60
-*    #define RESOLUTION_SETTING                          0x61
-*    #define GET_STATUS                                  0x71
-*    #define AUTO_MEASURE_VCOM                           0x80
-*    #define READ_VCOM_VALUE                             0x81
-*    #define VCM_DC_SETTING                              0x82
-*    #define PARTIAL_WINDOW                              0x90
-*    #define PARTIAL_IN                                  0x91
-*    #define PARTIAL_OUT                                 0x92
-*    #define PROGRAM_MODE                                0xA0
-*    #define ACTIVE_PROGRAM                              0xA1
-*    #define READ_OTP_DATA                               0xA2
-*    #define POWER_SAVING                                0xE3
-* V2.0(2018-10-30):
-* 1.Remove:ImageBuff[EPD_HEIGHT * EPD_WIDTH / 8]
-* 2.Change:EPD_Display(UBYTE *Image)
-*   Need to pass parameters: pointer to cached data
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documnetation files (the "Software"), to deal
@@ -101,8 +41,9 @@ void EPD_4IN2_Init(void);
 void EPD_4IN2_Clear(void);
 void EPD_4IN2_Display(UBYTE *Image);
 void EPD_4IN2_Sleep(void);
-void EPD_4IN2_UpdateDisplay(void);
+
 void EPD_4IN2_SendCommand(UBYTE Reg);
 void EPD_4IN2_SendData(UBYTE Data);
+void EPD_4IN2_TurnOnDisplay(void);
 
 #endif

@@ -40,8 +40,9 @@ void EPD_4IN2B_V2_Init(void);
 void EPD_4IN2B_V2_Clear(void);
 void EPD_4IN2B_V2_Display(const UBYTE *blackimage, const UBYTE *ryimage);
 void EPD_4IN2B_V2_Sleep(void);
-void EPD_4IN2B_V2_Display_Half(const UBYTE *blackimage, UBYTE Region);
-void EPD_4IN2B_V2_UpdateDisplay(void);
+
 void EPD_4IN2B_V2_SendCommand(UBYTE Reg);
 void EPD_4IN2B_V2_SendData(UBYTE Data);
+void EPD_4IN2B_V2_TurnOnDisplay(void);
+
 #endif
