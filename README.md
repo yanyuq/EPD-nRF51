@@ -56,12 +56,16 @@
 项目配置有 3 个 `Target`：
 
 - `EPD`: 用于编译正式版固件
-- `EPD-Debug`: 开发用，开启了日志和 RTT
-- `flash_softdevice`: 刷蓝牙协议栈用
+- `EPD-Debug`: 开发用，开启了 RTT 日志和一些调试代码
+- `flash_softdevice`: 刷蓝牙协议栈用，只需要刷一次
+
+烧录器可以使用 J-Link 或者 DAPLink（可使用 [RTTView](https://github.com/XIVN1987/RTTView) 查看 RTT 日志）。
 
 **刷机流程:**
 
-先擦除，再切换到 `flash_softdevice` 刷蓝牙协议栈（不要编译直接下载，只需刷一次），最后切换到 `EPD` 编译后再下载。
+1. 全部擦除 (Keil 擦除后刷不了的话，使用烧录器的上位机软件擦除试试)
+2. 切换到 `flash_softdevice`，**不要编译直接下载**（只需刷一次）
+3. 切换到 `EPD`，先编译再下载
 
 ## 致谢
 
