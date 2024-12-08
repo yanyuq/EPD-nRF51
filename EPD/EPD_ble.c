@@ -334,46 +334,36 @@ static uint32_t epd_service_init(ble_epd_t * p_epd)
 
 static void epd_config_init(ble_epd_t * p_epd)
 {
-    bool save_config = false;
-    if (p_epd->config.mosi_pin == 0xFF && p_epd->config.sclk_pin == 0xFF &&
-        p_epd->config.cs_pin == 0xFF && p_epd->config.dc_pin == 0xFF &&
-        p_epd->config.rst_pin == 0xFF && p_epd->config.busy_pin == 0xFF &&
-        p_epd->config.bs_pin == 0xFF)
+    bool is_empty_config = true;
+
+    for (uint8_t i = 0; i < EPD_CONFIG_SIZE; i++)
     {
-        p_epd->config.mosi_pin = EPD_MOSI_PIN;
-        p_epd->config.sclk_pin = EPD_SCLK_PIN;
-        p_epd->config.cs_pin = EPD_CS_PIN;
-        p_epd->config.dc_pin = EPD_DC_PIN;
-        p_epd->config.rst_pin = EPD_RST_PIN;
-        p_epd->config.busy_pin = EPD_BUSY_PIN;
-        p_epd->config.bs_pin = EPD_BS_PIN;
-        save_config = true;
+        if (((uint8_t *)&p_epd->config)[i] != 0xFF)
+        {
+            is_empty_config = false;
+        }
     }
-    else
+    // write default config
+    if (is_empty_config)
     {
-        EPD_MOSI_PIN = p_epd->config.mosi_pin;
-        EPD_SCLK_PIN = p_epd->config.sclk_pin;
-        EPD_CS_PIN = p_epd->config.cs_pin;
-        EPD_DC_PIN = p_epd->config.dc_pin;
-        EPD_RST_PIN = p_epd->config.rst_pin;
-        EPD_BUSY_PIN = p_epd->config.busy_pin;
-        EPD_BS_PIN = p_epd->config.bs_pin;
+        uint8_t cfg[] = {0x05, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x01, 0x07};
+        memcpy(&p_epd->config, cfg, ARRAY_SIZE(cfg));
+        epd_config_save(&p_epd->config);
     }
+
+    // load config
+    EPD_MOSI_PIN = p_epd->config.mosi_pin;
+    EPD_SCLK_PIN = p_epd->config.sclk_pin;
+    EPD_CS_PIN = p_epd->config.cs_pin;
+    EPD_DC_PIN = p_epd->config.dc_pin;
+    EPD_RST_PIN = p_epd->config.rst_pin;
+    EPD_BUSY_PIN = p_epd->config.busy_pin;
+    EPD_BS_PIN = p_epd->config.bs_pin;
+
     p_epd->driver = epd_driver_get(p_epd->config.driver_id);
     if (p_epd->driver == NULL)
     {
         p_epd->driver = &epd_drivers[0];
-        p_epd->config.driver_id = p_epd->driver->id;
-        save_config = true;
-    }
-    if (p_epd->config.wakeup_pin == 0xFF)
-    {
-        p_epd->config.wakeup_pin = 7;
-        save_config = true;
-    }
-    if (save_config)
-    {
-        epd_config_save(&p_epd->config);
     }
 }
 
@@ -421,7 +411,6 @@ uint32_t ble_epd_init(ble_epd_t * p_epd)
     err_code = pstorage_register(&param, &m_flash_handle);
     if (err_code == NRF_SUCCESS)
     {
-        // Load epd config
         err_code = epd_config_load(&p_epd->config);
         if (err_code == NRF_SUCCESS)
         {
