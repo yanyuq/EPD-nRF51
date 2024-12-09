@@ -38,7 +38,6 @@ function dithering(ctx, width, height, threshold, type) {
   let newPixel, err;
 
   for (let currentPixel = 0; currentPixel <= imageDataLength; currentPixel+=4) {
-
     if (type ==="none") {
       // No dithering
       imageData.data[currentPixel] = imageData.data[currentPixel] < threshold ? 0 : 255;
@@ -79,6 +78,7 @@ function dithering(ctx, width, height, threshold, type) {
   ctx.putImageData(imageData, 0, 0);
 }
 
+// white: 1, black/red: 0
 function canvas2bytes(canvas, type='bw') {
   const ctx = canvas.getContext("2d");
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -88,11 +88,11 @@ function canvas2bytes(canvas, type='bw') {
 
   for (let y = 0; y < canvas.height; y++) {
     for (let x = 0; x < canvas.width; x++) {
-      const index = (canvas.width * y + x) * 4;
-      if (type !== 'bwr') {
-        buffer.push(imageData.data[index] > 0 && imageData.data[index+1] > 0 && imageData.data[index+2] > 0 ? 1 : 0);
+      const i = (canvas.width * y + x) * 4;
+      if (type !== 'red') {
+        buffer.push(imageData.data[i] === 0 && imageData.data[i+1] === 0 && imageData.data[i+2] === 0 ? 0 : 1);
       } else {
-        buffer.push(imageData.data[index] > 0 && imageData.data[index+1] === 0 && imageData.data[index+2] === 0 ? 0 : 1);
+        buffer.push(imageData.data[i] > 0 && imageData.data[i+1] === 0 && imageData.data[i+2] === 0 ? 0 : 1);
       }
 
       if (buffer.length === 8) {
@@ -118,27 +118,27 @@ function bytes2canvas(bytes, canvas) {
   // bw
   for (let y = 0; y < canvas.height; y++) {
     for (let x = 0; x < canvas.width; x++) {
-      const index = (canvas.width * y + x) * 4;
+      const i = (canvas.width * y + x) * 4;
       const bit = buffer.shift();
-      const value = bit ? 255 : 0;
-      imageData.data[index] = value;     // R
-      imageData.data[index + 1] = value; // G
-      imageData.data[index + 2] = value; // B
-      imageData.data[index + 3] = 255;   // A
+      const value = bit === 0 ? 0 : 255;
+      imageData.data[i] = value;     // R
+      imageData.data[i + 1] = value; // G
+      imageData.data[i + 2] = value; // B
+      imageData.data[i + 3] = 255;   // A
     }
   }
 
-  // bwr
+  // red
   if (buffer.length * 2 == len) {
     for (let y = 0; y < canvas.height; y++) {
     for (let x = 0; x < canvas.width; x++) {
-      const index = (canvas.width * y + x) * 4;
+      const i = (canvas.width * y + x) * 4;
       const bit = buffer.shift();
-      if (bit) {
-        imageData.data[index] = 255;     // R
-        imageData.data[index + 1] = 0;   // G
-        imageData.data[index + 2] = 0;   // B
-        imageData.data[index + 3] = 255; // A
+      if (bit === 0) {
+        imageData.data[i] = 255;     // R
+        imageData.data[i + 1] = 0;   // G
+        imageData.data[i + 2] = 0;   // B
+        imageData.data[i + 3] = 255; // A
       }
     }
   }

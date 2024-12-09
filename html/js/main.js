@@ -205,7 +205,7 @@ function updateImageData(canvas) {
 	document.getElementById('cmdIMAGE').value = bytesToHex(canvas2bytes(canvas, 'bw'));
 	if (epdDriver === '03') {
 		if (dithering.startsWith('bwr')) {
-			document.getElementById('cmdIMAGE').value += bytesToHex(canvas2bytes(canvas, 'bwr'));
+			document.getElementById('cmdIMAGE').value += bytesToHex(canvas2bytes(canvas, 'red'));
 		} else {
 			const count = document.getElementById('cmdIMAGE').value.length;
 			document.getElementById('cmdIMAGE').value += 'F'.repeat(count);
