@@ -182,41 +182,40 @@ parameter:
 void EPD_4IN2_Init(void)
 {
 	EPD_4IN2_Reset();
-	EPD_4IN2_SendCommand(0x01);			//POWER SETTING 
-	EPD_4IN2_SendData (0x03);	          
-	EPD_4IN2_SendData (0x00);
-	EPD_4IN2_SendData (0x2b);  
-	EPD_4IN2_SendData (0x2b);
+	EPD_4IN2_SendCommand(0x01);			// POWER SETTING 
+	EPD_4IN2_SendData (0x03);	        // VDS_EN, VDG_EN internal  
+	EPD_4IN2_SendData (0x00);           // VCOM_HV, VGHL_LV=16V
+	EPD_4IN2_SendData (0x2b);           // VDH=11V
+	EPD_4IN2_SendData (0x2b);           // VDL=11V
 
-	EPD_4IN2_SendCommand(0x06);         //boost soft start
-	EPD_4IN2_SendData (0x17);		//A
-	EPD_4IN2_SendData (0x17);		//B
-	EPD_4IN2_SendData (0x17);		//C       
+	EPD_4IN2_SendCommand(0x06);         // boost soft start
+	EPD_4IN2_SendData (0x17);		    // A
+	EPD_4IN2_SendData (0x17);		    // B
+	EPD_4IN2_SendData (0x17);		    // C
 
-	EPD_4IN2_SendCommand(0x04);  
+	EPD_4IN2_SendCommand(0x04);         // POWER ON
 	EPD_4IN2_ReadBusy();
 
-	EPD_4IN2_SendCommand(0x00);			//panel setting
-	EPD_4IN2_SendData(0xbf);		//KW-bf   KWR-2F	BWROTP 0f	BWOTP 1f
+	EPD_4IN2_SendCommand(0x00);			// panel setting
+	EPD_4IN2_SendData(0x3f);		    // 300x400 B/W mode, LUT set by register
 
 
-	EPD_4IN2_SendCommand(0x30);			
-	EPD_4IN2_SendData (0x3c);      	// 3A 100HZ   29 150Hz 39 200HZ	31 171HZ
+	EPD_4IN2_SendCommand(0x30);			// PLL setting (clock frequency)
+	EPD_4IN2_SendData (0x3c);      	    // 3c=50HZ 3a=100HZ 29=150Hz 39=200HZ 31=171HZ
 
-	EPD_4IN2_SendCommand(0x61);			//resolution setting
-	EPD_4IN2_SendData (0x01);        	 
-	EPD_4IN2_SendData (0x90);	 //400	
-	EPD_4IN2_SendData (0x01);	 //300
-	EPD_4IN2_SendData (0x2c);	   
+	EPD_4IN2_SendCommand(0x61);			// resolution setting
+	EPD_4IN2_SendData (EPD_4IN2_WIDTH / 256);
+	EPD_4IN2_SendData (EPD_4IN2_WIDTH % 256);
+	EPD_4IN2_SendData (EPD_4IN2_HEIGHT / 256);
+	EPD_4IN2_SendData (EPD_4IN2_HEIGHT % 256);
 
+	EPD_4IN2_SendCommand(0x82);			// vcom_DC setting  	
+	EPD_4IN2_SendData (0x12);	        // -0.1 + 18 * -0.05 = -1.0V
 
-	EPD_4IN2_SendCommand(0x82);			//vcom_DC setting  	
-	EPD_4IN2_SendData (0x12);	
+	EPD_4IN2_SendCommand(0x50);         // VCOM AND DATA INTERVAL SETTING
+	EPD_4IN2_SendData(0x97);            // LUTB=0 LUTW=1 interval=10
 
-	EPD_4IN2_SendCommand(0X50);
-	EPD_4IN2_SendData(0x97);
-
-	EPD_4IN2_SetLut();		
+	EPD_4IN2_SetLut();
 }
 
 /******************************************************************************
