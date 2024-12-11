@@ -71,6 +71,9 @@ async function sendCmWithData(cmd, data){
 }
 
 async function send4GrayLut() {
+	await sendcmd("0300");
+	await sendcmd("043F"); // Load LUT from register
+
 	await sendCmWithData("20", "000A0000000160141400000100140000000100130A010001000000000000000000000000000000000000"); // vcom
 	await sendCmWithData("21", "400A0000000190141400000110140A000001A01301000001000000000000000000000000000000000000"); // red not use
 	await sendCmWithData("22", "400A0000000190141400000100140A000001990C01030401000000000000000000000000000000000000"); // bw r
@@ -95,7 +98,7 @@ async function sendimg(cmdIMG) {
 	if (mode === "4gray") {
 		await send4GrayLut();
 		await sendcmd("05");
-		await sendcmd(`01${driver}`);
+		await sendcmd(`01${driver}`); // restore lut
 	} else {
 		await sendcmd("05");
 	}
