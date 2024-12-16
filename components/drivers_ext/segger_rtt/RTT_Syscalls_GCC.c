@@ -39,10 +39,12 @@
 --------  END-OF-HEADER  ---------------------------------------------
 File    : SEGGER_RTT_Syscalls_GCC.c
 Purpose : Low-level functions for using printf() via RTT in GCC.
-          To use RTT for printf output, include this file in your 
+          To use RTT for printf output, include this file in your
           application.
 ----------------------------------------------------------------------
 */
+
+#if defined(NRF_LOG_USES_RTT) && NRF_LOG_USES_RTT == 1
 #include <stdlib.h>
 #include "SEGGER_RTT.h"
 
@@ -95,4 +97,6 @@ int _write_r(struct _reent *r, int file, char *ptr, int len) {
   return len;
 }
 
+#endif
 /****** End Of File *************************************************/
+

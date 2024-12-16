@@ -1,18 +1,46 @@
-/* Copyright (c) 2012 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 /** @file
  *
- * @defgroup ble_sdk_dtmlib_dtm DTM - Direct Test Mode
+ * @defgroup ble_dtm DTM - Direct Test Mode
  * @{
  * @ingroup ble_sdk_lib
  * @brief Module for testing RF/PHY using DTM commands.
@@ -23,9 +51,15 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "nrf.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 /**@brief Configuration parameters. */
+#define DTM_BITRATE                     UART_BAUDRATE_BAUDRATE_Baud19200/**< Serial bitrate on the UART */
 #define DEFAULT_TX_POWER                RADIO_TXPOWER_TXPOWER_0dBm      /**< Default Transmission power using in the DTM module. */
 #define DEFAULT_TIMER                   NRF_TIMER0                      /**< Default timer used for timing. */
 #define DEFAULT_TIMER_IRQn              TIMER0_IRQn                     /**< IRQ used for timer. NOTE: MUST correspond to DEFAULT_TIMER. */
@@ -64,6 +98,43 @@ typedef uint32_t dtm_cmd_t;                                             /**< DTM
 #define DTM_ERROR_ILLEGAL_CONFIGURATION 0x04                            /**< Parameter out of range (legal range is function dependent). */
 #define DTM_ERROR_UNINITIALIZED         0x05                            /**< DTM module has not been initialized by the application. */
 
+/**@details The UART poll cycle in micro seconds.
+ *          A baud rate of e.g. 19200 bits / second, and 8 data bits, 1 start/stop bit, no flow control,
+ *          give the time to transmit a byte: 10 bits * 1/19200 = approx: 520 us.
+ *          To ensure no loss of bytes, the UART should be polled every 260 us.
+ */
+#if DTM_BITRATE == UART_BAUDRATE_BAUDRATE_Baud9600
+#define UART_POLL_CYCLE ((uint32_t)(10*1e6/9600/2))
+#elif DTM_BITRATE == UART_BAUDRATE_BAUDRATE_Baud14400
+#define UART_POLL_CYCLE ((uint32_t)(10*1e6/14400/2))
+#elif DTM_BITRATE == UART_BAUDRATE_BAUDRATE_Baud19200
+#define UART_POLL_CYCLE ((uint32_t)(10*1e6/19200/2))
+#elif DTM_BITRATE == UART_BAUDRATE_BAUDRATE_Baud28800
+#define UART_POLL_CYCLE ((uint32_t)(10*1e6/28800/2))
+#elif DTM_BITRATE == UART_BAUDRATE_BAUDRATE_Baud38400
+#define UART_POLL_CYCLE ((uint32_t)(10*1e6/38400/2))
+#elif DTM_BITRATE == UART_BAUDRATE_BAUDRATE_Baud57600
+#define UART_POLL_CYCLE ((uint32_t)(10*1e6/57600/2))
+#elif DTM_BITRATE == UART_BAUDRATE_BAUDRATE_Baud76800
+#define UART_POLL_CYCLE ((uint32_t)(10*1e6/768000/2))
+#elif DTM_BITRATE == UART_BAUDRATE_BAUDRATE_Baud115200
+#define UART_POLL_CYCLE ((uint32_t)(10*1e6/115200/2))
+#elif DTM_BITRATE == UART_BAUDRATE_BAUDRATE_Baud230400
+#define UART_POLL_CYCLE ((uint32_t)(10*1e6/230400/2))
+#elif DTM_BITRATE == UART_BAUDRATE_BAUDRATE_Baud250000
+#define UART_POLL_CYCLE ((uint32_t)(10*1e6/250000/2))
+#elif DTM_BITRATE == UART_BAUDRATE_BAUDRATE_Baud460800
+#define UART_POLL_CYCLE ((uint32_t)(10*1e6/460800/2))
+#elif DTM_BITRATE == UART_BAUDRATE_BAUDRATE_Baud921600
+#define UART_POLL_CYCLE ((uint32_t)(10*1e6/921600/2))
+#elif DTM_BITRATE == UART_BAUDRATE_BAUDRATE_Baud1M
+#define UART_POLL_CYCLE ((uint32_t)(10*1e6/1e6/2))
+#else
+// It is possible to find values that work for other baud rates, but the formula above is not
+// guaranteed to work for all values. Suitable values may have to be found by trial and error.
+#error "Unsupported baud rate set."
+#endif
+
 // Note: DTM_PKT_VENDORSPECIFIC, is not a packet type
 #define PACKET_TYPE_MAX                 DTM_PKT_0X55                    /**< Highest value allowed as DTM Packet type. */
 
@@ -78,7 +149,7 @@ typedef uint32_t dtm_pkt_type_t;                                        /**< Typ
 
 
 /**@brief Function for initializing or re-initializing DTM module
- *     
+ *
  * @return DTM_SUCCESS on successful initialization of the DTM module.
 */
 uint32_t dtm_init(void);
@@ -109,7 +180,7 @@ uint32_t dtm_cmd(dtm_cmd_t cmd, dtm_freq_t freq, uint32_t length, dtm_pkt_type_t
 /**@brief Function for reading the result of a DTM command
  *
  * @param[out]  p_dtm_event   Pointer to buffer for 16 bit event code according to DTM standard.
- * 
+ *
  * @return      true: new event, false: no event since last call, this event has been read earlier
  */
 bool dtm_event_get(dtm_event_t * p_dtm_event);
@@ -117,24 +188,29 @@ bool dtm_event_get(dtm_event_t * p_dtm_event);
 
 /**@brief Function for configuring the timer to use.
  *
- * @note        Must be called when no DTM test is running. 
- * 
+ * @note        Must be called when no DTM test is running.
+ *
  * @param[in]   new_timer   Index (0..2) of timer to be used by the DTM library
  *
- * @return      true: success, new timer was selected, false: parameter error 
+ * @return      true: success, new timer was selected, false: parameter error
  */
-bool dtm_set_timer(uint32_t new_timer); 
+bool dtm_set_timer(uint32_t new_timer);
 
 
 /**@brief Function for configuring the transmit power.
  *
  * @note        Must be called when no DTM test is running.
- * 
+ *
  * @param[in]   new_tx_power   New output level, +4..-40, in steps of 4.
  *
  * @return      true: tx power setting changed, false: parameter error
  */
 bool dtm_set_txpower(uint32_t new_tx_power);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // BLE_DTM_H__
 

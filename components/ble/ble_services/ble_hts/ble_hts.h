@@ -1,31 +1,60 @@
-/* Copyright (c) 2012 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
+/**
+ * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 /** @file
  *
- * @defgroup ble_sdk_srv_hts Health Thermometer Service
+ * @defgroup ble_hts Health Thermometer Service
  * @{
  * @ingroup ble_sdk_srv
  * @brief Health Thermometer Service module.
  *
  * @details This module implements the Health Thermometer Service.
  *
- *          If an event handler is supplied by the application, the Health Thermometer 
+ *          If an event handler is supplied by the application, the Health Thermometer
  *          Service will generate Health Thermometer Service events to the application.
  *
  * @note The application must propagate BLE stack events to the Health Thermometer Service
  *       module by calling ble_hts_on_ble_evt() from the @ref softdevice_handler function.
  *
- * @note Attention! 
- *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile 
+ * @note Attention!
+ *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile
  *  qualification listings, this section of source code must not be modified.
  */
 
@@ -37,6 +66,10 @@
 #include "ble.h"
 #include "ble_srv_common.h"
 #include "ble_date_time.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Temperature Type measurement locations
 #define BLE_HTS_TEMP_TYPE_ARMPIT      1
@@ -63,7 +96,7 @@ typedef struct
     ble_hts_evt_type_t evt_type;                                            /**< Type of event. */
 } ble_hts_evt_t;
 
-// Forward declaration of the ble_hts_t type. 
+// Forward declaration of the ble_hts_t type.
 typedef struct ble_hts_s ble_hts_t;
 
 /**@brief Health Thermometer Service event handler type. */
@@ -154,6 +187,11 @@ uint32_t ble_hts_measurement_send(ble_hts_t * p_hts, ble_hts_meas_t * p_hts_meas
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
 uint32_t ble_hts_is_indication_enabled(ble_hts_t * p_hts, bool * p_indication_enabled);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // BLE_HTS_H__
 

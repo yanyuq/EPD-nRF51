@@ -1,19 +1,49 @@
-/* Copyright (c) 2012 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
+/**
+ * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
-/* Attention! 
-*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile 
+/* Attention!
+*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile
 *  qualification listings, this section of source code must not be modified.
 */
-
+#include "sdk_common.h"
+#if NRF_MODULE_ENABLED(BLE_GLS)
 #include "ble_gls.h"
 #include <string.h>
 #include "ble_srv_common.h"
@@ -219,7 +249,7 @@ static uint32_t glucose_feature_char_add(ble_gls_t * p_gls)
 
     memset(&char_md, 0, sizeof(char_md));
 
-    char_md.char_props.read  = 1;    
+    char_md.char_props.read  = 1;
     char_md.p_char_user_desc = NULL;
     char_md.p_char_pf        = NULL;
     char_md.p_user_desc_md   = NULL;
@@ -298,9 +328,9 @@ static uint32_t record_access_control_point_char_add(ble_gls_t * p_gls)
     attr_md.rd_auth = 0;
     attr_md.wr_auth = 1;
     attr_md.vlen    = 1;
-    
+
     memset(&attr_char_value, 0, sizeof(attr_char_value));
-    
+
     attr_char_value.p_uuid    = &ble_uuid;
     attr_char_value.p_attr_md = &attr_md;
     attr_char_value.init_len  = 0;
@@ -428,7 +458,7 @@ static void racp_send(ble_gls_t * p_gls, ble_racp_value_t * p_racp_val)
             state_set(STATE_RACP_RESPONSE_IND_VERIF);
             break;
 
-        case BLE_ERROR_NO_TX_BUFFERS:
+        case BLE_ERROR_NO_TX_PACKETS:
             // Wait for TX_COMPLETE event to retry transmission
             state_set(STATE_RACP_RESPONSE_PENDING);
             break;
@@ -715,7 +745,7 @@ static void racp_report_records_procedure(ble_gls_t * p_gls)
                 }
                 break;
 
-            case BLE_ERROR_NO_TX_BUFFERS:
+            case BLE_ERROR_NO_TX_PACKETS:
                 // Wait for TX_COMPLETE event to resume transmission
                 return;
 
@@ -1005,7 +1035,10 @@ static void on_racp_value_write(ble_gls_t * p_gls, ble_gatts_evt_write_t * p_evt
     bool                                  are_cccd_configured;
     uint32_t                              err_code;
 
-    auth_reply.type = BLE_GATTS_AUTHORIZE_TYPE_WRITE;
+    auth_reply.type                = BLE_GATTS_AUTHORIZE_TYPE_WRITE;
+    auth_reply.params.write.offset = 0;
+    auth_reply.params.write.len    = 0;
+    auth_reply.params.write.p_data = NULL;
 
     err_code = ble_gls_are_cccd_configured(p_gls, &are_cccd_configured);
     if (err_code != NRF_SUCCESS)
@@ -1040,8 +1073,10 @@ static void on_racp_value_write(ble_gls_t * p_gls, ble_gatts_evt_write_t * p_evt
     if (is_request_to_be_executed(&racp_request, &response_code))
     {
         auth_reply.params.write.gatt_status = BLE_GATT_STATUS_SUCCESS;
-        err_code                            = sd_ble_gatts_rw_authorize_reply(p_gls->conn_handle,
-                                                                              &auth_reply);
+        auth_reply.params.write.update      = 1;
+
+        err_code = sd_ble_gatts_rw_authorize_reply(p_gls->conn_handle,
+                                                   &auth_reply);
 
         if (err_code != NRF_SUCCESS)
         {
@@ -1064,6 +1099,7 @@ static void on_racp_value_write(ble_gls_t * p_gls, ble_gatts_evt_write_t * p_evt
     else if (response_code != RACP_RESPONSE_RESERVED)
     {
         auth_reply.params.write.gatt_status = BLE_GATT_STATUS_SUCCESS;
+        auth_reply.params.write.update      = 1;
         err_code                            = sd_ble_gatts_rw_authorize_reply(p_gls->conn_handle,
                                                                               &auth_reply);
 
@@ -1265,3 +1301,4 @@ uint32_t ble_gls_glucose_new_meas(ble_gls_t * p_gls, ble_gls_rec_t * p_rec)
     p_rec->meas.sequence_number = m_next_seq_num++;
     return ble_gls_db_record_add(p_rec);
 }
+#endif // NRF_MODULE_ENABLED(BLE_GLS)

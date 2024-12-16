@@ -1,13 +1,41 @@
-/* Copyright (c) 2014 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2014 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 #include <stdbool.h>
@@ -18,17 +46,11 @@
 #include "nrf_error.h"
 #include "app_error.h"
 #include "ble_serialization.h"
-
+#include "ser_dbg_sd_str.h"
 #include "ser_app_power_system_off.h"
-
 #include "app_util.h"
-
-#ifdef ENABLE_DEBUG_LOG_SUPPORT
-#include "app_trace.h"
-#define APPL_LOG                        app_trace_log             /**< Debug logger macro that will be used in this file to do logging of debug information over UART. */
-#else
-#define APPL_LOG(...)
-#endif //ENABLE_DEBUG_LOG_SUPPORT
+#define NRF_LOG_MODULE_NAME "SER_XFER"
+#include "nrf_log.h"
 
 /** SoftDevice event handler. */
 static ser_sd_transport_evt_handler_t m_evt_handler = NULL;
@@ -101,7 +123,7 @@ static void ser_sd_transport_rx_packet_handler(uint8_t * p_data, uint16_t length
 
             case SER_PKT_TYPE_EVT:
                 /* It is ensured during opening that handler is not NULL. No check needed. */
-                APPL_LOG("\r\n[EVT_ID]: 0x%X \r\n", uint16_decode(&p_data[SER_EVT_ID_POS])); // p_data points to EVT_ID
+                NRF_LOG_DEBUG("[EVT]: %s \r\n", (uint32_t)ser_dbg_sd_evt_str_get(uint16_decode(&p_data[SER_EVT_ID_POS]))); // p_data points to EVT_ID
                 m_evt_handler(p_data, length);
                 break;
 
@@ -132,7 +154,7 @@ static void ser_sd_transport_hal_handler(ser_hal_transport_evt_t event)
         }
         break;
     case SER_HAL_TRANSP_EVT_TX_PKT_SENT:
-        if(ser_app_power_system_off_get() == true)
+        if (ser_app_power_system_off_get() == true)
         {
             ser_app_power_system_off_enter();
         }
@@ -254,6 +276,7 @@ uint32_t ser_sd_transport_cmd_write(const uint8_t *                p_buffer,
     {
         m_rsp_wait = false;
     }
-    APPL_LOG("\r\n[SD_CALL_ID]: 0x%X, err_code= 0x%X\r\n", p_buffer[1], err_code);
+    
+    NRF_LOG_DEBUG("[SD_CALL]:%s, err_code= 0x%X\r\n", (uint32_t)ser_dbg_sd_call_str_get(p_buffer[1]), err_code);
     return err_code;
 }

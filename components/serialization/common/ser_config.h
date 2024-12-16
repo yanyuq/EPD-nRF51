@@ -1,13 +1,41 @@
- /* Copyright (c) 2014 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2014 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 #ifndef SER_CONFIG_H__
@@ -16,6 +44,10 @@
 #include <stdint.h>
 
 #include "nrf.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /***********************************************************************************************//**
  * General parameters configuration.
@@ -26,7 +58,7 @@
 #define SER_SD_ERROR_CODE    (uint32_t)(0xDEADBEEF)
 
 /** Value used as error code indicating warning - unusual situation but not critical so system
- *  should NOT be reseted. */
+ *  should NOT be reset. */
 #define SER_WARNING_CODE     (uint32_t)(0xBADDCAFE)
 
 /***********************************************************************************************//**
@@ -69,7 +101,7 @@
 #define SER_PHY_UART_PARITY             true
 #define SER_PHY_UART_BAUDRATE           UART_BAUDRATE_BAUDRATE_Baud1M
 
-/** Find UART baudrate value based on chosen register setting. */
+/** Find UART baud rate value based on the chosen register setting. */
 #if (SER_PHY_UART_BAUDRATE == UART_BAUDRATE_BAUDRATE_Baud1200)
     #define SER_PHY_UART_BAUDRATE_VAL 1200uL
 #elif (SER_PHY_UART_BAUDRATE == UART_BAUDRATE_BAUDRATE_Baud2400)
@@ -104,19 +136,15 @@
     #define SER_PHY_UART_BAUDRATE_VAL 1000000uL
 #endif /* SER_PHY_UART_BAUDRATE */
 
-/** Configuration timeouts of connectivity MCU */
-#define CONN_CHIP_RESET_TIME            50      /**< The time to keep the reset line to the nRF51822 low (in milliseconds). */
-#define CONN_CHIP_WAKEUP_TIME           500     /**< The time for nRF51822 to reset and become ready to receive serialized commands (in milliseconds). */
+/** Configuration timeouts of connectivity MCU. */
+#define CONN_CHIP_RESET_TIME            50      /**< Time to keep the reset line to the connectivity chip low (in milliseconds). */
+#define CONN_CHIP_WAKEUP_TIME           500     /**< Time for the connectivity chip to reset and become ready to receive serialized commands (in milliseconds). */
 
-#ifdef S110
-    #define SER_MAX_CONNECTIONS 1
-#else
-    #ifdef S120
-        #define SER_MAX_CONNECTIONS 8
-    #endif
-    #ifdef S130
-        #define SER_MAX_CONNECTIONS 1
-    #endif
+#define SER_MAX_CONNECTIONS 8
+
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* SER_CONFIG_H__ */

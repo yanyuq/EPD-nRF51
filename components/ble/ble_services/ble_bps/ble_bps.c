@@ -1,26 +1,54 @@
-/* Copyright (c) 2012 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
-/* Attention! 
-*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile 
+/* Attention!
+*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile
 *  qualification listings, this section of source code must not be modified.
 */
-
+#include "sdk_common.h"
+#if NRF_MODULE_ENABLED(BLE_BPS)
 #include "ble_bps.h"
 #include <string.h>
 #include "nordic_common.h"
 #include "ble_l2cap.h"
 #include "ble_srv_common.h"
-#include "app_util.h"
 
 
 #define OPCODE_LENGTH 1                                                   /**< Length of opcode inside Blood Pressure Measurement packet. */
@@ -242,7 +270,7 @@ static uint32_t bps_measurement_char_add(ble_bps_t * p_bps, const ble_bps_init_t
     ble_gatts_attr_md_t attr_md;
     ble_bps_meas_t      initial_bpm;
     uint8_t             encoded_bpm[MAX_BPM_LEN];
-    
+
     memset(&cccd_md, 0, sizeof(cccd_md));
 
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.read_perm);
@@ -250,16 +278,16 @@ static uint32_t bps_measurement_char_add(ble_bps_t * p_bps, const ble_bps_init_t
     cccd_md.write_perm = p_bps_init->bps_meas_attr_md.cccd_write_perm;
 
     memset(&char_md, 0, sizeof(char_md));
-    
+
     char_md.char_props.indicate = 1;
     char_md.p_char_user_desc    = NULL;
     char_md.p_char_pf           = NULL;
     char_md.p_user_desc_md      = NULL;
     char_md.p_cccd_md           = &cccd_md;
     char_md.p_sccd_md           = NULL;
-    
+
     BLE_UUID_BLE_ASSIGN(ble_uuid, BLE_UUID_BLOOD_PRESSURE_MEASUREMENT_CHAR);
-    
+
     memset(&attr_md, 0, sizeof(attr_md));
 
     attr_md.vloc       = BLE_GATTS_VLOC_STACK;
@@ -268,17 +296,17 @@ static uint32_t bps_measurement_char_add(ble_bps_t * p_bps, const ble_bps_init_t
     attr_md.rd_auth    = 0;
     attr_md.wr_auth    = 0;
     attr_md.vlen       = 1;
-    
+
     memset(&attr_char_value, 0, sizeof(attr_char_value));
     memset(&initial_bpm, 0, sizeof(initial_bpm));
-    
+
     attr_char_value.p_uuid       = &ble_uuid;
     attr_char_value.p_attr_md    = &attr_md;
     attr_char_value.init_len     = bps_measurement_encode(p_bps, &initial_bpm, encoded_bpm);
     attr_char_value.init_offs    = 0;
     attr_char_value.max_len      = MAX_BPM_LEN;
     attr_char_value.p_value      = encoded_bpm;
-    
+
     return sd_ble_gatts_characteristic_add(p_bps->service_handle,
                                            &char_md,
                                            &attr_char_value,
@@ -301,18 +329,18 @@ static uint32_t bps_feature_char_add(ble_bps_t * p_bps, const ble_bps_init_t * p
     ble_gatts_attr_md_t attr_md;
     uint8_t             init_value_encoded[2];
     uint8_t             init_value_len;
-    
+
     memset(&char_md, 0, sizeof(char_md));
-    
+
     char_md.char_props.read  = 1;
     char_md.p_char_user_desc = NULL;
     char_md.p_char_pf        = NULL;
     char_md.p_user_desc_md   = NULL;
     char_md.p_cccd_md        = NULL;
     char_md.p_sccd_md        = NULL;
-    
+
     BLE_UUID_BLE_ASSIGN(ble_uuid, BLE_UUID_BLOOD_PRESSURE_FEATURE_CHAR);
-    
+
     memset(&attr_md, 0, sizeof(attr_md));
 
     attr_md.vloc       = BLE_GATTS_VLOC_STACK;
@@ -321,9 +349,9 @@ static uint32_t bps_feature_char_add(ble_bps_t * p_bps, const ble_bps_init_t * p
     attr_md.rd_auth    = 0;
     attr_md.wr_auth    = 0;
     attr_md.vlen       = 0;
-    
+
     memset(&attr_char_value, 0, sizeof(attr_char_value));
-    
+
     init_value_len = uint16_encode(p_bps_init->feature, init_value_encoded);
 
     attr_char_value.p_uuid       = &ble_uuid;
@@ -332,7 +360,7 @@ static uint32_t bps_feature_char_add(ble_bps_t * p_bps, const ble_bps_init_t * p
     attr_char_value.init_offs    = 0;
     attr_char_value.max_len      = init_value_len;
     attr_char_value.p_value      = init_value_encoded;
-    
+
     return sd_ble_gatts_characteristic_add(p_bps->service_handle,
                                            &char_md,
                                            &attr_char_value,
@@ -358,21 +386,21 @@ uint32_t ble_bps_init(ble_bps_t * p_bps, const ble_bps_init_t * p_bps_init)
     {
         return err_code;
     }
-    
+
     // Add measurement characteristic
     err_code = bps_measurement_char_add(p_bps, p_bps_init);
     if (err_code != NRF_SUCCESS)
     {
         return err_code;
     }
-    
+
     // Add feature characteristic
     err_code = bps_feature_char_add(p_bps, p_bps_init);
     if (err_code != NRF_SUCCESS)
     {
         return err_code;
     }
-    
+
     return NRF_SUCCESS;
 }
 
@@ -388,18 +416,18 @@ uint32_t ble_bps_measurement_send(ble_bps_t * p_bps, ble_bps_meas_t * p_bps_meas
         uint16_t               len;
         uint16_t               hvx_len;
         ble_gatts_hvx_params_t hvx_params;
-        
+
         len     = bps_measurement_encode(p_bps, p_bps_meas, encoded_bps_meas);
         hvx_len = len;
 
         memset(&hvx_params, 0, sizeof(hvx_params));
-        
+
         hvx_params.handle = p_bps->meas_handles.value_handle;
         hvx_params.type   = BLE_GATT_HVX_INDICATION;
         hvx_params.offset = 0;
         hvx_params.p_len  = &hvx_len;
         hvx_params.p_data = encoded_bps_meas;
-        
+
         err_code = sd_ble_gatts_hvx(p_bps->conn_handle, &hvx_params);
         if ((err_code == NRF_SUCCESS) && (hvx_len != len))
         {
@@ -427,13 +455,20 @@ uint32_t ble_bps_is_indication_enabled(ble_bps_t * p_bps, bool * p_indication_en
     gatts_value.len     = BLE_CCCD_VALUE_LEN;
     gatts_value.offset  = 0;
     gatts_value.p_value = cccd_value_buf;
-    
+
     err_code = sd_ble_gatts_value_get(p_bps->conn_handle,
                                       p_bps->meas_handles.cccd_handle,
                                       &gatts_value);
+
     if (err_code == NRF_SUCCESS)
     {
         *p_indication_enabled = ble_srv_is_indication_enabled(cccd_value_buf);
     }
+    if (err_code == BLE_ERROR_GATTS_SYS_ATTR_MISSING)
+    {
+        *p_indication_enabled = false;
+        return NRF_SUCCESS;
+    }
     return err_code;
 }
+#endif // NRF_MODULE_ENABLED(BLE_BPS)

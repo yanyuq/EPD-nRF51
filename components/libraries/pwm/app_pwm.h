@@ -1,13 +1,41 @@
-/* Copyright (c) 2015 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2015 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 /** @file
@@ -25,7 +53,7 @@
  * - 1 PPI group per instance.
  * - 1 GPIOTE channel per PWM channel.
  *
- * For example, a PWM instance with two channels will consume 2+4 PPI channels, 1 PPI group, and 2 GPIOTE channels.
+ * For example, a PWM instance with two channels will consume 2 + 4 PPI channels, 1 PPI group, and 2 GPIOTE channels.
  *
  * The maximum number of PWM channels per instance is 2.
  */
@@ -38,7 +66,15 @@
 #include "nrf_drv_timer.h"
 #include "nrf_drv_common.h"
 #include "nrf_drv_ppi.h"
+#include "nrf_peripherals.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#if defined(GPIOTE_FEATURE_SET_PRESENT) && defined(GPIOTE_FEATURE_CLR_PRESENT)
+#define GPIOTE_SET_CLEAR_TASKS
+#endif
 
 #define APP_PWM_NOPIN                 0xFFFFFFFF
 
@@ -110,9 +146,9 @@ typedef struct
  *
  * @brief Module for internal usage inside the library only
  *
- * There are some definitions that must be included in the header file because 
+ * There are some definitions that must be included in the header file because
  * of the way the library is set up. In this way, the are accessible to the user.
- * However, any functions and variables defined here may change at any time 
+ * However, any functions and variables defined here may change at any time
  * without a warning, so you should not access them directly.
  */
 
@@ -140,8 +176,12 @@ typedef struct
         app_pwm_channel_cb_t    channels_cb[APP_PWM_CHANNELS_PER_INSTANCE]; //!< Channels data
         uint32_t                period;                                     //!< Selected period in ticks
         app_pwm_callback_t      p_ready_callback;                           //!< Callback function called on PWM readiness
+#ifdef GPIOTE_SET_CLEAR_TASKS
+        nrf_ppi_channel_t       ppi_channel;                               //!< PPI channel used temporary while changing duty
+#else
         nrf_ppi_channel_t       ppi_channels[2];                            //!< PPI channels used temporary while changing duty
         nrf_ppi_channel_group_t ppi_group;                                  //!< PPI group used to synchronize changes on channels
+#endif
         nrf_drv_state_t         state;                                      //!< Current driver status
     } app_pwm_cb_t;
 /** @}
@@ -289,6 +329,11 @@ app_pwm_duty_t app_pwm_channel_duty_get(app_pwm_t const * const p_instance, uint
     uint16_t app_pwm_cycle_ticks_get(app_pwm_t const * const p_instance);
 /** @} */
 
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

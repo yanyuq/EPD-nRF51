@@ -1,27 +1,51 @@
-/* Copyright (c) 2015 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2015 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 #ifndef NRF_EGU_H__
 #define NRF_EGU_H__
 
-#ifndef NRF52
-    #error EGU is not supported on your chip.
-#endif
-
 /**
 * @defgroup nrf_egu EGU (Event Generator Unit) abstraction
 * @{
 * @ingroup nrf_drivers
-* @brief EGU (Event Generator Unit) module functions.
+* @brief @tagAPI52 EGU (Event Generator Unit) module functions.
 *
 */
 
@@ -31,8 +55,9 @@
 #include "nrf_assert.h"
 #include "nrf.h"
 
-#define NRF_EGU_COUNT           6   /**< Number of EGU instances. */
-#define NRF_EGU_CHANNEL_COUNT   16  /**< Number of channels per EGU instance. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @enum  nrf_egu_task_t
@@ -113,6 +138,34 @@ typedef enum
     NRF_EGU_INT_ALL         = 0xFFFFuL
 } nrf_egu_int_mask_t;
 
+/**@brief Function for getting max channel number of given EGU.
+ *
+ * @param NRF_EGUx EGU instance.
+ *
+ * @returns number of available channels.
+ */
+__STATIC_INLINE uint32_t nrf_egu_channel_count(NRF_EGU_Type * NRF_EGUx)
+{
+    if (NRF_EGUx == NRF_EGU0){
+        return EGU0_CH_NUM;
+    }
+    if (NRF_EGUx ==  NRF_EGU1){
+        return EGU1_CH_NUM;
+    }
+    if (NRF_EGUx ==  NRF_EGU2){
+        return EGU2_CH_NUM;
+    }
+    if (NRF_EGUx ==  NRF_EGU3){
+        return EGU3_CH_NUM;
+    }
+    if (NRF_EGUx ==  NRF_EGU4){
+        return EGU4_CH_NUM;
+    }
+    if (NRF_EGUx ==  NRF_EGU5){
+        return EGU5_CH_NUM;
+    }
+    return 0;
+}
 
 /**
  * @brief Function for triggering a specific EGU task.
@@ -148,7 +201,7 @@ __STATIC_INLINE uint32_t * nrf_egu_task_address_get(NRF_EGU_Type * NRF_EGUx,
 __STATIC_INLINE uint32_t * nrf_egu_task_trigger_addres_get(NRF_EGU_Type * NRF_EGUx,
                                                            uint8_t channel)
 {
-    ASSERT(channel < NRF_EGU_CHANNEL_COUNT);
+    ASSERT(channel < nrf_egu_channel_count(NRF_EGUx));
     return (uint32_t*)&NRF_EGUx->TASKS_TRIGGER[channel];
 }
 
@@ -156,11 +209,12 @@ __STATIC_INLINE uint32_t * nrf_egu_task_trigger_addres_get(NRF_EGU_Type * NRF_EG
 /**
  * @brief Function for returning the specific EGU TRIGGER task.
  *
+ * @param NRF_EGUx EGU instance.
  * @param channel  Channel number.
  */
-__STATIC_INLINE nrf_egu_task_t nrf_egu_task_trigger_get(uint8_t channel)
+__STATIC_INLINE nrf_egu_task_t nrf_egu_task_trigger_get(NRF_EGU_Type * NRF_EGUx, uint8_t channel)
 {
-    ASSERT(channel <= NRF_EGU_CHANNEL_COUNT);
+    ASSERT(channel < nrf_egu_channel_count(NRF_EGUx));
     return (nrf_egu_task_t)((uint32_t) NRF_EGU_TASK_TRIGGER0 + (channel * sizeof(uint32_t)));
 }
 
@@ -188,6 +242,10 @@ __STATIC_INLINE void nrf_egu_event_clear(NRF_EGU_Type * NRF_EGUx,
                                          nrf_egu_event_t egu_event)
 {
     *((volatile uint32_t *)((uint8_t *)NRF_EGUx + (uint32_t)egu_event)) = 0x0UL;
+#if __CORTEX_M == 0x04
+    volatile uint32_t dummy = *((volatile uint32_t *)((uint8_t *)NRF_EGUx + (uint32_t)egu_event));
+    (void)dummy;
+#endif
 }
 
 
@@ -213,7 +271,7 @@ __STATIC_INLINE uint32_t * nrf_egu_event_address_get(NRF_EGU_Type * NRF_EGUx,
 __STATIC_INLINE uint32_t * nrf_egu_event_triggered_addres_get(NRF_EGU_Type * NRF_EGUx,
                                                               uint8_t channel)
 {
-    ASSERT(channel < NRF_EGU_CHANNEL_COUNT);
+    ASSERT(channel < nrf_egu_channel_count(NRF_EGUx));
     return (uint32_t*)&NRF_EGUx->EVENTS_TRIGGERED[channel];
 }
 
@@ -221,11 +279,13 @@ __STATIC_INLINE uint32_t * nrf_egu_event_triggered_addres_get(NRF_EGU_Type * NRF
 /**
  * @brief Function for returning the specific EGU TRIGGERED event.
  *
+ * @param NRF_EGUx EGU instance.
  * @param channel  Channel number.
  */
-__STATIC_INLINE nrf_egu_event_t nrf_egu_event_triggered_get(uint8_t channel)
+__STATIC_INLINE nrf_egu_event_t nrf_egu_event_triggered_get(NRF_EGU_Type * NRF_EGUx,
+                                                            uint8_t channel)
 {
-    ASSERT(channel < NRF_EGU_CHANNEL_COUNT);
+    ASSERT(channel < nrf_egu_channel_count(NRF_EGUx));
     return (nrf_egu_event_t)((uint32_t) NRF_EGU_EVENT_TRIGGERED0 + (channel * sizeof(uint32_t)));
 }
 
@@ -271,16 +331,22 @@ __STATIC_INLINE void nrf_egu_int_disable(NRF_EGU_Type * NRF_EGUx, uint32_t egu_i
 /**
  * @brief Function for retrieving one or more specific EGU interrupts.
  *
+ * @param NRF_EGUx EGU instance.
  * @param channel Channel number.
  *
  * @returns EGU interrupt mask.
  */
-__STATIC_INLINE nrf_egu_int_mask_t nrf_egu_int_get(uint8_t channel)
+__STATIC_INLINE nrf_egu_int_mask_t nrf_egu_int_get(NRF_EGU_Type * NRF_EGUx, uint8_t channel)
 {
-    ASSERT(channel < NRF_EGU_CHANNEL_COUNT);
+    ASSERT(channel < nrf_egu_channel_count(NRF_EGUx));
     return (nrf_egu_int_mask_t)((uint32_t) (EGU_INTENSET_TRIGGERED0_Msk << channel));
 }
 
 /** @} */
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

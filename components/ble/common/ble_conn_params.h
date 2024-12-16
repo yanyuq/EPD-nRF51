@@ -1,13 +1,41 @@
-/* Copyright (c) 2012 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 /** @file
@@ -24,6 +52,10 @@
 #include <stdint.h>
 #include "ble.h"
 #include "ble_srv_common.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**@brief Connection Parameters Module event type. */
 typedef enum
@@ -58,7 +90,7 @@ typedef struct
 
 /**@brief Function for initializing the Connection Parameters module.
  *
- * @note If the negotiation procedure should be triggered when notification/indication of 
+ * @note If the negotiation procedure should be triggered when notification/indication of
  *       any characteristic is enabled by the peer, then this function must be called after
  *       having initialized the services.
  *
@@ -83,7 +115,7 @@ uint32_t ble_conn_params_stop(void);
 
 /**@brief Function for changing the current connection parameters to a new set.
  *
- *  @details Use this function to change the connection parameters to a new set of parameter 
+ *  @details Use this function to change the connection parameters to a new set of parameter
  *       (ie different from the ones given at init of the module).
  *       This function is usefull for scenario where most of the time the application
  *       needs a relatively big connection interval, and just sometimes, for a temporary
@@ -105,6 +137,11 @@ uint32_t ble_conn_params_change_conn_params(ble_gap_conn_params_t *new_params);
  * @param[in]   p_ble_evt  The event received from the BLE stack.
  */
 void ble_conn_params_on_ble_evt(ble_evt_t * p_ble_evt);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // BLE_CONN_PARAMS_H__
 

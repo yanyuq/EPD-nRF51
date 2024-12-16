@@ -1,18 +1,58 @@
-/* Copyright (c) 2015 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2015 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
+
+#include "sdk_common.h"
+#if NRF_MODULE_ENABLED(ANT_SDM)
 
 #include "ant_sdm_page_2.h"
 #include "ant_sdm_utils.h"
-#include "ant_sdm_page_logger.h"
+
+#define NRF_LOG_MODULE_NAME "ANT_SDM_PAGE_2"
+#if ANT_SDM_PAGE_2_LOG_ENABLED
+#define NRF_LOG_LEVEL       ANT_SDM_PAGE_2_LOG_LEVEL
+#define NRF_LOG_INFO_COLOR  ANT_SDM_PAGE_2_INFO_COLOR
+#else // ANT_SDM_PAGE_2_LOG_ENABLED
+#define NRF_LOG_LEVEL       0
+#endif // ANT_SDM_PAGE_2_LOG_ENABLED
+#include "nrf_log.h"
+
 
 /**@brief SDM page 2 data layout structure. */
 typedef struct
@@ -32,24 +72,23 @@ typedef struct
  */
 static void page_2_data_log(ant_sdm_page2_data_t const * p_page_data)
 {
-#ifdef TRACE_SDM_PAGE_2_ENABLE
     static const char * p_location[4] = {"Laces", "Midsole", "Other", "Ankle"};
     static const char * p_battery[4]  = {"New", "Good", "OK", "Low"};
     static const char * p_health[4]   = {"OK", "Error", "Warning", ""};
     static const char * p_state[4]    = {"Inactive", "Active", "", ""};
 
     uint16_t cadence = ANT_SDM_CADENCE_RESCALE(p_page_data->cadence);
-#endif // TRACE_SDM_PAGE_2_ENABLE
 
-    LOG_PAGE2("Status:                           state:    %s\n\r",
-                p_state[p_page_data->status.items.state]);
-    LOG_PAGE2("                                  health:   %s\n\r",
-                p_health[p_page_data->status.items.health]);
-    LOG_PAGE2("                                  battery:  %s\n\r",
-                p_battery[p_page_data->status.items.battery]);
-    LOG_PAGE2("                                  location: %s\n\r",
-                p_location[p_page_data->status.items.location]);
-    LOG_PAGE2("Cadence                           %u.%01u strides/min\n\r",
+    NRF_LOG_INFO("Status:\r\n");
+    NRF_LOG_INFO("state:                                %s\r\n",
+                (uint32_t)p_state[p_page_data->status.items.state]);
+    NRF_LOG_INFO("health:                               %s\r\n",
+                (uint32_t)p_health[p_page_data->status.items.health]);
+    NRF_LOG_INFO("battery:                              %s\r\n",
+                (uint32_t)p_battery[p_page_data->status.items.battery]);
+    NRF_LOG_INFO("location:                             %s\r\n",
+                (uint32_t)p_location[p_page_data->status.items.location]);
+    NRF_LOG_INFO("Cadence                               %u.%01u strides/min\r\n",
                 cadence / ANT_SDM_CADENCE_DISP_PRECISION,
                 cadence % ANT_SDM_CADENCE_DISP_PRECISION);
 }
@@ -88,4 +127,4 @@ void ant_sdm_page_2_decode(uint8_t const        * p_page_buffer,
     page_2_data_log(p_page_data);
 }
 
-
+#endif // NRF_MODULE_ENABLED(ANT_SDM)

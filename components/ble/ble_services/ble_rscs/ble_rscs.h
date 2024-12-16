@@ -1,18 +1,46 @@
-/* Copyright (c) 2012 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 /** @file
  *
- * @defgroup ble_sdk_srv_rsc Running Speed and Cadence Service
+ * @defgroup ble_rscs Running Speed and Cadence Service
  * @{
  * @ingroup ble_sdk_srv
  * @brief Running Speed and Cadence Service module.
@@ -27,8 +55,8 @@
  * @note The application must propagate BLE stack events to the Running Speead and Candence Service
  *       module by calling ble_rscs_on_ble_evt() from the @ref softdevice_handler function.
  *
- * @note Attention! 
- *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile 
+ * @note Attention!
+ *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile
  *  qualification listings, this section of source code must not be modified.
  */
 
@@ -39,6 +67,10 @@
 #include <stdbool.h>
 #include "ble.h"
 #include "ble_srv_common.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**@brief Running Speed and Cadence Service feature bits. */
 #define BLE_RSCS_FEATURE_INSTANT_STRIDE_LEN_BIT             (0x01 << 0)     /**< Instantaneous Stride Length Measurement Supported bit. */
@@ -60,7 +92,7 @@ typedef struct
     ble_rscs_evt_type_t evt_type;                                           /**< Type of event. */
 } ble_rscs_evt_t;
 
-// Forward declaration of the ble_rsc types. 
+// Forward declaration of the ble_rsc types.
 typedef struct ble_rscs_s      ble_rscs_t;
 typedef struct ble_rscs_meas_s ble_rscs_meas_t;
 
@@ -88,7 +120,7 @@ typedef struct
     ble_srv_cccd_security_mode_t rsc_meas_attr_md;                          /**< Initial security level for running speed and cadence measurement attribute */
     ble_srv_security_mode_t      rsc_feature_attr_md;                       /**< Initial security level for feature attribute */
     uint16_t                     feature;                                   /**< Initial value for features of sensor. */
-    ble_rscs_meas_t              initial_rcm;                               /**< Initial Running Speed Cadence Measurement.*/            
+    ble_rscs_meas_t              initial_rcm;                               /**< Initial Running Speed Cadence Measurement.*/
 } ble_rscs_init_t;
 
 /**@brief Running Speed and Cadence Service structure. This contains various status information for
@@ -138,6 +170,11 @@ void ble_rscs_on_ble_evt(ble_rscs_t * p_rscs, ble_evt_t * p_ble_evt);
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
 uint32_t ble_rscs_measurement_send(ble_rscs_t * p_rscs, ble_rscs_meas_t * p_measurement);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // BLE_RSCS_H__
 

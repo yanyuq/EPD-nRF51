@@ -1,26 +1,60 @@
-/* Copyright (c) 2015 Nordic Semiconductor. All Rights Reserved.
-*
-* The information contained herein is property of Nordic Semiconductor ASA.
-* Terms and conditions of usage are described in detail in NORDIC
-* SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
-*
-* Licensees are granted free, non-transferable use of the information. NO
-* WARRANTY of ANY KIND is provided. This heading must NOT be removed from
-* the file.
-*
-*/
+/**
+ * Copyright (c) 2015 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ */
+
 
 #ifndef SECURITY_DISPATCHER_H__
 #define SECURITY_DISPATCHER_H__
 
-#include "stdint.h"
+#include <stdint.h>
 #include "sdk_errors.h"
 #include "ble.h"
 #include "ble_gap.h"
 #include "peer_manager_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /**
+ * @cond NO_DOXYGEN
  * @defgroup security_dispatcher Security Dispatcher
  * @ingroup peer_manager
  * @{
@@ -61,7 +95,7 @@ typedef struct
  */
 typedef struct
 {
-    pm_sec_procedure_t procedure; /**< The procedure that has started. */
+    pm_conn_sec_procedure_t procedure; /**< The procedure that has started. */
 } smd_evt_sec_procedure_start_t;
 
 
@@ -80,8 +114,8 @@ typedef struct
  */
 typedef struct
 {
-    uint8_t auth_status; /**< The error code describing the error. See @ref BLE_GAP_SEC_STATUS. */
-    uint8_t error_src;   /**< The origin of the error. See @ref BLE_GAP_SEC_STATUS_SOURCES. */
+    pm_sec_error_code_t error;     /**< What went wrong. */
+    uint8_t             error_src; /**< The party that raised the error, see @ref BLE_GAP_SEC_STATUS_SOURCES. */
 } smd_evt_pairing_failed_t;
 
 
@@ -98,7 +132,7 @@ typedef struct
 typedef struct
 {
     pm_sec_error_code_t error;     /**< What went wrong. */
-    uint8_t             error_src; /**< The party which raised the error, see @ref BLE_GAP_SEC_STATUS_SOURCES. */
+    uint8_t             error_src; /**< The party that raised the error, see @ref BLE_GAP_SEC_STATUS_SOURCES. */
 } smd_evt_link_encryption_failed_t;
 
 
@@ -115,7 +149,7 @@ typedef struct
 typedef struct
 {
     pm_peer_id_t peer_id; /**< The peer this event pertains to, if previously bonded. @ref PM_PEER_ID_INVALID if no successful bonding has happened with the peer before. */
-    ret_code_t error;     /**< The unexpected error that occurred. */
+    ret_code_t   error;   /**< The unexpected error that occurred. */
 } smd_evt_error_bonding_info_t;
 
 
@@ -166,6 +200,7 @@ typedef struct
 typedef void (*smd_evt_handler_t)(smd_evt_t const * p_event);
 
 
+#if 0
 /**@brief Function for registering with the Security Dispatcher module. This function also
  *        initializes the module if uninitialized.
  *
@@ -176,6 +211,10 @@ typedef void (*smd_evt_handler_t)(smd_evt_t const * p_event);
  * @retval NRF_ERROR_NULL    evt_handler was NULL.
  */
 ret_code_t smd_register(smd_evt_handler_t evt_handler);
+#endif
+
+
+ret_code_t smd_init(void);
 
 
 /**@brief Function for dispatching SoftDevice events to the Security Dispatcher module.
@@ -189,13 +228,14 @@ void smd_ble_evt_handler(ble_evt_t * ble_evt);
  *        procedure on a connection.
  *
  * @note If this function returns an @ref NRF_ERROR_NULL, @ref NRF_ERROR_INVALID_PARAM, @ref
- *       BLE_ERROR_INVALID_CONN_HANDLE, or @ref NRF_ERROR_NO_MEM, this function can be called again
- *       after corrective action.
+ *       BLE_ERROR_INVALID_CONN_HANDLE, or @ref NRF_ERROR_STORAGE_FULL, this function can be called
+ *       again after corrective action.
  *
  * @note To reject a request, call this function with NULL p_sec_params.
  *
  * @param[in]  conn_handle   The connection handle of the connection the pairing is happening on.
  * @param[in]  p_sec_params  The security parameters to use for this link.
+ * @param[in]  p_public_key  A pointer to the public key to use if using LESC, or NULL.
  *
  * @retval NRF_SUCCESS                    Success.
  * @retval NRF_ERROR_INVALID_STATE        Module is not initialized, or no parameters have been
@@ -205,10 +245,13 @@ void smd_ble_evt_handler(ble_evt_t * ble_evt);
  * @retval NRF_ERROR_TIMEOUT              There has been an SMP timeout, so no more SMP operations
  *                                        can be performed on this link.
  * @retval BLE_ERROR_INVALID_CONN_HANDLE  Invalid connection handle.
- * @retval NRF_ERROR_NO_MEM               No more room in flash. Fix and reattempt later.
+ * @retval NRF_ERROR_STORAGE_FULL         No more room in flash. Fix and reattempt after the next
+ *                                        FDS garbage collection procedure.
  * @retval NRF_ERROR_BUSY                 No write buffer. Reattempt later.
  */
-ret_code_t smd_params_reply(uint16_t conn_handle, ble_gap_sec_params_t * p_sec_params);
+ret_code_t smd_params_reply(uint16_t                 conn_handle,
+                            ble_gap_sec_params_t   * p_sec_params,
+                            ble_gap_lesc_p256_pk_t * p_public_key);
 
 
 /**@brief Function for initiating security on the link, with the specified parameters.
@@ -235,14 +278,21 @@ ret_code_t smd_params_reply(uint16_t conn_handle, ble_gap_sec_params_t * p_sec_p
  * @retval NRF_ERROR_TIMEOUT              There has been an SMP timeout, so no more SMP operations
  *                                        can be performed on this link.
  * @retval BLE_ERROR_INVALID_CONN_HANDLE  Invalid connection handle.
- * @retval NRF_ERROR_NO_MEM               No more room in flash, or no space in RAM for
- *                                        peer_database to use.
+ * @retval NRF_ERROR_STORAGE_FULL         No more room in flash. Fix and reattempt after the next
+ *                                        FDS garbage collection procedure.
  * @retval NRF_ERROR_INTERNAL             No more available peer IDs.
  */
 ret_code_t smd_link_secure(uint16_t               conn_handle,
                            ble_gap_sec_params_t * p_sec_params,
                            bool                   force_repairing);
 
-/** @} */
+/** @}
+ * @endcond
+ */
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SECURITY_DISPATCHER_H__ */

@@ -1,13 +1,41 @@
-/* Copyright (c) 2009 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2009 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 #include "twi_master.h"
@@ -46,10 +74,10 @@ static bool twi_master_write(uint8_t * data, uint8_t data_length, bool issue_sto
         if (timeout == 0 || NRF_TWI1->EVENTS_ERROR != 0)
         {
             // Recover the peripheral as indicated by PAN 56: "TWI: TWI module lock-up." found at
-            // Product Anomaly Notification document found at 
+            // Product Anomaly Notification document found at
             // https://www.nordicsemi.com/eng/Products/Bluetooth-R-low-energy/nRF51822/#Downloads
             NRF_TWI1->EVENTS_ERROR = 0;
-            NRF_TWI1->ENABLE       = TWI_ENABLE_ENABLE_Disabled << TWI_ENABLE_ENABLE_Pos; 
+            NRF_TWI1->ENABLE       = TWI_ENABLE_ENABLE_Disabled << TWI_ENABLE_ENABLE_Pos;
             NRF_TWI1->POWER        = 0;
             nrf_delay_us(5);
             NRF_TWI1->POWER        = 1;
@@ -73,8 +101,8 @@ static bool twi_master_write(uint8_t * data, uint8_t data_length, bool issue_sto
     {
         NRF_TWI1->EVENTS_STOPPED = 0;
         NRF_TWI1->TASKS_STOP     = 1;
-        /* Wait until stop sequence is sent */ 
-        while(NRF_TWI1->EVENTS_STOPPED == 0) 
+        /* Wait until stop sequence is sent */
+        while (NRF_TWI1->EVENTS_STOPPED == 0)
         {
             // Do nothing.
         }
@@ -83,7 +111,7 @@ static bool twi_master_write(uint8_t * data, uint8_t data_length, bool issue_sto
 }
 
 
-/** @brief Function for read by twi_master. 
+/** @brief Function for read by twi_master.
  */
 static bool twi_master_read(uint8_t * data, uint8_t data_length, bool issue_stop_condition)
 {
@@ -155,7 +183,7 @@ static bool twi_master_read(uint8_t * data, uint8_t data_length, bool issue_stop
     /** @snippet [TWI HW master read] */
 
     /* Wait until stop sequence is sent */
-    while(NRF_TWI1->EVENTS_STOPPED == 0)
+    while (NRF_TWI1->EVENTS_STOPPED == 0)
     {
         // Do nothing.
     }

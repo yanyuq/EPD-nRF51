@@ -1,34 +1,45 @@
-/* Copyright (c) 2013, Nordic Semiconductor ASA
+/**
+ * Copyright (c) 2013 - 2017, Nordic Semiconductor ASA
+ * 
  * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *   * Redistributions of source code must retain the above copyright notice, this
- *     list of conditions and the following disclaimer.
- *
- *   * Redistributions in binary form must reproduce the above copyright notice,
- *     this list of conditions and the following disclaimer in the documentation
- *     and/or other materials provided with the distribution.
- *
- *   * Neither the name of Nordic Semiconductor ASA nor the names of its
- *     contributors may be used to endorse or promote products derived from
- *     this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
-/* NOTE: Template files (including this one) are application specific and therefore expected to 
+
+/* NOTE: Template files (including this one) are application specific and therefore expected to
    be copied into the application project folder prior to its use! */
 
 #include <stdint.h>
@@ -46,7 +57,7 @@ static bool is_disabled_in_debug_needed(void);
 
 
 #if defined ( __CC_ARM )
-    uint32_t SystemCoreClock __attribute__((used)) = __SYSTEM_CLOCK;  
+    uint32_t SystemCoreClock __attribute__((used)) = __SYSTEM_CLOCK;
 #elif defined ( __ICCARM__ )
     __root uint32_t SystemCoreClock = __SYSTEM_CLOCK;
 #elif defined   ( __GNUC__ )
@@ -65,7 +76,7 @@ void SystemInit(void)
 
     /* Prepare the peripherals for use as indicated by the PAN 26 "System: Manual setup is required
        to enable the use of peripherals" found at Product Anomaly document for your device found at
-       https://www.nordicsemi.com/. The side effect of executing these instructions in the devices 
+       https://www.nordicsemi.com/. The side effect of executing these instructions in the devices
        that do not need it is that the new peripherals in the second generation devices (LPCOMP for
        example) will not be available. */
     if (is_manual_peripheral_setup_needed())
@@ -73,9 +84,9 @@ void SystemInit(void)
         *(uint32_t volatile *)0x40000504 = 0xC007FFDF;
         *(uint32_t volatile *)0x40006C18 = 0x00008000;
     }
-    
+
     /* Disable PROTENSET registers under debug, as indicated by PAN 59 "MPU: Reset value of DISABLEINDEBUG
-       register is incorrect" found at Product Anomaly document four your device found at 
+       register is incorrect" found at Product Anomaly document four your device found at
        https://www.nordicsemi.com/. There is no side effect of using these instruction if not needed. */
     if (is_disabled_in_debug_needed())
     {
@@ -84,7 +95,7 @@ void SystemInit(void)
 }
 
 
-static bool is_manual_peripheral_setup_needed(void) 
+static bool is_manual_peripheral_setup_needed(void)
 {
     if ((((*(uint32_t *)0xF0000FE0) & 0x000000FF) == 0x1) && (((*(uint32_t *)0xF0000FE4) & 0x0000000F) == 0x0))
     {
@@ -101,11 +112,11 @@ static bool is_manual_peripheral_setup_needed(void)
             return true;
         }
     }
-    
+
     return false;
 }
 
-static bool is_disabled_in_debug_needed(void) 
+static bool is_disabled_in_debug_needed(void)
 {
     if ((((*(uint32_t *)0xF0000FE0) & 0x000000FF) == 0x1) && (((*(uint32_t *)0xF0000FE4) & 0x0000000F) == 0x0))
     {
@@ -114,7 +125,7 @@ static bool is_disabled_in_debug_needed(void)
             return true;
         }
     }
-    
+
     return false;
 }
 

@@ -1,18 +1,46 @@
-/* Copyright (c) 2014 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2014 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 #include <stdlib.h>
 #include <string.h>
 #include "ble_app.h"
-#include "app_mailbox.h"
+#include "nrf_queue.h"
 #include "app_scheduler.h"
 #include "softdevice_handler.h"
 #include "ser_sd_transport.h"
@@ -34,7 +62,15 @@ typedef struct
  *   Mailbox used for communication between event handler (called from serial stream
  *   interrupt context) and event processing function (called from scheduler or interrupt context).
  */
-APP_MAILBOX_DEF(sd_ble_evt_mailbox, SD_BLE_EVT_MAILBOX_QUEUE_SIZE, sizeof(ser_sd_handler_evt_data_t));
+NRF_QUEUE_DEF(ser_sd_handler_evt_data_t,
+              m_sd_ble_evt_mailbox,
+              SD_BLE_EVT_MAILBOX_QUEUE_SIZE,
+              NRF_QUEUE_MODE_NO_OVERFLOW);
+
+NRF_QUEUE_DEF(uint32_t,
+              m_sd_soc_evt_mailbox,
+              SD_BLE_EVT_MAILBOX_QUEUE_SIZE,
+              NRF_QUEUE_MODE_NO_OVERFLOW);
 
 /**
  * @brief Function to be replaced by user implementation if needed.
@@ -48,7 +84,7 @@ __WEAK void os_rsp_set_handler(void)
 
 static void connectivity_reset_low(void)
 {
-    //Signal a reset to the nRF51822 by setting the reset pin on the nRF51822 low.
+    //Signal a reset to the connectivity chip by setting the reset pin low.
     ser_app_hal_nrf_reset_pin_clear();
     ser_app_hal_delay(CONN_CHIP_RESET_TIME);
 
@@ -60,7 +96,7 @@ static void connectivity_reset_high(void)
     //Set the reset level to high again.
     ser_app_hal_nrf_reset_pin_set();
 
-    //Wait for nRF51822 to be ready.
+    //Wait for connectivity chip to be ready.
     ser_app_hal_delay(CONN_CHIP_WAKEUP_TIME);
 }
 
@@ -76,7 +112,18 @@ static void ser_softdevice_evt_handler(uint8_t * p_data, uint16_t length)
     err_code = ser_sd_transport_rx_free(p_data);
     APP_ERROR_CHECK(err_code);
 
-    err_code = app_mailbox_put(&sd_ble_evt_mailbox, &item);
+    err_code = nrf_queue_push(&m_sd_ble_evt_mailbox, &item);
+    APP_ERROR_CHECK(err_code);
+
+    ser_app_hal_nrf_evt_pending();
+}
+
+void ser_softdevice_flash_operation_success_evt(bool success)
+{
+    uint32_t evt_type = success ? NRF_EVT_FLASH_OPERATION_SUCCESS :
+            NRF_EVT_FLASH_OPERATION_ERROR;
+
+    uint32_t err_code = nrf_queue_push(&m_sd_soc_evt_mailbox, &evt_type);
     APP_ERROR_CHECK(err_code);
 
     ser_app_hal_nrf_evt_pending();
@@ -98,16 +145,12 @@ static void ser_sd_rsp_wait(void)
 
 uint32_t sd_evt_get(uint32_t * p_evt_id)
 {
-    (void)p_evt_id;
-    //current serialization doesn't support any events other than ble events
-    return NRF_ERROR_NOT_FOUND;
+    return nrf_queue_pop(&m_sd_soc_evt_mailbox, p_evt_id);
 }
 
 uint32_t sd_ble_evt_get(uint8_t * p_data, uint16_t * p_len)
 {
-    uint32_t err_code;
-
-    err_code = app_mailbox_get(&sd_ble_evt_mailbox, p_data);
+    uint32_t err_code = nrf_queue_pop(&m_sd_ble_evt_mailbox, p_data);
 
     if (err_code == NRF_SUCCESS) //if anything in the mailbox
     {
@@ -130,36 +173,31 @@ uint32_t sd_ble_evt_get(uint8_t * p_data, uint16_t * p_len)
 
 uint32_t sd_ble_evt_mailbox_length_get(uint32_t * p_mailbox_length)
 {
-    uint32_t err_code = NRF_SUCCESS;
-    
-    *p_mailbox_length = app_mailbox_length_get(&sd_ble_evt_mailbox);
-    
-    return err_code;
+    *p_mailbox_length = nrf_queue_utilization_get(&m_sd_ble_evt_mailbox);
+    return NRF_SUCCESS;
 }
 
-uint32_t sd_softdevice_enable(nrf_clock_lfclksrc_t           clock_source,
-                              softdevice_assertion_handler_t assertion_handler)
+uint32_t sd_softdevice_enable(nrf_clock_lf_cfg_t const * p_clock_lf_cfg,
+                              nrf_fault_handler_t assertion_handler)
 {
     uint32_t err_code;
 
-    err_code = ser_app_hal_hw_init();
+    err_code = ser_app_hal_hw_init(ser_softdevice_flash_operation_success_evt);
 
     if (err_code == NRF_SUCCESS)
     {
         connectivity_reset_low();
 
-        err_code = app_mailbox_create(&sd_ble_evt_mailbox);
+        nrf_queue_reset(&m_sd_soc_evt_mailbox);
+        nrf_queue_reset(&m_sd_ble_evt_mailbox);
 
+        err_code = ser_sd_transport_open(ser_softdevice_evt_handler,
+                                         ser_sd_rsp_wait,
+                                         os_rsp_set_handler,
+                                         NULL);
         if (err_code == NRF_SUCCESS)
         {
-            err_code = ser_sd_transport_open(ser_softdevice_evt_handler,
-                                             ser_sd_rsp_wait,
-                                             os_rsp_set_handler,
-                                             NULL);
-            if (err_code == NRF_SUCCESS)
-            {
-              connectivity_reset_high();
-            }
+          connectivity_reset_high();
         }
 
         ser_app_hal_nrf_evt_irq_priority_set();

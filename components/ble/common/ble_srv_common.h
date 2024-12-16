@@ -1,13 +1,41 @@
-/* Copyright (c) 2012 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 /** @file
@@ -28,6 +56,10 @@
 #include "ble.h"
 #include "ble_gap.h"
 #include "ble_gatt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** @defgroup UUID_SERVICES Service UUID definitions
  * @{ */
@@ -51,12 +83,15 @@
 #define BLE_UUID_SCAN_PARAMETERS_SERVICE                         0x1813     /**< Scan Parameters service UUID. */
 #define BLE_UUID_TX_POWER_SERVICE                                0x1804     /**< TX Power service UUID. */
 #define BLE_UUID_IPSP_SERVICE                                    0x1820     /**< Internet Protocol Support service UUID. */
+#define BLE_UUID_BMS_SERVICE                                     0x181E     /**< BOND MANAGEMENT service UUID*/
+#define BLE_UUID_CGM_SERVICE                                     0x181F     /**< Contiunous Glucose Monitoring service UUID*/
+#define BLE_UUID_PLX_SERVICE                                     0x1822     /**< Pulse Oximeter Service UUID*/
+
+
 /** @} */
 
 /** @defgroup UUID_CHARACTERISTICS Characteristic UUID definitions
  * @{ */
-#define BLE_UUID_BATTERY_LEVEL_STATE_CHAR                        0x2A1B     /**< Battery Level State characteristic UUID. */
-#define BLE_UUID_BATTERY_POWER_STATE_CHAR                        0x2A1A     /**< Battery Power State characteristic UUID. */
 #define BLE_UUID_REMOVABLE_CHAR                                  0x2A3A     /**< Removable characteristic UUID. */
 #define BLE_UUID_SERVICE_REQUIRED_CHAR                           0x2A3B     /**< Service Required characteristic UUID. */
 #define BLE_UUID_ALERT_CATEGORY_ID_CHAR                          0x2A43     /**< Alert Category Id characteristic UUID. */
@@ -132,6 +167,22 @@
 #define BLE_UUID_LN_LOCATION_AND_SPEED_CHAR                      0x2A67     /**< Location Navigation Service, Location and Speed characteristic UUID. */
 #define BLE_UUID_LN_NAVIGATION_CHAR                              0x2A68     /**< Location Navigation Service, Navigation characteristic UUID. */
 #define BLE_UUID_LN_CONTROL_POINT_CHAR                           0x2A6B     /**< Location Navigation Service, Control point characteristic UUID. */
+#define BLE_UUID_BMS_CTRLPT                                      0x2AA4     /**< BMS Control Point characteristic UUID. */
+#define BLE_UUID_BMS_FEATURE                                     0x2AA5     /**< BMS Feature characteristic UUID. */
+#define BLE_UUID_CGM_MEASUREMENT                                 0x2AA7     /**< CGM Service, Measurement characteristic UUID*/
+#define BLE_UUID_CGM_FEATURE                                     0x2AA8     /**< CGM Service, Feature characteristic UUID*/
+#define BLE_UUID_CGM_STATUS                                      0x2AA9     /**< CGM Service, Status characteristic UUID*/
+#define BLE_UUID_CGM_SESSION_START_TIME                          0x2AAA     /**< CGM Service, session start time characteristic UUID*/
+#define BLE_UUID_CGM_SESSION_RUN_TIME                            0x2AAB     /**< CGM Service, session run time characteristic UUID*/
+#define BLE_UUID_CGM_SPECIFIC_OPS_CTRLPT                         0x2AAC     /**< CGM Service, specific ops ctrlpt characteristic UUID*/
+#define BLE_UUID_PLX_SPOT_CHECK_MEAS                             0x2A5E     /**< PLX Service, spot check measurement characteristic UUID*/
+#define BLE_UUID_PLX_CONTINUOUS_MEAS                             0x2A5F     /**< PLX Service, continuous measurement characteristic UUID*/
+#define BLE_UUID_PLX_FEATURES                                    0x2A60     /**< PLX Service, feature characteristic UUID*/
+
+
+
+
+
 /** @} */
 
 /** @defgroup ALERT_LEVEL_VALUES Definitions for the Alert Level characteristic values
@@ -150,7 +201,7 @@ typedef void (*ble_srv_error_handler_t) (uint32_t nrf_error);
 
 
 
-/**@brief Value of a Report Reference descriptor. 
+/**@brief Value of a Report Reference descriptor.
  *
  * @details This is mapping information that maps the parent characteristic to the Report ID(s) and
  *          Report Type(s) defined within a Report Map characteristic.
@@ -201,12 +252,9 @@ typedef struct
  * @retval      TRUE If notification is enabled.
  * @retval      FALSE Otherwise.
  */
-static __INLINE bool ble_srv_is_notification_enabled(uint8_t * p_encoded_data)
-{
-    uint16_t cccd_value = uint16_decode(p_encoded_data);
-    return ((cccd_value & BLE_GATT_HVX_NOTIFICATION) != 0);
-}
-    
+bool ble_srv_is_notification_enabled(uint8_t const * p_encoded_data);
+
+
 /**@brief Function for decoding a CCCD value, and then testing if indication is
  *        enabled.
  *
@@ -215,11 +263,8 @@ static __INLINE bool ble_srv_is_notification_enabled(uint8_t * p_encoded_data)
  * @retval      TRUE If indication is enabled.
  * @retval      FALSE Otherwise.
  */
-static __INLINE bool ble_srv_is_indication_enabled(uint8_t * p_encoded_data)
-{
-    uint16_t cccd_value = uint16_decode(p_encoded_data);
-    return ((cccd_value & BLE_GATT_HVX_INDICATION) != 0);
-}
+bool ble_srv_is_indication_enabled(uint8_t const * p_encoded_data);
+
 
 /**@brief Function for encoding a Report Reference Descriptor.
  *
@@ -283,6 +328,7 @@ typedef struct
     uint8_t *                   p_init_value;             /**< Initial encoded value of the characteristic.*/
     bool                        is_var_len;               /**< Indicates if the characteristic value has variable length.*/
     ble_gatt_char_props_t       char_props;               /**< Characteristic properties.*/
+    ble_gatt_char_ext_props_t   char_ext_props;           /**< Characteristic extended properties.*/
     bool                        is_defered_read;          /**< Indicate if deferred read operations are supported.*/
     bool                        is_defered_write;         /**< Indicate if deferred write operations are supported.*/
     security_req_t              read_access;              /**< Security requirement for reading the characteristic value.*/
@@ -314,7 +360,7 @@ typedef struct
 } ble_add_descr_params_t;
 
 
-/**@brief Function for adding a characteristic to a given service. 
+/**@brief Function for adding a characteristic to a given service.
  *
  * If no pointer is given for the initial value,
  * the initial length parameter will be ignored and the initial length will be 0.
@@ -342,6 +388,11 @@ uint32_t descriptor_add(uint16_t                   char_handle,
                         ble_add_descr_params_t *   p_descr_props,
                         uint16_t *                 p_descr_handle);
 
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // BLE_SRV_COMMON_H__
 

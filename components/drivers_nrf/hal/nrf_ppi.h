@@ -1,13 +1,41 @@
-/* Copyright (c) 2014 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2015 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 #ifndef NRF_PPI_H__
@@ -15,6 +43,11 @@
 
 #include <stddef.h>
 #include "nrf.h"
+#include "nrf_peripherals.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @defgroup nrf_ppi_hal PPI HAL
@@ -47,6 +80,12 @@ typedef enum
     NRF_PPI_CHANNEL13 = PPI_CHEN_CH13_Pos, /**< Channel 13. */
     NRF_PPI_CHANNEL14 = PPI_CHEN_CH14_Pos, /**< Channel 14. */
     NRF_PPI_CHANNEL15 = PPI_CHEN_CH15_Pos, /**< Channel 15. */
+#if (PPI_CH_NUM > 16) || defined(__SDK_DOXYGEN__)
+    NRF_PPI_CHANNEL16 = PPI_CHEN_CH16_Pos, /**< Channel 16. */
+    NRF_PPI_CHANNEL17 = PPI_CHEN_CH17_Pos, /**< Channel 17. */
+    NRF_PPI_CHANNEL18 = PPI_CHEN_CH18_Pos, /**< Channel 18. */
+    NRF_PPI_CHANNEL19 = PPI_CHEN_CH19_Pos, /**< Channel 19. */
+#endif
     NRF_PPI_CHANNEL20 = PPI_CHEN_CH20_Pos, /**< Channel 20. */
     NRF_PPI_CHANNEL21 = PPI_CHEN_CH21_Pos, /**< Channel 21. */
     NRF_PPI_CHANNEL22 = PPI_CHEN_CH22_Pos, /**< Channel 22. */
@@ -70,7 +109,11 @@ typedef enum
     NRF_PPI_CHANNEL_GROUP0 = 0, /**< Channel group 0. */
     NRF_PPI_CHANNEL_GROUP1 = 1, /**< Channel group 1. */
     NRF_PPI_CHANNEL_GROUP2 = 2, /**< Channel group 2. */
-    NRF_PPI_CHANNEL_GROUP3 = 3  /**< Channel group 3. */
+    NRF_PPI_CHANNEL_GROUP3 = 3, /**< Channel group 3. */
+#if (PPI_GROUP_NUM > 4) || defined(__SDK_DOXYGEN__)
+    NRF_PPI_CHANNEL_GROUP4 = 4, /**< Channel group 4. */
+    NRF_PPI_CHANNEL_GROUP5 = 5  /**< Channel group 5. */
+#endif
 } nrf_ppi_channel_group_t;
 
 /**
@@ -107,7 +150,13 @@ typedef enum
     NRF_PPI_TASK_CHG2_EN  = offsetof(NRF_PPI_Type, TASKS_CHG[2].EN),  /**< Task for enabling channel group 2 */
     NRF_PPI_TASK_CHG2_DIS = offsetof(NRF_PPI_Type, TASKS_CHG[2].DIS), /**< Task for disabling channel group 2 */
     NRF_PPI_TASK_CHG3_EN  = offsetof(NRF_PPI_Type, TASKS_CHG[3].EN),  /**< Task for enabling channel group 3 */
-    NRF_PPI_TASK_CHG3_DIS = offsetof(NRF_PPI_Type, TASKS_CHG[3].DIS)  /**< Task for disabling channel group 3 */
+    NRF_PPI_TASK_CHG3_DIS = offsetof(NRF_PPI_Type, TASKS_CHG[3].DIS), /**< Task for disabling channel group 3 */
+#if (PPI_GROUP_NUM > 4) || defined(__SDK_DOXYGEN__)
+    NRF_PPI_TASK_CHG4_EN  = offsetof(NRF_PPI_Type, TASKS_CHG[4].EN),  /**< Task for enabling channel group 4 */
+    NRF_PPI_TASK_CHG4_DIS = offsetof(NRF_PPI_Type, TASKS_CHG[4].DIS), /**< Task for disabling channel group 4 */
+    NRF_PPI_TASK_CHG5_EN  = offsetof(NRF_PPI_Type, TASKS_CHG[5].EN),  /**< Task for enabling channel group 5 */
+    NRF_PPI_TASK_CHG5_DIS = offsetof(NRF_PPI_Type, TASKS_CHG[5].DIS)  /**< Task for disabling channel group 5 */
+#endif
     /*lint -restore*/
 } nrf_ppi_task_t;
 
@@ -170,7 +219,6 @@ __STATIC_INLINE void nrf_ppi_channel_disable_all(void)
     NRF_PPI->CHENCLR = ((uint32_t)0xFFFFFFFFuL);
 }
 
-
 /**
  * @brief Function for disabling multiple PPI channels.
  *
@@ -181,13 +229,12 @@ __STATIC_INLINE void nrf_ppi_channels_disable(uint32_t mask)
     NRF_PPI->CHENCLR = mask;
 }
 
-
 /**
  * @brief Function for setting up event and task endpoints for a given PPI channel.
  *
- * @param[in] eep Event register address (register value).
+ * @param[in] eep Event register address.
  *
- * @param[in] tep Task register address (register value).
+ * @param[in] tep Task register address.
  *
  * @param[in] channel Channel to which the given endpoints are assigned.
  */
@@ -199,6 +246,40 @@ __STATIC_INLINE void nrf_ppi_channel_endpoint_setup(nrf_ppi_channel_t channel,
     NRF_PPI->CH[(uint32_t) channel].TEP = tep;
 }
 
+#if defined(PPI_FEATURE_FORKS_PRESENT) || defined(__SDK_DOXYGEN__)
+/**
+ * @brief Function for setting up task endpoint for a given PPI fork.
+ *
+ * @param[in] fork_tep Task register address.
+ *
+ * @param[in] channel Channel to which the given fork endpoint is assigned.
+ */
+__STATIC_INLINE void nrf_ppi_fork_endpoint_setup(nrf_ppi_channel_t channel,
+                                                 uint32_t          fork_tep)
+{
+    NRF_PPI->FORK[(uint32_t) channel].TEP = fork_tep;
+}
+
+/**
+ * @brief Function for setting up event and task endpoints for a given PPI channel and fork.
+ *
+ * @param[in] eep Event register address.
+ *
+ * @param[in] tep Task register address.
+ *
+ * @param[in] fork_tep Fork task register address (register value).
+ *
+ * @param[in] channel Channel to which the given endpoints are assigned.
+ */
+__STATIC_INLINE void nrf_ppi_channel_and_fork_endpoint_setup(nrf_ppi_channel_t channel,
+                                                             uint32_t          eep,
+                                                             uint32_t          tep,
+                                                             uint32_t          fork_tep)
+{
+    nrf_ppi_channel_endpoint_setup(channel, eep, tep);
+    nrf_ppi_fork_endpoint_setup(channel, fork_tep);
+}
+#endif
 
 /**
  * @brief Function for including a PPI channel in a channel group.
@@ -351,4 +432,9 @@ __STATIC_INLINE uint32_t * nrf_ppi_task_group_disable_address_get(nrf_ppi_channe
  **/
 
 /*lint --flb "Leave library region" */
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif // NRF_PPI_H__

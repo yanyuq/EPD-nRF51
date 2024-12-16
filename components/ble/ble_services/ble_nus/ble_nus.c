@@ -1,18 +1,45 @@
-/* Copyright (c) 2012 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
-
+#include "sdk_common.h"
+#if NRF_MODULE_ENABLED(BLE_NUS)
 #include "ble_nus.h"
-#include <string.h>
-#include "nordic_common.h"
 #include "ble_srv_common.h"
 
 #define BLE_UUID_NUS_TX_CHARACTERISTIC 0x0002                      /**< The UUID of the TX Characteristic. */
@@ -232,10 +259,8 @@ uint32_t ble_nus_init(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init)
     ble_uuid_t    ble_uuid;
     ble_uuid128_t nus_base_uuid = NUS_BASE_UUID;
 
-    if ((p_nus == NULL) || (p_nus_init == NULL))
-    {
-        return NRF_ERROR_NULL;
-    }
+    VERIFY_PARAM_NOT_NULL(p_nus);
+    VERIFY_PARAM_NOT_NULL(p_nus_init);
 
     // Initialize the service structure.
     p_nus->conn_handle             = BLE_CONN_HANDLE_INVALID;
@@ -245,10 +270,7 @@ uint32_t ble_nus_init(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init)
     /**@snippet [Adding proprietary Service to S110 SoftDevice] */
     // Add a custom base UUID.
     err_code = sd_ble_uuid_vs_add(&nus_base_uuid, &p_nus->uuid_type);
-    if (err_code != NRF_SUCCESS)
-    {
-        return err_code;
-    }
+    VERIFY_SUCCESS(err_code);
 
     ble_uuid.type = p_nus->uuid_type;
     ble_uuid.uuid = BLE_UUID_NUS_SERVICE;
@@ -258,24 +280,15 @@ uint32_t ble_nus_init(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init)
                                         &ble_uuid,
                                         &p_nus->service_handle);
     /**@snippet [Adding proprietary Service to S110 SoftDevice] */
-    if (err_code != NRF_SUCCESS)
-    {
-        return err_code;
-    }
+    VERIFY_SUCCESS(err_code);
 
     // Add the RX Characteristic.
     err_code = rx_char_add(p_nus, p_nus_init);
-    if (err_code != NRF_SUCCESS)
-    {
-        return err_code;
-    }
+    VERIFY_SUCCESS(err_code);
 
     // Add the TX Characteristic.
     err_code = tx_char_add(p_nus, p_nus_init);
-    if (err_code != NRF_SUCCESS)
-    {
-        return err_code;
-    }
+    VERIFY_SUCCESS(err_code);
 
     return NRF_SUCCESS;
 }
@@ -285,10 +298,7 @@ uint32_t ble_nus_string_send(ble_nus_t * p_nus, uint8_t * p_string, uint16_t len
 {
     ble_gatts_hvx_params_t hvx_params;
 
-    if (p_nus == NULL)
-    {
-        return NRF_ERROR_NULL;
-    }
+    VERIFY_PARAM_NOT_NULL(p_nus);
 
     if ((p_nus->conn_handle == BLE_CONN_HANDLE_INVALID) || (!p_nus->is_notification_enabled))
     {
@@ -310,4 +320,4 @@ uint32_t ble_nus_string_send(ble_nus_t * p_nus, uint8_t * p_string, uint16_t len
     return sd_ble_gatts_hvx(p_nus->conn_handle, &hvx_params);
 }
 
-
+#endif // NRF_MODULE_ENABLED(BLE_NUS)
