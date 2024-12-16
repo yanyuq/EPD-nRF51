@@ -48,6 +48,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup BLE_TYPES_DEFINES Defines
  * @{ */
 
@@ -178,17 +182,20 @@
 /** @brief 128 bit UUID values. */
 typedef struct
 { 
-    unsigned char uuid128[16]; /**< Little-Endian UUID bytes. */
+  uint8_t uuid128[16]; /**< Little-Endian UUID bytes. */
 } ble_uuid128_t;
 
 /** @brief  Bluetooth Low Energy UUID type, encapsulates both 16-bit and 128-bit UUIDs. */
 typedef struct
 {
-    uint16_t    uuid; /**< 16-bit UUID value or octets 12-13 of 128-bit UUID. */
-    uint8_t     type; /**< UUID type, see @ref BLE_UUID_TYPES. If type is @ref BLE_UUID_TYPE_UNKNOWN, the value of uuid is undefined. */
+  uint16_t    uuid; /**< 16-bit UUID value or octets 12-13 of 128-bit UUID. */
+  uint8_t     type; /**< UUID type, see @ref BLE_UUID_TYPES. If type is @ref BLE_UUID_TYPE_UNKNOWN, the value of uuid is undefined. */
 } ble_uuid_t;
 
 /** @} */
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* BLE_TYPES_H__ */
 

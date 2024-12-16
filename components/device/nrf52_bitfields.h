@@ -1,4 +1,4 @@
-/* Copyright (c) 2015, Nordic Semiconductor ASA
+/* Copyright (c) 2016, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+ 
 #ifndef __NRF52_BITS_H
 #define __NRF52_BITS_H
 
@@ -123,7 +124,7 @@
 /* Register: AAR_SCRATCHPTR */
 /* Description: Pointer to data area used for temporary storage */
 
-/* Bits 31..0 : Pointer to a "scratch" data area used for temporary storage during resolution.A space of minimum 3 bytes must be reserved. */
+/* Bits 31..0 : Pointer to a scratch data area used for temporary storage during resolution.A space of minimum 3 bytes must be reserved. */
 #define AAR_SCRATCHPTR_SCRATCHPTR_Pos (0UL) /*!< Position of SCRATCHPTR field. */
 #define AAR_SCRATCHPTR_SCRATCHPTR_Msk (0xFFFFFFFFUL << AAR_SCRATCHPTR_SCRATCHPTR_Pos) /*!< Bit mask of SCRATCHPTR field. */
 
@@ -522,9 +523,9 @@
 #define BPROT_CONFIG1_REGION32_Enabled (1UL) /*!< Protection enabled */
 
 /* Register: BPROT_DISABLEINDEBUG */
-/* Description: Disable protection mechanism in debug mode */
+/* Description: Disable protection mechanism in debug interface mode */
 
-/* Bit 0 : Disable the protection mechanism for NVM regions while in debug mode. This register will only disable the protection mechanism if the device is in debug mode. */
+/* Bit 0 : Disable the protection mechanism for NVM regions while in debug interface mode. This register will only disable the protection mechanism if the device is in debug interface mode. */
 #define BPROT_DISABLEINDEBUG_DISABLEINDEBUG_Pos (0UL) /*!< Position of DISABLEINDEBUG field. */
 #define BPROT_DISABLEINDEBUG_DISABLEINDEBUG_Msk (0x1UL << BPROT_DISABLEINDEBUG_DISABLEINDEBUG_Pos) /*!< Bit mask of DISABLEINDEBUG field. */
 #define BPROT_DISABLEINDEBUG_DISABLEINDEBUG_Enabled (0UL) /*!< Enable in debug */
@@ -1044,7 +1045,7 @@
 /* Register: CCM_SCRATCHPTR */
 /* Description: Pointer to data area used for temporary storage */
 
-/* Bits 31..0 : Pointer to a "scratch" data area used for temporary storage during key-stream generation, MIC generation and encryption/decryption. */
+/* Bits 31..0 : Pointer to a scratch data area used for temporary storage during key-stream generation, MIC generation and encryption/decryption. */
 #define CCM_SCRATCHPTR_SCRATCHPTR_Pos (0UL) /*!< Position of SCRATCHPTR field. */
 #define CCM_SCRATCHPTR_SCRATCHPTR_Msk (0xFFFFFFFFUL << CCM_SCRATCHPTR_SCRATCHPTR_Pos) /*!< Bit mask of SCRATCHPTR field. */
 
@@ -1176,6 +1177,18 @@
 /* Register: CLOCK_LFCLKSRC */
 /* Description: Clock source for the LFCLK */
 
+/* Bit 17 : Enable or disable external source for LFCLK */
+#define CLOCK_LFCLKSRC_EXTERNAL_Pos (17UL) /*!< Position of EXTERNAL field. */
+#define CLOCK_LFCLKSRC_EXTERNAL_Msk (0x1UL << CLOCK_LFCLKSRC_EXTERNAL_Pos) /*!< Bit mask of EXTERNAL field. */
+#define CLOCK_LFCLKSRC_EXTERNAL_Disabled (0UL) /*!< Disable external source (use with Xtal) */
+#define CLOCK_LFCLKSRC_EXTERNAL_Enabled (1UL) /*!< Enable use of external source instead of Xtal (SRC needs to be set to Xtal) */
+
+/* Bit 16 : Enable or disable bypass of LFCLK crystal oscillator with external clock source */
+#define CLOCK_LFCLKSRC_BYPASS_Pos (16UL) /*!< Position of BYPASS field. */
+#define CLOCK_LFCLKSRC_BYPASS_Msk (0x1UL << CLOCK_LFCLKSRC_BYPASS_Pos) /*!< Bit mask of BYPASS field. */
+#define CLOCK_LFCLKSRC_BYPASS_Disabled (0UL) /*!< Disable (use with Xtal or low-swing external source) */
+#define CLOCK_LFCLKSRC_BYPASS_Enabled (1UL) /*!< Enable (use with rail-to-rail external source) */
+
 /* Bits 1..0 : Clock source */
 #define CLOCK_LFCLKSRC_SRC_Pos (0UL) /*!< Position of SRC field. */
 #define CLOCK_LFCLKSRC_SRC_Msk (0x3UL << CLOCK_LFCLKSRC_SRC_Pos) /*!< Bit mask of SRC field. */
@@ -1184,7 +1197,7 @@
 #define CLOCK_LFCLKSRC_SRC_Synth (2UL) /*!< 32.768 kHz synthesized from HFCLK */
 
 /* Register: CLOCK_CTIV */
-/* Description: Calibration timer interval (retained register, same reset behaviour as RESETREAS) */
+/* Description: Calibration timer interval */
 
 /* Bits 6..0 : Calibration timer interval in multiple of 0.25 seconds. Range: 0.25 seconds to 31.75 seconds. */
 #define CLOCK_CTIV_CTIV_Pos (0UL) /*!< Position of CTIV field. */
@@ -1377,7 +1390,7 @@
 #define COMP_REFSEL_REFSEL_Int1V8 (1UL) /*!< VREF = internal 1.8 V reference (VDD &gt;= VREF + 0.2 V) */
 #define COMP_REFSEL_REFSEL_Int2V4 (2UL) /*!< VREF = internal 2.4 V reference (VDD &gt;= VREF + 0.2 V) */
 #define COMP_REFSEL_REFSEL_VDD (4UL) /*!< VREF = VDD */
-#define COMP_REFSEL_REFSEL_ARef (5UL) /*!< VREF = AREF (VDD &gt;= VREF &gt;= AREFMIN) */
+#define COMP_REFSEL_REFSEL_ARef (7UL) /*!< VREF = AREF (VDD &gt;= VREF &gt;= AREFMIN) */
 
 /* Register: COMP_EXTREFSEL */
 /* Description: External reference select */
@@ -1391,13 +1404,13 @@
 /* Register: COMP_TH */
 /* Description: Threshold configuration for hysteresis unit */
 
-/* Bits 13..8 : VDOWN = (THDOWN+1)/64*VREF */
-#define COMP_TH_THDOWN_Pos (8UL) /*!< Position of THDOWN field. */
-#define COMP_TH_THDOWN_Msk (0x3FUL << COMP_TH_THDOWN_Pos) /*!< Bit mask of THDOWN field. */
-
-/* Bits 5..0 : VUP = (THUP+1)/64*VREF */
-#define COMP_TH_THUP_Pos (0UL) /*!< Position of THUP field. */
+/* Bits 13..8 : VUP = (THUP+1)/64*VREF */
+#define COMP_TH_THUP_Pos (8UL) /*!< Position of THUP field. */
 #define COMP_TH_THUP_Msk (0x3FUL << COMP_TH_THUP_Pos) /*!< Bit mask of THUP field. */
+
+/* Bits 5..0 : VDOWN = (THDOWN+1)/64*VREF */
+#define COMP_TH_THDOWN_Pos (0UL) /*!< Position of THDOWN field. */
+#define COMP_TH_THDOWN_Msk (0x3FUL << COMP_TH_THDOWN_Pos) /*!< Bit mask of THDOWN field. */
 
 /* Register: COMP_MODE */
 /* Description: Mode configuration */
@@ -1831,17 +1844,6 @@
 #define FICR_CODESIZE_CODESIZE_Pos (0UL) /*!< Position of CODESIZE field. */
 #define FICR_CODESIZE_CODESIZE_Msk (0xFFFFFFFFUL << FICR_CODESIZE_CODESIZE_Pos) /*!< Bit mask of CODESIZE field. */
 
-/* Register: FICR_CONFIGID */
-/* Description: Configuration identifier */
-
-/* Bits 31..16 : Deprecated field -  Identification number for the FW that is pre-loaded into the chip */
-#define FICR_CONFIGID_FWID_Pos (16UL) /*!< Position of FWID field. */
-#define FICR_CONFIGID_FWID_Msk (0xFFFFUL << FICR_CONFIGID_FWID_Pos) /*!< Bit mask of FWID field. */
-
-/* Bits 15..0 : Identification number for the HW */
-#define FICR_CONFIGID_HWID_Pos (0UL) /*!< Position of HWID field. */
-#define FICR_CONFIGID_HWID_Msk (0xFFFFUL << FICR_CONFIGID_HWID_Pos) /*!< Bit mask of HWID field. */
-
 /* Register: FICR_DEVICEID */
 /* Description: Description collection[0]:  Device identifier */
 
@@ -1889,13 +1891,15 @@
 #define FICR_INFO_PART_PART_Unspecified (0xFFFFFFFFUL) /*!< Unspecified */
 
 /* Register: FICR_INFO_VARIANT */
-/* Description: Part variant */
+/* Description: Part Variant, Hardware version and Production configuration */
 
-/* Bits 31..0 : Part variant */
+/* Bits 31..0 : Part Variant, Hardware version and Production configuration, encoded as ASCII */
 #define FICR_INFO_VARIANT_VARIANT_Pos (0UL) /*!< Position of VARIANT field. */
 #define FICR_INFO_VARIANT_VARIANT_Msk (0xFFFFFFFFUL << FICR_INFO_VARIANT_VARIANT_Pos) /*!< Bit mask of VARIANT field. */
-#define FICR_INFO_VARIANT_VARIANT_nRF52AA (0x2000UL) /*!< nRF52832-AA (Engineering sample) */
-#define FICR_INFO_VARIANT_VARIANT_nRF52A0 (0x2001UL) /*!< nRF52832-A0 */
+#define FICR_INFO_VARIANT_VARIANT_AAAA (0x41414141UL) /*!< AAAA */
+#define FICR_INFO_VARIANT_VARIANT_AAAB (0x41414142UL) /*!< AAAB */
+#define FICR_INFO_VARIANT_VARIANT_AABA (0x41414241UL) /*!< AABA */
+#define FICR_INFO_VARIANT_VARIANT_AABB (0x41414242UL) /*!< AABB */
 #define FICR_INFO_VARIANT_VARIANT_Unspecified (0xFFFFFFFFUL) /*!< Unspecified */
 
 /* Register: FICR_INFO_PACKAGE */
@@ -1904,9 +1908,9 @@
 /* Bits 31..0 : Package option */
 #define FICR_INFO_PACKAGE_PACKAGE_Pos (0UL) /*!< Position of PACKAGE field. */
 #define FICR_INFO_PACKAGE_PACKAGE_Msk (0xFFFFFFFFUL << FICR_INFO_PACKAGE_PACKAGE_Pos) /*!< Bit mask of PACKAGE field. */
-#define FICR_INFO_PACKAGE_PACKAGE_QFN48 (0x0000UL) /*!< 48-pin QFN with 31 GPIO */
-#define FICR_INFO_PACKAGE_PACKAGE_nRF52832QF (0x2000UL) /*!< nRF52832 QFxx - 48-pin QFN */
-#define FICR_INFO_PACKAGE_PACKAGE_nRF52832CH (0x2001UL) /*!< nRF52832 CHxx - 7x8 WLCSP 56 balls */
+#define FICR_INFO_PACKAGE_PACKAGE_QF (0x2000UL) /*!< QFxx - 48-pin QFN */
+#define FICR_INFO_PACKAGE_PACKAGE_CH (0x2001UL) /*!< CHxx - 7x8 WLCSP 56 balls */
+#define FICR_INFO_PACKAGE_PACKAGE_CI (0x2002UL) /*!< CIxx - 7x8 WLCSP 56 balls */
 #define FICR_INFO_PACKAGE_PACKAGE_Unspecified (0xFFFFFFFFUL) /*!< Unspecified */
 
 /* Register: FICR_INFO_RAM */
@@ -1915,9 +1919,9 @@
 /* Bits 31..0 : RAM variant */
 #define FICR_INFO_RAM_RAM_Pos (0UL) /*!< Position of RAM field. */
 #define FICR_INFO_RAM_RAM_Msk (0xFFFFFFFFUL << FICR_INFO_RAM_RAM_Pos) /*!< Bit mask of RAM field. */
-#define FICR_INFO_RAM_RAM_K16 (16UL) /*!< 16 kByte RAM */
-#define FICR_INFO_RAM_RAM_K32 (32UL) /*!< 32 kByte RAM */
-#define FICR_INFO_RAM_RAM_K64 (64UL) /*!< 64 kByte RAM */
+#define FICR_INFO_RAM_RAM_K16 (0x10UL) /*!< 16 kByte RAM */
+#define FICR_INFO_RAM_RAM_K32 (0x20UL) /*!< 32 kByte RAM */
+#define FICR_INFO_RAM_RAM_K64 (0x40UL) /*!< 64 kByte RAM */
 #define FICR_INFO_RAM_RAM_Unspecified (0xFFFFFFFFUL) /*!< Unspecified */
 
 /* Register: FICR_INFO_FLASH */
@@ -1926,9 +1930,9 @@
 /* Bits 31..0 : Flash variant */
 #define FICR_INFO_FLASH_FLASH_Pos (0UL) /*!< Position of FLASH field. */
 #define FICR_INFO_FLASH_FLASH_Msk (0xFFFFFFFFUL << FICR_INFO_FLASH_FLASH_Pos) /*!< Bit mask of FLASH field. */
-#define FICR_INFO_FLASH_FLASH_K128 (128UL) /*!< 128 kByte FLASH */
-#define FICR_INFO_FLASH_FLASH_K256 (256UL) /*!< 256 kByte FLASH */
-#define FICR_INFO_FLASH_FLASH_K512 (512UL) /*!< 512 kByte FLASH */
+#define FICR_INFO_FLASH_FLASH_K128 (0x80UL) /*!< 128 kByte FLASH */
+#define FICR_INFO_FLASH_FLASH_K256 (0x100UL) /*!< 256 kByte FLASH */
+#define FICR_INFO_FLASH_FLASH_K512 (0x200UL) /*!< 512 kByte FLASH */
 #define FICR_INFO_FLASH_FLASH_Unspecified (0xFFFFFFFFUL) /*!< Unspecified */
 
 /* Register: FICR_TEMP_A0 */
@@ -2369,8 +2373,8 @@
 /* Bit 0 : Enable I2S module. */
 #define I2S_ENABLE_ENABLE_Pos (0UL) /*!< Position of ENABLE field. */
 #define I2S_ENABLE_ENABLE_Msk (0x1UL << I2S_ENABLE_ENABLE_Pos) /*!< Bit mask of ENABLE field. */
-#define I2S_ENABLE_ENABLE_DISABLE (0UL) /*!< Disabl */
-#define I2S_ENABLE_ENABLE_ENABLE (1UL) /*!< Enable */
+#define I2S_ENABLE_ENABLE_Disabled (0UL) /*!< Disable */
+#define I2S_ENABLE_ENABLE_Enabled (1UL) /*!< Enable */
 
 /* Register: I2S_CONFIG_MODE */
 /* Description: I2S mode. */
@@ -2378,8 +2382,8 @@
 /* Bit 0 : I2S mode. */
 #define I2S_CONFIG_MODE_MODE_Pos (0UL) /*!< Position of MODE field. */
 #define I2S_CONFIG_MODE_MODE_Msk (0x1UL << I2S_CONFIG_MODE_MODE_Pos) /*!< Bit mask of MODE field. */
-#define I2S_CONFIG_MODE_MODE_MASTER (0UL) /*!< Master mode. SCK and LRCK generated from internal master clcok (MCK) and output on pins defined by PSEL.xxx. */
-#define I2S_CONFIG_MODE_MODE_SLAVE (1UL) /*!< Slave mode. SCK and LRCK generated by external master and received on pins defined by PSEL.xxx */
+#define I2S_CONFIG_MODE_MODE_Master (0UL) /*!< Master mode. SCK and LRCK generated from internal master clcok (MCK) and output on pins defined by PSEL.xxx. */
+#define I2S_CONFIG_MODE_MODE_Slave (1UL) /*!< Slave mode. SCK and LRCK generated by external master and received on pins defined by PSEL.xxx */
 
 /* Register: I2S_CONFIG_RXEN */
 /* Description: Reception (RX) enable. */
@@ -2387,8 +2391,8 @@
 /* Bit 0 : Reception (RX) enable. */
 #define I2S_CONFIG_RXEN_RXEN_Pos (0UL) /*!< Position of RXEN field. */
 #define I2S_CONFIG_RXEN_RXEN_Msk (0x1UL << I2S_CONFIG_RXEN_RXEN_Pos) /*!< Bit mask of RXEN field. */
-#define I2S_CONFIG_RXEN_RXEN_DISABLE (0UL) /*!< Reception disabled and now data will be written to the RXD.PTR address. */
-#define I2S_CONFIG_RXEN_RXEN_ENABLE (1UL) /*!< Reception enabled. */
+#define I2S_CONFIG_RXEN_RXEN_Disabled (0UL) /*!< Reception disabled and now data will be written to the RXD.PTR address. */
+#define I2S_CONFIG_RXEN_RXEN_Enabled (1UL) /*!< Reception enabled. */
 
 /* Register: I2S_CONFIG_TXEN */
 /* Description: Transmission (TX) enable. */
@@ -2396,8 +2400,8 @@
 /* Bit 0 : Transmission (TX) enable. */
 #define I2S_CONFIG_TXEN_TXEN_Pos (0UL) /*!< Position of TXEN field. */
 #define I2S_CONFIG_TXEN_TXEN_Msk (0x1UL << I2S_CONFIG_TXEN_TXEN_Pos) /*!< Bit mask of TXEN field. */
-#define I2S_CONFIG_TXEN_TXEN_DISABLE (0UL) /*!< Transmission disabled and now data will be read from the RXD.TXD address. */
-#define I2S_CONFIG_TXEN_TXEN_ENABLE (1UL) /*!< Transmission enabled. */
+#define I2S_CONFIG_TXEN_TXEN_Disabled (0UL) /*!< Transmission disabled and now data will be read from the RXD.TXD address. */
+#define I2S_CONFIG_TXEN_TXEN_Enabled (1UL) /*!< Transmission enabled. */
 
 /* Register: I2S_CONFIG_MCKEN */
 /* Description: Master clock generator enable. */
@@ -2405,8 +2409,8 @@
 /* Bit 0 : Master clock generator enable. */
 #define I2S_CONFIG_MCKEN_MCKEN_Pos (0UL) /*!< Position of MCKEN field. */
 #define I2S_CONFIG_MCKEN_MCKEN_Msk (0x1UL << I2S_CONFIG_MCKEN_MCKEN_Pos) /*!< Bit mask of MCKEN field. */
-#define I2S_CONFIG_MCKEN_MCKEN_DISABLE (0UL) /*!< Master clock generator disabled and PSEL.MCK not connected(available as GPIO). */
-#define I2S_CONFIG_MCKEN_MCKEN_ENABLE (1UL) /*!< Master clock generator running and MCK output on PSEL.MCK. */
+#define I2S_CONFIG_MCKEN_MCKEN_Disabled (0UL) /*!< Master clock generator disabled and PSEL.MCK not connected(available as GPIO). */
+#define I2S_CONFIG_MCKEN_MCKEN_Enabled (1UL) /*!< Master clock generator running and MCK output on PSEL.MCK. */
 
 /* Register: I2S_CONFIG_MCKFREQ */
 /* Description: Master clock generator frequency. */
@@ -2455,9 +2459,9 @@
 /* Bits 1..0 : Sample width. */
 #define I2S_CONFIG_SWIDTH_SWIDTH_Pos (0UL) /*!< Position of SWIDTH field. */
 #define I2S_CONFIG_SWIDTH_SWIDTH_Msk (0x3UL << I2S_CONFIG_SWIDTH_SWIDTH_Pos) /*!< Bit mask of SWIDTH field. */
-#define I2S_CONFIG_SWIDTH_SWIDTH_8BIT (0UL) /*!< 8 bit. */
-#define I2S_CONFIG_SWIDTH_SWIDTH_16BIT (1UL) /*!< 16 bit. */
-#define I2S_CONFIG_SWIDTH_SWIDTH_24BIT (2UL) /*!< 24 bit. */
+#define I2S_CONFIG_SWIDTH_SWIDTH_8Bit (0UL) /*!< 8 bit. */
+#define I2S_CONFIG_SWIDTH_SWIDTH_16Bit (1UL) /*!< 16 bit. */
+#define I2S_CONFIG_SWIDTH_SWIDTH_24Bit (2UL) /*!< 24 bit. */
 
 /* Register: I2S_CONFIG_ALIGN */
 /* Description: Alignment of sample within a frame. */
@@ -2465,8 +2469,8 @@
 /* Bit 0 : Alignment of sample within a frame. */
 #define I2S_CONFIG_ALIGN_ALIGN_Pos (0UL) /*!< Position of ALIGN field. */
 #define I2S_CONFIG_ALIGN_ALIGN_Msk (0x1UL << I2S_CONFIG_ALIGN_ALIGN_Pos) /*!< Bit mask of ALIGN field. */
-#define I2S_CONFIG_ALIGN_ALIGN_LEFT (0UL) /*!< Left-aligned. */
-#define I2S_CONFIG_ALIGN_ALIGN_RIGHT (1UL) /*!< Right-aligned. */
+#define I2S_CONFIG_ALIGN_ALIGN_Left (0UL) /*!< Left-aligned. */
+#define I2S_CONFIG_ALIGN_ALIGN_Right (1UL) /*!< Right-aligned. */
 
 /* Register: I2S_CONFIG_FORMAT */
 /* Description: Frame format. */
@@ -2475,7 +2479,7 @@
 #define I2S_CONFIG_FORMAT_FORMAT_Pos (0UL) /*!< Position of FORMAT field. */
 #define I2S_CONFIG_FORMAT_FORMAT_Msk (0x1UL << I2S_CONFIG_FORMAT_FORMAT_Pos) /*!< Bit mask of FORMAT field. */
 #define I2S_CONFIG_FORMAT_FORMAT_I2S (0UL) /*!< Original I2S format. */
-#define I2S_CONFIG_FORMAT_FORMAT_ALIGNED (1UL) /*!< Alternate (left- or right-aligned) format. */
+#define I2S_CONFIG_FORMAT_FORMAT_Aligned (1UL) /*!< Alternate (left- or right-aligned) format. */
 
 /* Register: I2S_CONFIG_CHANNELS */
 /* Description: Enable channels. */
@@ -2483,9 +2487,9 @@
 /* Bits 1..0 : Enable channels. */
 #define I2S_CONFIG_CHANNELS_CHANNELS_Pos (0UL) /*!< Position of CHANNELS field. */
 #define I2S_CONFIG_CHANNELS_CHANNELS_Msk (0x3UL << I2S_CONFIG_CHANNELS_CHANNELS_Pos) /*!< Bit mask of CHANNELS field. */
-#define I2S_CONFIG_CHANNELS_CHANNELS_STEREO (0UL) /*!< Stereo. */
-#define I2S_CONFIG_CHANNELS_CHANNELS_LEFT (1UL) /*!< Left only. */
-#define I2S_CONFIG_CHANNELS_CHANNELS_RIGHT (2UL) /*!< Right only. */
+#define I2S_CONFIG_CHANNELS_CHANNELS_Stereo (0UL) /*!< Stereo. */
+#define I2S_CONFIG_CHANNELS_CHANNELS_Left (1UL) /*!< Left only. */
+#define I2S_CONFIG_CHANNELS_CHANNELS_Right (2UL) /*!< Right only. */
 
 /* Register: I2S_RXD_PTR */
 /* Description: Receive buffer RAM start address. */
@@ -2678,7 +2682,7 @@
 /* Bit 0 : Result of last compare. Decision point SAMPLE task. */
 #define LPCOMP_RESULT_RESULT_Pos (0UL) /*!< Position of RESULT field. */
 #define LPCOMP_RESULT_RESULT_Msk (0x1UL << LPCOMP_RESULT_RESULT_Pos) /*!< Bit mask of RESULT field. */
-#define LPCOMP_RESULT_RESULT_Bellow (0UL) /*!< Input voltage is below the reference threshold (VIN+ &lt; VIN-). */
+#define LPCOMP_RESULT_RESULT_Below (0UL) /*!< Input voltage is below the reference threshold (VIN+ &lt; VIN-). */
 #define LPCOMP_RESULT_RESULT_Above (1UL) /*!< Input voltage is above the reference threshold (VIN+ &gt; VIN-). */
 
 /* Register: LPCOMP_ENABLE */
@@ -3907,7 +3911,7 @@
 /* Register: MWU_REGION_END */
 /* Description: Description cluster[0]:  End address of region 0 */
 
-/* Bits 31..0 : End address of region. Value 0 has a special meaning, see below. */
+/* Bits 31..0 : End address of region. */
 #define MWU_REGION_END_END_Pos (0UL) /*!< Position of END field. */
 #define MWU_REGION_END_END_Msk (0xFFFFFFFFUL << MWU_REGION_END_END_Pos) /*!< Bit mask of END field. */
 
@@ -4451,10 +4455,6 @@
 /* Register: NFCT_ERRORSTATUS */
 /* Description: NFC Error Status register */
 
-/* Bit 6 : No valid End of Frame detected */
-#define NFCT_ERRORSTATUS_EOFERROR_Pos (6UL) /*!< Position of EOFERROR field. */
-#define NFCT_ERRORSTATUS_EOFERROR_Msk (0x1UL << NFCT_ERRORSTATUS_EOFERROR_Pos) /*!< Bit mask of EOFERROR field. */
-
 /* Bit 3 : Field level is too low at min load resistance */
 #define NFCT_ERRORSTATUS_NFCFIELDTOOWEAK_Pos (3UL) /*!< Position of NFCFIELDTOOWEAK field. */
 #define NFCT_ERRORSTATUS_NFCFIELDTOOWEAK_Msk (0x1UL << NFCT_ERRORSTATUS_NFCFIELDTOOWEAK_Pos) /*!< Bit mask of NFCFIELDTOOWEAK field. */
@@ -4462,10 +4462,6 @@
 /* Bit 2 : Field level is too high at max load resistance */
 #define NFCT_ERRORSTATUS_NFCFIELDTOOSTRONG_Pos (2UL) /*!< Position of NFCFIELDTOOSTRONG field. */
 #define NFCT_ERRORSTATUS_NFCFIELDTOOSTRONG_Msk (0x1UL << NFCT_ERRORSTATUS_NFCFIELDTOOSTRONG_Pos) /*!< Bit mask of NFCFIELDTOOSTRONG field. */
-
-/* Bit 1 : The received pulse does not match a valid NFC-A symbol */
-#define NFCT_ERRORSTATUS_INVALIDNFCSYMBOL_Pos (1UL) /*!< Position of INVALIDNFCSYMBOL field. */
-#define NFCT_ERRORSTATUS_INVALIDNFCSYMBOL_Msk (0x1UL << NFCT_ERRORSTATUS_INVALIDNFCSYMBOL_Pos) /*!< Bit mask of INVALIDNFCSYMBOL field. */
 
 /* Bit 0 : No STARTTX task triggered before expiration of the time set in FRAMEDELAYMAX */
 #define NFCT_ERRORSTATUS_FRAMEDELAYTIMEOUT_Pos (0UL) /*!< Position of FRAMEDELAYTIMEOUT field. */
@@ -4827,193 +4823,193 @@
 /* Register: GPIO_OUT */
 /* Description: Write GPIO port */
 
-/* Bit 31 : P0.31 pin */
+/* Bit 31 : Pin 31 */
 #define GPIO_OUT_PIN31_Pos (31UL) /*!< Position of PIN31 field. */
 #define GPIO_OUT_PIN31_Msk (0x1UL << GPIO_OUT_PIN31_Pos) /*!< Bit mask of PIN31 field. */
 #define GPIO_OUT_PIN31_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN31_High (1UL) /*!< Pin driver is high */
 
-/* Bit 30 : P0.30 pin */
+/* Bit 30 : Pin 30 */
 #define GPIO_OUT_PIN30_Pos (30UL) /*!< Position of PIN30 field. */
 #define GPIO_OUT_PIN30_Msk (0x1UL << GPIO_OUT_PIN30_Pos) /*!< Bit mask of PIN30 field. */
 #define GPIO_OUT_PIN30_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN30_High (1UL) /*!< Pin driver is high */
 
-/* Bit 29 : P0.29 pin */
+/* Bit 29 : Pin 29 */
 #define GPIO_OUT_PIN29_Pos (29UL) /*!< Position of PIN29 field. */
 #define GPIO_OUT_PIN29_Msk (0x1UL << GPIO_OUT_PIN29_Pos) /*!< Bit mask of PIN29 field. */
 #define GPIO_OUT_PIN29_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN29_High (1UL) /*!< Pin driver is high */
 
-/* Bit 28 : P0.28 pin */
+/* Bit 28 : Pin 28 */
 #define GPIO_OUT_PIN28_Pos (28UL) /*!< Position of PIN28 field. */
 #define GPIO_OUT_PIN28_Msk (0x1UL << GPIO_OUT_PIN28_Pos) /*!< Bit mask of PIN28 field. */
 #define GPIO_OUT_PIN28_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN28_High (1UL) /*!< Pin driver is high */
 
-/* Bit 27 : P0.27 pin */
+/* Bit 27 : Pin 27 */
 #define GPIO_OUT_PIN27_Pos (27UL) /*!< Position of PIN27 field. */
 #define GPIO_OUT_PIN27_Msk (0x1UL << GPIO_OUT_PIN27_Pos) /*!< Bit mask of PIN27 field. */
 #define GPIO_OUT_PIN27_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN27_High (1UL) /*!< Pin driver is high */
 
-/* Bit 26 : P0.26 pin */
+/* Bit 26 : Pin 26 */
 #define GPIO_OUT_PIN26_Pos (26UL) /*!< Position of PIN26 field. */
 #define GPIO_OUT_PIN26_Msk (0x1UL << GPIO_OUT_PIN26_Pos) /*!< Bit mask of PIN26 field. */
 #define GPIO_OUT_PIN26_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN26_High (1UL) /*!< Pin driver is high */
 
-/* Bit 25 : P0.25 pin */
+/* Bit 25 : Pin 25 */
 #define GPIO_OUT_PIN25_Pos (25UL) /*!< Position of PIN25 field. */
 #define GPIO_OUT_PIN25_Msk (0x1UL << GPIO_OUT_PIN25_Pos) /*!< Bit mask of PIN25 field. */
 #define GPIO_OUT_PIN25_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN25_High (1UL) /*!< Pin driver is high */
 
-/* Bit 24 : P0.24 pin */
+/* Bit 24 : Pin 24 */
 #define GPIO_OUT_PIN24_Pos (24UL) /*!< Position of PIN24 field. */
 #define GPIO_OUT_PIN24_Msk (0x1UL << GPIO_OUT_PIN24_Pos) /*!< Bit mask of PIN24 field. */
 #define GPIO_OUT_PIN24_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN24_High (1UL) /*!< Pin driver is high */
 
-/* Bit 23 : P0.23 pin */
+/* Bit 23 : Pin 23 */
 #define GPIO_OUT_PIN23_Pos (23UL) /*!< Position of PIN23 field. */
 #define GPIO_OUT_PIN23_Msk (0x1UL << GPIO_OUT_PIN23_Pos) /*!< Bit mask of PIN23 field. */
 #define GPIO_OUT_PIN23_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN23_High (1UL) /*!< Pin driver is high */
 
-/* Bit 22 : P0.22 pin */
+/* Bit 22 : Pin 22 */
 #define GPIO_OUT_PIN22_Pos (22UL) /*!< Position of PIN22 field. */
 #define GPIO_OUT_PIN22_Msk (0x1UL << GPIO_OUT_PIN22_Pos) /*!< Bit mask of PIN22 field. */
 #define GPIO_OUT_PIN22_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN22_High (1UL) /*!< Pin driver is high */
 
-/* Bit 21 : P0.21 pin */
+/* Bit 21 : Pin 21 */
 #define GPIO_OUT_PIN21_Pos (21UL) /*!< Position of PIN21 field. */
 #define GPIO_OUT_PIN21_Msk (0x1UL << GPIO_OUT_PIN21_Pos) /*!< Bit mask of PIN21 field. */
 #define GPIO_OUT_PIN21_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN21_High (1UL) /*!< Pin driver is high */
 
-/* Bit 20 : P0.20 pin */
+/* Bit 20 : Pin 20 */
 #define GPIO_OUT_PIN20_Pos (20UL) /*!< Position of PIN20 field. */
 #define GPIO_OUT_PIN20_Msk (0x1UL << GPIO_OUT_PIN20_Pos) /*!< Bit mask of PIN20 field. */
 #define GPIO_OUT_PIN20_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN20_High (1UL) /*!< Pin driver is high */
 
-/* Bit 19 : P0.19 pin */
+/* Bit 19 : Pin 19 */
 #define GPIO_OUT_PIN19_Pos (19UL) /*!< Position of PIN19 field. */
 #define GPIO_OUT_PIN19_Msk (0x1UL << GPIO_OUT_PIN19_Pos) /*!< Bit mask of PIN19 field. */
 #define GPIO_OUT_PIN19_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN19_High (1UL) /*!< Pin driver is high */
 
-/* Bit 18 : P0.18 pin */
+/* Bit 18 : Pin 18 */
 #define GPIO_OUT_PIN18_Pos (18UL) /*!< Position of PIN18 field. */
 #define GPIO_OUT_PIN18_Msk (0x1UL << GPIO_OUT_PIN18_Pos) /*!< Bit mask of PIN18 field. */
 #define GPIO_OUT_PIN18_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN18_High (1UL) /*!< Pin driver is high */
 
-/* Bit 17 : P0.17 pin */
+/* Bit 17 : Pin 17 */
 #define GPIO_OUT_PIN17_Pos (17UL) /*!< Position of PIN17 field. */
 #define GPIO_OUT_PIN17_Msk (0x1UL << GPIO_OUT_PIN17_Pos) /*!< Bit mask of PIN17 field. */
 #define GPIO_OUT_PIN17_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN17_High (1UL) /*!< Pin driver is high */
 
-/* Bit 16 : P0.16 pin */
+/* Bit 16 : Pin 16 */
 #define GPIO_OUT_PIN16_Pos (16UL) /*!< Position of PIN16 field. */
 #define GPIO_OUT_PIN16_Msk (0x1UL << GPIO_OUT_PIN16_Pos) /*!< Bit mask of PIN16 field. */
 #define GPIO_OUT_PIN16_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN16_High (1UL) /*!< Pin driver is high */
 
-/* Bit 15 : P0.15 pin */
+/* Bit 15 : Pin 15 */
 #define GPIO_OUT_PIN15_Pos (15UL) /*!< Position of PIN15 field. */
 #define GPIO_OUT_PIN15_Msk (0x1UL << GPIO_OUT_PIN15_Pos) /*!< Bit mask of PIN15 field. */
 #define GPIO_OUT_PIN15_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN15_High (1UL) /*!< Pin driver is high */
 
-/* Bit 14 : P0.14 pin */
+/* Bit 14 : Pin 14 */
 #define GPIO_OUT_PIN14_Pos (14UL) /*!< Position of PIN14 field. */
 #define GPIO_OUT_PIN14_Msk (0x1UL << GPIO_OUT_PIN14_Pos) /*!< Bit mask of PIN14 field. */
 #define GPIO_OUT_PIN14_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN14_High (1UL) /*!< Pin driver is high */
 
-/* Bit 13 : P0.13 pin */
+/* Bit 13 : Pin 13 */
 #define GPIO_OUT_PIN13_Pos (13UL) /*!< Position of PIN13 field. */
 #define GPIO_OUT_PIN13_Msk (0x1UL << GPIO_OUT_PIN13_Pos) /*!< Bit mask of PIN13 field. */
 #define GPIO_OUT_PIN13_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN13_High (1UL) /*!< Pin driver is high */
 
-/* Bit 12 : P0.12 pin */
+/* Bit 12 : Pin 12 */
 #define GPIO_OUT_PIN12_Pos (12UL) /*!< Position of PIN12 field. */
 #define GPIO_OUT_PIN12_Msk (0x1UL << GPIO_OUT_PIN12_Pos) /*!< Bit mask of PIN12 field. */
 #define GPIO_OUT_PIN12_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN12_High (1UL) /*!< Pin driver is high */
 
-/* Bit 11 : P0.11 pin */
+/* Bit 11 : Pin 11 */
 #define GPIO_OUT_PIN11_Pos (11UL) /*!< Position of PIN11 field. */
 #define GPIO_OUT_PIN11_Msk (0x1UL << GPIO_OUT_PIN11_Pos) /*!< Bit mask of PIN11 field. */
 #define GPIO_OUT_PIN11_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN11_High (1UL) /*!< Pin driver is high */
 
-/* Bit 10 : P0.10 pin */
+/* Bit 10 : Pin 10 */
 #define GPIO_OUT_PIN10_Pos (10UL) /*!< Position of PIN10 field. */
 #define GPIO_OUT_PIN10_Msk (0x1UL << GPIO_OUT_PIN10_Pos) /*!< Bit mask of PIN10 field. */
 #define GPIO_OUT_PIN10_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN10_High (1UL) /*!< Pin driver is high */
 
-/* Bit 9 : P0.9 pin */
+/* Bit 9 : Pin 9 */
 #define GPIO_OUT_PIN9_Pos (9UL) /*!< Position of PIN9 field. */
 #define GPIO_OUT_PIN9_Msk (0x1UL << GPIO_OUT_PIN9_Pos) /*!< Bit mask of PIN9 field. */
 #define GPIO_OUT_PIN9_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN9_High (1UL) /*!< Pin driver is high */
 
-/* Bit 8 : P0.8 pin */
+/* Bit 8 : Pin 8 */
 #define GPIO_OUT_PIN8_Pos (8UL) /*!< Position of PIN8 field. */
 #define GPIO_OUT_PIN8_Msk (0x1UL << GPIO_OUT_PIN8_Pos) /*!< Bit mask of PIN8 field. */
 #define GPIO_OUT_PIN8_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN8_High (1UL) /*!< Pin driver is high */
 
-/* Bit 7 : P0.7 pin */
+/* Bit 7 : Pin 7 */
 #define GPIO_OUT_PIN7_Pos (7UL) /*!< Position of PIN7 field. */
 #define GPIO_OUT_PIN7_Msk (0x1UL << GPIO_OUT_PIN7_Pos) /*!< Bit mask of PIN7 field. */
 #define GPIO_OUT_PIN7_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN7_High (1UL) /*!< Pin driver is high */
 
-/* Bit 6 : P0.6 pin */
+/* Bit 6 : Pin 6 */
 #define GPIO_OUT_PIN6_Pos (6UL) /*!< Position of PIN6 field. */
 #define GPIO_OUT_PIN6_Msk (0x1UL << GPIO_OUT_PIN6_Pos) /*!< Bit mask of PIN6 field. */
 #define GPIO_OUT_PIN6_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN6_High (1UL) /*!< Pin driver is high */
 
-/* Bit 5 : P0.5 pin */
+/* Bit 5 : Pin 5 */
 #define GPIO_OUT_PIN5_Pos (5UL) /*!< Position of PIN5 field. */
 #define GPIO_OUT_PIN5_Msk (0x1UL << GPIO_OUT_PIN5_Pos) /*!< Bit mask of PIN5 field. */
 #define GPIO_OUT_PIN5_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN5_High (1UL) /*!< Pin driver is high */
 
-/* Bit 4 : P0.4 pin */
+/* Bit 4 : Pin 4 */
 #define GPIO_OUT_PIN4_Pos (4UL) /*!< Position of PIN4 field. */
 #define GPIO_OUT_PIN4_Msk (0x1UL << GPIO_OUT_PIN4_Pos) /*!< Bit mask of PIN4 field. */
 #define GPIO_OUT_PIN4_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN4_High (1UL) /*!< Pin driver is high */
 
-/* Bit 3 : P0.3 pin */
+/* Bit 3 : Pin 3 */
 #define GPIO_OUT_PIN3_Pos (3UL) /*!< Position of PIN3 field. */
 #define GPIO_OUT_PIN3_Msk (0x1UL << GPIO_OUT_PIN3_Pos) /*!< Bit mask of PIN3 field. */
 #define GPIO_OUT_PIN3_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN3_High (1UL) /*!< Pin driver is high */
 
-/* Bit 2 : P0.2 pin */
+/* Bit 2 : Pin 2 */
 #define GPIO_OUT_PIN2_Pos (2UL) /*!< Position of PIN2 field. */
 #define GPIO_OUT_PIN2_Msk (0x1UL << GPIO_OUT_PIN2_Pos) /*!< Bit mask of PIN2 field. */
 #define GPIO_OUT_PIN2_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN2_High (1UL) /*!< Pin driver is high */
 
-/* Bit 1 : P0.1 pin */
+/* Bit 1 : Pin 1 */
 #define GPIO_OUT_PIN1_Pos (1UL) /*!< Position of PIN1 field. */
 #define GPIO_OUT_PIN1_Msk (0x1UL << GPIO_OUT_PIN1_Pos) /*!< Bit mask of PIN1 field. */
 #define GPIO_OUT_PIN1_Low (0UL) /*!< Pin driver is low */
 #define GPIO_OUT_PIN1_High (1UL) /*!< Pin driver is high */
 
-/* Bit 0 : P0.0 pin */
+/* Bit 0 : Pin 0 */
 #define GPIO_OUT_PIN0_Pos (0UL) /*!< Position of PIN0 field. */
 #define GPIO_OUT_PIN0_Msk (0x1UL << GPIO_OUT_PIN0_Pos) /*!< Bit mask of PIN0 field. */
 #define GPIO_OUT_PIN0_Low (0UL) /*!< Pin driver is low */
@@ -5022,224 +5018,224 @@
 /* Register: GPIO_OUTSET */
 /* Description: Set individual bits in GPIO port */
 
-/* Bit 31 : P0.31 pin */
+/* Bit 31 : Pin 31 */
 #define GPIO_OUTSET_PIN31_Pos (31UL) /*!< Position of PIN31 field. */
 #define GPIO_OUTSET_PIN31_Msk (0x1UL << GPIO_OUTSET_PIN31_Pos) /*!< Bit mask of PIN31 field. */
 #define GPIO_OUTSET_PIN31_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN31_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN31_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 30 : P0.30 pin */
+/* Bit 30 : Pin 30 */
 #define GPIO_OUTSET_PIN30_Pos (30UL) /*!< Position of PIN30 field. */
 #define GPIO_OUTSET_PIN30_Msk (0x1UL << GPIO_OUTSET_PIN30_Pos) /*!< Bit mask of PIN30 field. */
 #define GPIO_OUTSET_PIN30_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN30_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN30_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 29 : P0.29 pin */
+/* Bit 29 : Pin 29 */
 #define GPIO_OUTSET_PIN29_Pos (29UL) /*!< Position of PIN29 field. */
 #define GPIO_OUTSET_PIN29_Msk (0x1UL << GPIO_OUTSET_PIN29_Pos) /*!< Bit mask of PIN29 field. */
 #define GPIO_OUTSET_PIN29_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN29_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN29_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 28 : P0.28 pin */
+/* Bit 28 : Pin 28 */
 #define GPIO_OUTSET_PIN28_Pos (28UL) /*!< Position of PIN28 field. */
 #define GPIO_OUTSET_PIN28_Msk (0x1UL << GPIO_OUTSET_PIN28_Pos) /*!< Bit mask of PIN28 field. */
 #define GPIO_OUTSET_PIN28_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN28_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN28_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 27 : P0.27 pin */
+/* Bit 27 : Pin 27 */
 #define GPIO_OUTSET_PIN27_Pos (27UL) /*!< Position of PIN27 field. */
 #define GPIO_OUTSET_PIN27_Msk (0x1UL << GPIO_OUTSET_PIN27_Pos) /*!< Bit mask of PIN27 field. */
 #define GPIO_OUTSET_PIN27_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN27_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN27_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 26 : P0.26 pin */
+/* Bit 26 : Pin 26 */
 #define GPIO_OUTSET_PIN26_Pos (26UL) /*!< Position of PIN26 field. */
 #define GPIO_OUTSET_PIN26_Msk (0x1UL << GPIO_OUTSET_PIN26_Pos) /*!< Bit mask of PIN26 field. */
 #define GPIO_OUTSET_PIN26_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN26_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN26_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 25 : P0.25 pin */
+/* Bit 25 : Pin 25 */
 #define GPIO_OUTSET_PIN25_Pos (25UL) /*!< Position of PIN25 field. */
 #define GPIO_OUTSET_PIN25_Msk (0x1UL << GPIO_OUTSET_PIN25_Pos) /*!< Bit mask of PIN25 field. */
 #define GPIO_OUTSET_PIN25_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN25_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN25_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 24 : P0.24 pin */
+/* Bit 24 : Pin 24 */
 #define GPIO_OUTSET_PIN24_Pos (24UL) /*!< Position of PIN24 field. */
 #define GPIO_OUTSET_PIN24_Msk (0x1UL << GPIO_OUTSET_PIN24_Pos) /*!< Bit mask of PIN24 field. */
 #define GPIO_OUTSET_PIN24_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN24_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN24_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 23 : P0.23 pin */
+/* Bit 23 : Pin 23 */
 #define GPIO_OUTSET_PIN23_Pos (23UL) /*!< Position of PIN23 field. */
 #define GPIO_OUTSET_PIN23_Msk (0x1UL << GPIO_OUTSET_PIN23_Pos) /*!< Bit mask of PIN23 field. */
 #define GPIO_OUTSET_PIN23_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN23_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN23_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 22 : P0.22 pin */
+/* Bit 22 : Pin 22 */
 #define GPIO_OUTSET_PIN22_Pos (22UL) /*!< Position of PIN22 field. */
 #define GPIO_OUTSET_PIN22_Msk (0x1UL << GPIO_OUTSET_PIN22_Pos) /*!< Bit mask of PIN22 field. */
 #define GPIO_OUTSET_PIN22_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN22_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN22_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 21 : P0.21 pin */
+/* Bit 21 : Pin 21 */
 #define GPIO_OUTSET_PIN21_Pos (21UL) /*!< Position of PIN21 field. */
 #define GPIO_OUTSET_PIN21_Msk (0x1UL << GPIO_OUTSET_PIN21_Pos) /*!< Bit mask of PIN21 field. */
 #define GPIO_OUTSET_PIN21_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN21_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN21_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 20 : P0.20 pin */
+/* Bit 20 : Pin 20 */
 #define GPIO_OUTSET_PIN20_Pos (20UL) /*!< Position of PIN20 field. */
 #define GPIO_OUTSET_PIN20_Msk (0x1UL << GPIO_OUTSET_PIN20_Pos) /*!< Bit mask of PIN20 field. */
 #define GPIO_OUTSET_PIN20_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN20_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN20_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 19 : P0.19 pin */
+/* Bit 19 : Pin 19 */
 #define GPIO_OUTSET_PIN19_Pos (19UL) /*!< Position of PIN19 field. */
 #define GPIO_OUTSET_PIN19_Msk (0x1UL << GPIO_OUTSET_PIN19_Pos) /*!< Bit mask of PIN19 field. */
 #define GPIO_OUTSET_PIN19_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN19_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN19_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 18 : P0.18 pin */
+/* Bit 18 : Pin 18 */
 #define GPIO_OUTSET_PIN18_Pos (18UL) /*!< Position of PIN18 field. */
 #define GPIO_OUTSET_PIN18_Msk (0x1UL << GPIO_OUTSET_PIN18_Pos) /*!< Bit mask of PIN18 field. */
 #define GPIO_OUTSET_PIN18_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN18_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN18_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 17 : P0.17 pin */
+/* Bit 17 : Pin 17 */
 #define GPIO_OUTSET_PIN17_Pos (17UL) /*!< Position of PIN17 field. */
 #define GPIO_OUTSET_PIN17_Msk (0x1UL << GPIO_OUTSET_PIN17_Pos) /*!< Bit mask of PIN17 field. */
 #define GPIO_OUTSET_PIN17_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN17_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN17_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 16 : P0.16 pin */
+/* Bit 16 : Pin 16 */
 #define GPIO_OUTSET_PIN16_Pos (16UL) /*!< Position of PIN16 field. */
 #define GPIO_OUTSET_PIN16_Msk (0x1UL << GPIO_OUTSET_PIN16_Pos) /*!< Bit mask of PIN16 field. */
 #define GPIO_OUTSET_PIN16_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN16_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN16_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 15 : P0.15 pin */
+/* Bit 15 : Pin 15 */
 #define GPIO_OUTSET_PIN15_Pos (15UL) /*!< Position of PIN15 field. */
 #define GPIO_OUTSET_PIN15_Msk (0x1UL << GPIO_OUTSET_PIN15_Pos) /*!< Bit mask of PIN15 field. */
 #define GPIO_OUTSET_PIN15_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN15_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN15_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 14 : P0.14 pin */
+/* Bit 14 : Pin 14 */
 #define GPIO_OUTSET_PIN14_Pos (14UL) /*!< Position of PIN14 field. */
 #define GPIO_OUTSET_PIN14_Msk (0x1UL << GPIO_OUTSET_PIN14_Pos) /*!< Bit mask of PIN14 field. */
 #define GPIO_OUTSET_PIN14_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN14_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN14_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 13 : P0.13 pin */
+/* Bit 13 : Pin 13 */
 #define GPIO_OUTSET_PIN13_Pos (13UL) /*!< Position of PIN13 field. */
 #define GPIO_OUTSET_PIN13_Msk (0x1UL << GPIO_OUTSET_PIN13_Pos) /*!< Bit mask of PIN13 field. */
 #define GPIO_OUTSET_PIN13_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN13_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN13_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 12 : P0.12 pin */
+/* Bit 12 : Pin 12 */
 #define GPIO_OUTSET_PIN12_Pos (12UL) /*!< Position of PIN12 field. */
 #define GPIO_OUTSET_PIN12_Msk (0x1UL << GPIO_OUTSET_PIN12_Pos) /*!< Bit mask of PIN12 field. */
 #define GPIO_OUTSET_PIN12_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN12_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN12_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 11 : P0.11 pin */
+/* Bit 11 : Pin 11 */
 #define GPIO_OUTSET_PIN11_Pos (11UL) /*!< Position of PIN11 field. */
 #define GPIO_OUTSET_PIN11_Msk (0x1UL << GPIO_OUTSET_PIN11_Pos) /*!< Bit mask of PIN11 field. */
 #define GPIO_OUTSET_PIN11_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN11_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN11_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 10 : P0.10 pin */
+/* Bit 10 : Pin 10 */
 #define GPIO_OUTSET_PIN10_Pos (10UL) /*!< Position of PIN10 field. */
 #define GPIO_OUTSET_PIN10_Msk (0x1UL << GPIO_OUTSET_PIN10_Pos) /*!< Bit mask of PIN10 field. */
 #define GPIO_OUTSET_PIN10_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN10_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN10_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 9 : P0.9 pin */
+/* Bit 9 : Pin 9 */
 #define GPIO_OUTSET_PIN9_Pos (9UL) /*!< Position of PIN9 field. */
 #define GPIO_OUTSET_PIN9_Msk (0x1UL << GPIO_OUTSET_PIN9_Pos) /*!< Bit mask of PIN9 field. */
 #define GPIO_OUTSET_PIN9_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN9_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN9_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 8 : P0.8 pin */
+/* Bit 8 : Pin 8 */
 #define GPIO_OUTSET_PIN8_Pos (8UL) /*!< Position of PIN8 field. */
 #define GPIO_OUTSET_PIN8_Msk (0x1UL << GPIO_OUTSET_PIN8_Pos) /*!< Bit mask of PIN8 field. */
 #define GPIO_OUTSET_PIN8_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN8_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN8_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 7 : P0.7 pin */
+/* Bit 7 : Pin 7 */
 #define GPIO_OUTSET_PIN7_Pos (7UL) /*!< Position of PIN7 field. */
 #define GPIO_OUTSET_PIN7_Msk (0x1UL << GPIO_OUTSET_PIN7_Pos) /*!< Bit mask of PIN7 field. */
 #define GPIO_OUTSET_PIN7_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN7_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN7_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 6 : P0.6 pin */
+/* Bit 6 : Pin 6 */
 #define GPIO_OUTSET_PIN6_Pos (6UL) /*!< Position of PIN6 field. */
 #define GPIO_OUTSET_PIN6_Msk (0x1UL << GPIO_OUTSET_PIN6_Pos) /*!< Bit mask of PIN6 field. */
 #define GPIO_OUTSET_PIN6_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN6_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN6_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 5 : P0.5 pin */
+/* Bit 5 : Pin 5 */
 #define GPIO_OUTSET_PIN5_Pos (5UL) /*!< Position of PIN5 field. */
 #define GPIO_OUTSET_PIN5_Msk (0x1UL << GPIO_OUTSET_PIN5_Pos) /*!< Bit mask of PIN5 field. */
 #define GPIO_OUTSET_PIN5_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN5_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN5_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 4 : P0.4 pin */
+/* Bit 4 : Pin 4 */
 #define GPIO_OUTSET_PIN4_Pos (4UL) /*!< Position of PIN4 field. */
 #define GPIO_OUTSET_PIN4_Msk (0x1UL << GPIO_OUTSET_PIN4_Pos) /*!< Bit mask of PIN4 field. */
 #define GPIO_OUTSET_PIN4_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN4_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN4_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 3 : P0.3 pin */
+/* Bit 3 : Pin 3 */
 #define GPIO_OUTSET_PIN3_Pos (3UL) /*!< Position of PIN3 field. */
 #define GPIO_OUTSET_PIN3_Msk (0x1UL << GPIO_OUTSET_PIN3_Pos) /*!< Bit mask of PIN3 field. */
 #define GPIO_OUTSET_PIN3_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN3_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN3_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 2 : P0.2 pin */
+/* Bit 2 : Pin 2 */
 #define GPIO_OUTSET_PIN2_Pos (2UL) /*!< Position of PIN2 field. */
 #define GPIO_OUTSET_PIN2_Msk (0x1UL << GPIO_OUTSET_PIN2_Pos) /*!< Bit mask of PIN2 field. */
 #define GPIO_OUTSET_PIN2_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN2_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN2_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 1 : P0.1 pin */
+/* Bit 1 : Pin 1 */
 #define GPIO_OUTSET_PIN1_Pos (1UL) /*!< Position of PIN1 field. */
 #define GPIO_OUTSET_PIN1_Msk (0x1UL << GPIO_OUTSET_PIN1_Pos) /*!< Bit mask of PIN1 field. */
 #define GPIO_OUTSET_PIN1_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTSET_PIN1_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTSET_PIN1_Set (1UL) /*!< Write: writing a '1' sets the pin high; writing a '0' has no effect */
 
-/* Bit 0 : P0.0 pin */
+/* Bit 0 : Pin 0 */
 #define GPIO_OUTSET_PIN0_Pos (0UL) /*!< Position of PIN0 field. */
 #define GPIO_OUTSET_PIN0_Msk (0x1UL << GPIO_OUTSET_PIN0_Pos) /*!< Bit mask of PIN0 field. */
 #define GPIO_OUTSET_PIN0_Low (0UL) /*!< Read: pin driver is low */
@@ -5249,224 +5245,224 @@
 /* Register: GPIO_OUTCLR */
 /* Description: Clear individual bits in GPIO port */
 
-/* Bit 31 : P0.31 pin */
+/* Bit 31 : Pin 31 */
 #define GPIO_OUTCLR_PIN31_Pos (31UL) /*!< Position of PIN31 field. */
 #define GPIO_OUTCLR_PIN31_Msk (0x1UL << GPIO_OUTCLR_PIN31_Pos) /*!< Bit mask of PIN31 field. */
 #define GPIO_OUTCLR_PIN31_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN31_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN31_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 30 : P0.30 pin */
+/* Bit 30 : Pin 30 */
 #define GPIO_OUTCLR_PIN30_Pos (30UL) /*!< Position of PIN30 field. */
 #define GPIO_OUTCLR_PIN30_Msk (0x1UL << GPIO_OUTCLR_PIN30_Pos) /*!< Bit mask of PIN30 field. */
 #define GPIO_OUTCLR_PIN30_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN30_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN30_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 29 : P0.29 pin */
+/* Bit 29 : Pin 29 */
 #define GPIO_OUTCLR_PIN29_Pos (29UL) /*!< Position of PIN29 field. */
 #define GPIO_OUTCLR_PIN29_Msk (0x1UL << GPIO_OUTCLR_PIN29_Pos) /*!< Bit mask of PIN29 field. */
 #define GPIO_OUTCLR_PIN29_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN29_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN29_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 28 : P0.28 pin */
+/* Bit 28 : Pin 28 */
 #define GPIO_OUTCLR_PIN28_Pos (28UL) /*!< Position of PIN28 field. */
 #define GPIO_OUTCLR_PIN28_Msk (0x1UL << GPIO_OUTCLR_PIN28_Pos) /*!< Bit mask of PIN28 field. */
 #define GPIO_OUTCLR_PIN28_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN28_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN28_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 27 : P0.27 pin */
+/* Bit 27 : Pin 27 */
 #define GPIO_OUTCLR_PIN27_Pos (27UL) /*!< Position of PIN27 field. */
 #define GPIO_OUTCLR_PIN27_Msk (0x1UL << GPIO_OUTCLR_PIN27_Pos) /*!< Bit mask of PIN27 field. */
 #define GPIO_OUTCLR_PIN27_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN27_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN27_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 26 : P0.26 pin */
+/* Bit 26 : Pin 26 */
 #define GPIO_OUTCLR_PIN26_Pos (26UL) /*!< Position of PIN26 field. */
 #define GPIO_OUTCLR_PIN26_Msk (0x1UL << GPIO_OUTCLR_PIN26_Pos) /*!< Bit mask of PIN26 field. */
 #define GPIO_OUTCLR_PIN26_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN26_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN26_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 25 : P0.25 pin */
+/* Bit 25 : Pin 25 */
 #define GPIO_OUTCLR_PIN25_Pos (25UL) /*!< Position of PIN25 field. */
 #define GPIO_OUTCLR_PIN25_Msk (0x1UL << GPIO_OUTCLR_PIN25_Pos) /*!< Bit mask of PIN25 field. */
 #define GPIO_OUTCLR_PIN25_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN25_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN25_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 24 : P0.24 pin */
+/* Bit 24 : Pin 24 */
 #define GPIO_OUTCLR_PIN24_Pos (24UL) /*!< Position of PIN24 field. */
 #define GPIO_OUTCLR_PIN24_Msk (0x1UL << GPIO_OUTCLR_PIN24_Pos) /*!< Bit mask of PIN24 field. */
 #define GPIO_OUTCLR_PIN24_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN24_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN24_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 23 : P0.23 pin */
+/* Bit 23 : Pin 23 */
 #define GPIO_OUTCLR_PIN23_Pos (23UL) /*!< Position of PIN23 field. */
 #define GPIO_OUTCLR_PIN23_Msk (0x1UL << GPIO_OUTCLR_PIN23_Pos) /*!< Bit mask of PIN23 field. */
 #define GPIO_OUTCLR_PIN23_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN23_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN23_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 22 : P0.22 pin */
+/* Bit 22 : Pin 22 */
 #define GPIO_OUTCLR_PIN22_Pos (22UL) /*!< Position of PIN22 field. */
 #define GPIO_OUTCLR_PIN22_Msk (0x1UL << GPIO_OUTCLR_PIN22_Pos) /*!< Bit mask of PIN22 field. */
 #define GPIO_OUTCLR_PIN22_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN22_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN22_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 21 : P0.21 pin */
+/* Bit 21 : Pin 21 */
 #define GPIO_OUTCLR_PIN21_Pos (21UL) /*!< Position of PIN21 field. */
 #define GPIO_OUTCLR_PIN21_Msk (0x1UL << GPIO_OUTCLR_PIN21_Pos) /*!< Bit mask of PIN21 field. */
 #define GPIO_OUTCLR_PIN21_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN21_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN21_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 20 : P0.20 pin */
+/* Bit 20 : Pin 20 */
 #define GPIO_OUTCLR_PIN20_Pos (20UL) /*!< Position of PIN20 field. */
 #define GPIO_OUTCLR_PIN20_Msk (0x1UL << GPIO_OUTCLR_PIN20_Pos) /*!< Bit mask of PIN20 field. */
 #define GPIO_OUTCLR_PIN20_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN20_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN20_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 19 : P0.19 pin */
+/* Bit 19 : Pin 19 */
 #define GPIO_OUTCLR_PIN19_Pos (19UL) /*!< Position of PIN19 field. */
 #define GPIO_OUTCLR_PIN19_Msk (0x1UL << GPIO_OUTCLR_PIN19_Pos) /*!< Bit mask of PIN19 field. */
 #define GPIO_OUTCLR_PIN19_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN19_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN19_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 18 : P0.18 pin */
+/* Bit 18 : Pin 18 */
 #define GPIO_OUTCLR_PIN18_Pos (18UL) /*!< Position of PIN18 field. */
 #define GPIO_OUTCLR_PIN18_Msk (0x1UL << GPIO_OUTCLR_PIN18_Pos) /*!< Bit mask of PIN18 field. */
 #define GPIO_OUTCLR_PIN18_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN18_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN18_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 17 : P0.17 pin */
+/* Bit 17 : Pin 17 */
 #define GPIO_OUTCLR_PIN17_Pos (17UL) /*!< Position of PIN17 field. */
 #define GPIO_OUTCLR_PIN17_Msk (0x1UL << GPIO_OUTCLR_PIN17_Pos) /*!< Bit mask of PIN17 field. */
 #define GPIO_OUTCLR_PIN17_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN17_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN17_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 16 : P0.16 pin */
+/* Bit 16 : Pin 16 */
 #define GPIO_OUTCLR_PIN16_Pos (16UL) /*!< Position of PIN16 field. */
 #define GPIO_OUTCLR_PIN16_Msk (0x1UL << GPIO_OUTCLR_PIN16_Pos) /*!< Bit mask of PIN16 field. */
 #define GPIO_OUTCLR_PIN16_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN16_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN16_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 15 : P0.15 pin */
+/* Bit 15 : Pin 15 */
 #define GPIO_OUTCLR_PIN15_Pos (15UL) /*!< Position of PIN15 field. */
 #define GPIO_OUTCLR_PIN15_Msk (0x1UL << GPIO_OUTCLR_PIN15_Pos) /*!< Bit mask of PIN15 field. */
 #define GPIO_OUTCLR_PIN15_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN15_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN15_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 14 : P0.14 pin */
+/* Bit 14 : Pin 14 */
 #define GPIO_OUTCLR_PIN14_Pos (14UL) /*!< Position of PIN14 field. */
 #define GPIO_OUTCLR_PIN14_Msk (0x1UL << GPIO_OUTCLR_PIN14_Pos) /*!< Bit mask of PIN14 field. */
 #define GPIO_OUTCLR_PIN14_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN14_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN14_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 13 : P0.13 pin */
+/* Bit 13 : Pin 13 */
 #define GPIO_OUTCLR_PIN13_Pos (13UL) /*!< Position of PIN13 field. */
 #define GPIO_OUTCLR_PIN13_Msk (0x1UL << GPIO_OUTCLR_PIN13_Pos) /*!< Bit mask of PIN13 field. */
 #define GPIO_OUTCLR_PIN13_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN13_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN13_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 12 : P0.12 pin */
+/* Bit 12 : Pin 12 */
 #define GPIO_OUTCLR_PIN12_Pos (12UL) /*!< Position of PIN12 field. */
 #define GPIO_OUTCLR_PIN12_Msk (0x1UL << GPIO_OUTCLR_PIN12_Pos) /*!< Bit mask of PIN12 field. */
 #define GPIO_OUTCLR_PIN12_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN12_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN12_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 11 : P0.11 pin */
+/* Bit 11 : Pin 11 */
 #define GPIO_OUTCLR_PIN11_Pos (11UL) /*!< Position of PIN11 field. */
 #define GPIO_OUTCLR_PIN11_Msk (0x1UL << GPIO_OUTCLR_PIN11_Pos) /*!< Bit mask of PIN11 field. */
 #define GPIO_OUTCLR_PIN11_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN11_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN11_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 10 : P0.10 pin */
+/* Bit 10 : Pin 10 */
 #define GPIO_OUTCLR_PIN10_Pos (10UL) /*!< Position of PIN10 field. */
 #define GPIO_OUTCLR_PIN10_Msk (0x1UL << GPIO_OUTCLR_PIN10_Pos) /*!< Bit mask of PIN10 field. */
 #define GPIO_OUTCLR_PIN10_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN10_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN10_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 9 : P0.9 pin */
+/* Bit 9 : Pin 9 */
 #define GPIO_OUTCLR_PIN9_Pos (9UL) /*!< Position of PIN9 field. */
 #define GPIO_OUTCLR_PIN9_Msk (0x1UL << GPIO_OUTCLR_PIN9_Pos) /*!< Bit mask of PIN9 field. */
 #define GPIO_OUTCLR_PIN9_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN9_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN9_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 8 : P0.8 pin */
+/* Bit 8 : Pin 8 */
 #define GPIO_OUTCLR_PIN8_Pos (8UL) /*!< Position of PIN8 field. */
 #define GPIO_OUTCLR_PIN8_Msk (0x1UL << GPIO_OUTCLR_PIN8_Pos) /*!< Bit mask of PIN8 field. */
 #define GPIO_OUTCLR_PIN8_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN8_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN8_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 7 : P0.7 pin */
+/* Bit 7 : Pin 7 */
 #define GPIO_OUTCLR_PIN7_Pos (7UL) /*!< Position of PIN7 field. */
 #define GPIO_OUTCLR_PIN7_Msk (0x1UL << GPIO_OUTCLR_PIN7_Pos) /*!< Bit mask of PIN7 field. */
 #define GPIO_OUTCLR_PIN7_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN7_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN7_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 6 : P0.6 pin */
+/* Bit 6 : Pin 6 */
 #define GPIO_OUTCLR_PIN6_Pos (6UL) /*!< Position of PIN6 field. */
 #define GPIO_OUTCLR_PIN6_Msk (0x1UL << GPIO_OUTCLR_PIN6_Pos) /*!< Bit mask of PIN6 field. */
 #define GPIO_OUTCLR_PIN6_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN6_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN6_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 5 : P0.5 pin */
+/* Bit 5 : Pin 5 */
 #define GPIO_OUTCLR_PIN5_Pos (5UL) /*!< Position of PIN5 field. */
 #define GPIO_OUTCLR_PIN5_Msk (0x1UL << GPIO_OUTCLR_PIN5_Pos) /*!< Bit mask of PIN5 field. */
 #define GPIO_OUTCLR_PIN5_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN5_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN5_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 4 : P0.4 pin */
+/* Bit 4 : Pin 4 */
 #define GPIO_OUTCLR_PIN4_Pos (4UL) /*!< Position of PIN4 field. */
 #define GPIO_OUTCLR_PIN4_Msk (0x1UL << GPIO_OUTCLR_PIN4_Pos) /*!< Bit mask of PIN4 field. */
 #define GPIO_OUTCLR_PIN4_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN4_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN4_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 3 : P0.3 pin */
+/* Bit 3 : Pin 3 */
 #define GPIO_OUTCLR_PIN3_Pos (3UL) /*!< Position of PIN3 field. */
 #define GPIO_OUTCLR_PIN3_Msk (0x1UL << GPIO_OUTCLR_PIN3_Pos) /*!< Bit mask of PIN3 field. */
 #define GPIO_OUTCLR_PIN3_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN3_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN3_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 2 : P0.2 pin */
+/* Bit 2 : Pin 2 */
 #define GPIO_OUTCLR_PIN2_Pos (2UL) /*!< Position of PIN2 field. */
 #define GPIO_OUTCLR_PIN2_Msk (0x1UL << GPIO_OUTCLR_PIN2_Pos) /*!< Bit mask of PIN2 field. */
 #define GPIO_OUTCLR_PIN2_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN2_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN2_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 1 : P0.1 pin */
+/* Bit 1 : Pin 1 */
 #define GPIO_OUTCLR_PIN1_Pos (1UL) /*!< Position of PIN1 field. */
 #define GPIO_OUTCLR_PIN1_Msk (0x1UL << GPIO_OUTCLR_PIN1_Pos) /*!< Bit mask of PIN1 field. */
 #define GPIO_OUTCLR_PIN1_Low (0UL) /*!< Read: pin driver is low */
 #define GPIO_OUTCLR_PIN1_High (1UL) /*!< Read: pin driver is high */
 #define GPIO_OUTCLR_PIN1_Clear (1UL) /*!< Write: writing a '1' sets the pin low; writing a '0' has no effect */
 
-/* Bit 0 : P0.0 pin */
+/* Bit 0 : Pin 0 */
 #define GPIO_OUTCLR_PIN0_Pos (0UL) /*!< Position of PIN0 field. */
 #define GPIO_OUTCLR_PIN0_Msk (0x1UL << GPIO_OUTCLR_PIN0_Pos) /*!< Bit mask of PIN0 field. */
 #define GPIO_OUTCLR_PIN0_Low (0UL) /*!< Read: pin driver is low */
@@ -5476,193 +5472,193 @@
 /* Register: GPIO_IN */
 /* Description: Read GPIO port */
 
-/* Bit 31 : P0.31 pin */
+/* Bit 31 : Pin 31 */
 #define GPIO_IN_PIN31_Pos (31UL) /*!< Position of PIN31 field. */
 #define GPIO_IN_PIN31_Msk (0x1UL << GPIO_IN_PIN31_Pos) /*!< Bit mask of PIN31 field. */
 #define GPIO_IN_PIN31_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN31_High (1UL) /*!< Pin input is high */
 
-/* Bit 30 : P0.30 pin */
+/* Bit 30 : Pin 30 */
 #define GPIO_IN_PIN30_Pos (30UL) /*!< Position of PIN30 field. */
 #define GPIO_IN_PIN30_Msk (0x1UL << GPIO_IN_PIN30_Pos) /*!< Bit mask of PIN30 field. */
 #define GPIO_IN_PIN30_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN30_High (1UL) /*!< Pin input is high */
 
-/* Bit 29 : P0.29 pin */
+/* Bit 29 : Pin 29 */
 #define GPIO_IN_PIN29_Pos (29UL) /*!< Position of PIN29 field. */
 #define GPIO_IN_PIN29_Msk (0x1UL << GPIO_IN_PIN29_Pos) /*!< Bit mask of PIN29 field. */
 #define GPIO_IN_PIN29_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN29_High (1UL) /*!< Pin input is high */
 
-/* Bit 28 : P0.28 pin */
+/* Bit 28 : Pin 28 */
 #define GPIO_IN_PIN28_Pos (28UL) /*!< Position of PIN28 field. */
 #define GPIO_IN_PIN28_Msk (0x1UL << GPIO_IN_PIN28_Pos) /*!< Bit mask of PIN28 field. */
 #define GPIO_IN_PIN28_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN28_High (1UL) /*!< Pin input is high */
 
-/* Bit 27 : P0.27 pin */
+/* Bit 27 : Pin 27 */
 #define GPIO_IN_PIN27_Pos (27UL) /*!< Position of PIN27 field. */
 #define GPIO_IN_PIN27_Msk (0x1UL << GPIO_IN_PIN27_Pos) /*!< Bit mask of PIN27 field. */
 #define GPIO_IN_PIN27_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN27_High (1UL) /*!< Pin input is high */
 
-/* Bit 26 : P0.26 pin */
+/* Bit 26 : Pin 26 */
 #define GPIO_IN_PIN26_Pos (26UL) /*!< Position of PIN26 field. */
 #define GPIO_IN_PIN26_Msk (0x1UL << GPIO_IN_PIN26_Pos) /*!< Bit mask of PIN26 field. */
 #define GPIO_IN_PIN26_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN26_High (1UL) /*!< Pin input is high */
 
-/* Bit 25 : P0.25 pin */
+/* Bit 25 : Pin 25 */
 #define GPIO_IN_PIN25_Pos (25UL) /*!< Position of PIN25 field. */
 #define GPIO_IN_PIN25_Msk (0x1UL << GPIO_IN_PIN25_Pos) /*!< Bit mask of PIN25 field. */
 #define GPIO_IN_PIN25_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN25_High (1UL) /*!< Pin input is high */
 
-/* Bit 24 : P0.24 pin */
+/* Bit 24 : Pin 24 */
 #define GPIO_IN_PIN24_Pos (24UL) /*!< Position of PIN24 field. */
 #define GPIO_IN_PIN24_Msk (0x1UL << GPIO_IN_PIN24_Pos) /*!< Bit mask of PIN24 field. */
 #define GPIO_IN_PIN24_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN24_High (1UL) /*!< Pin input is high */
 
-/* Bit 23 : P0.23 pin */
+/* Bit 23 : Pin 23 */
 #define GPIO_IN_PIN23_Pos (23UL) /*!< Position of PIN23 field. */
 #define GPIO_IN_PIN23_Msk (0x1UL << GPIO_IN_PIN23_Pos) /*!< Bit mask of PIN23 field. */
 #define GPIO_IN_PIN23_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN23_High (1UL) /*!< Pin input is high */
 
-/* Bit 22 : P0.22 pin */
+/* Bit 22 : Pin 22 */
 #define GPIO_IN_PIN22_Pos (22UL) /*!< Position of PIN22 field. */
 #define GPIO_IN_PIN22_Msk (0x1UL << GPIO_IN_PIN22_Pos) /*!< Bit mask of PIN22 field. */
 #define GPIO_IN_PIN22_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN22_High (1UL) /*!< Pin input is high */
 
-/* Bit 21 : P0.21 pin */
+/* Bit 21 : Pin 21 */
 #define GPIO_IN_PIN21_Pos (21UL) /*!< Position of PIN21 field. */
 #define GPIO_IN_PIN21_Msk (0x1UL << GPIO_IN_PIN21_Pos) /*!< Bit mask of PIN21 field. */
 #define GPIO_IN_PIN21_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN21_High (1UL) /*!< Pin input is high */
 
-/* Bit 20 : P0.20 pin */
+/* Bit 20 : Pin 20 */
 #define GPIO_IN_PIN20_Pos (20UL) /*!< Position of PIN20 field. */
 #define GPIO_IN_PIN20_Msk (0x1UL << GPIO_IN_PIN20_Pos) /*!< Bit mask of PIN20 field. */
 #define GPIO_IN_PIN20_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN20_High (1UL) /*!< Pin input is high */
 
-/* Bit 19 : P0.19 pin */
+/* Bit 19 : Pin 19 */
 #define GPIO_IN_PIN19_Pos (19UL) /*!< Position of PIN19 field. */
 #define GPIO_IN_PIN19_Msk (0x1UL << GPIO_IN_PIN19_Pos) /*!< Bit mask of PIN19 field. */
 #define GPIO_IN_PIN19_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN19_High (1UL) /*!< Pin input is high */
 
-/* Bit 18 : P0.18 pin */
+/* Bit 18 : Pin 18 */
 #define GPIO_IN_PIN18_Pos (18UL) /*!< Position of PIN18 field. */
 #define GPIO_IN_PIN18_Msk (0x1UL << GPIO_IN_PIN18_Pos) /*!< Bit mask of PIN18 field. */
 #define GPIO_IN_PIN18_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN18_High (1UL) /*!< Pin input is high */
 
-/* Bit 17 : P0.17 pin */
+/* Bit 17 : Pin 17 */
 #define GPIO_IN_PIN17_Pos (17UL) /*!< Position of PIN17 field. */
 #define GPIO_IN_PIN17_Msk (0x1UL << GPIO_IN_PIN17_Pos) /*!< Bit mask of PIN17 field. */
 #define GPIO_IN_PIN17_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN17_High (1UL) /*!< Pin input is high */
 
-/* Bit 16 : P0.16 pin */
+/* Bit 16 : Pin 16 */
 #define GPIO_IN_PIN16_Pos (16UL) /*!< Position of PIN16 field. */
 #define GPIO_IN_PIN16_Msk (0x1UL << GPIO_IN_PIN16_Pos) /*!< Bit mask of PIN16 field. */
 #define GPIO_IN_PIN16_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN16_High (1UL) /*!< Pin input is high */
 
-/* Bit 15 : P0.15 pin */
+/* Bit 15 : Pin 15 */
 #define GPIO_IN_PIN15_Pos (15UL) /*!< Position of PIN15 field. */
 #define GPIO_IN_PIN15_Msk (0x1UL << GPIO_IN_PIN15_Pos) /*!< Bit mask of PIN15 field. */
 #define GPIO_IN_PIN15_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN15_High (1UL) /*!< Pin input is high */
 
-/* Bit 14 : P0.14 pin */
+/* Bit 14 : Pin 14 */
 #define GPIO_IN_PIN14_Pos (14UL) /*!< Position of PIN14 field. */
 #define GPIO_IN_PIN14_Msk (0x1UL << GPIO_IN_PIN14_Pos) /*!< Bit mask of PIN14 field. */
 #define GPIO_IN_PIN14_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN14_High (1UL) /*!< Pin input is high */
 
-/* Bit 13 : P0.13 pin */
+/* Bit 13 : Pin 13 */
 #define GPIO_IN_PIN13_Pos (13UL) /*!< Position of PIN13 field. */
 #define GPIO_IN_PIN13_Msk (0x1UL << GPIO_IN_PIN13_Pos) /*!< Bit mask of PIN13 field. */
 #define GPIO_IN_PIN13_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN13_High (1UL) /*!< Pin input is high */
 
-/* Bit 12 : P0.12 pin */
+/* Bit 12 : Pin 12 */
 #define GPIO_IN_PIN12_Pos (12UL) /*!< Position of PIN12 field. */
 #define GPIO_IN_PIN12_Msk (0x1UL << GPIO_IN_PIN12_Pos) /*!< Bit mask of PIN12 field. */
 #define GPIO_IN_PIN12_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN12_High (1UL) /*!< Pin input is high */
 
-/* Bit 11 : P0.11 pin */
+/* Bit 11 : Pin 11 */
 #define GPIO_IN_PIN11_Pos (11UL) /*!< Position of PIN11 field. */
 #define GPIO_IN_PIN11_Msk (0x1UL << GPIO_IN_PIN11_Pos) /*!< Bit mask of PIN11 field. */
 #define GPIO_IN_PIN11_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN11_High (1UL) /*!< Pin input is high */
 
-/* Bit 10 : P0.10 pin */
+/* Bit 10 : Pin 10 */
 #define GPIO_IN_PIN10_Pos (10UL) /*!< Position of PIN10 field. */
 #define GPIO_IN_PIN10_Msk (0x1UL << GPIO_IN_PIN10_Pos) /*!< Bit mask of PIN10 field. */
 #define GPIO_IN_PIN10_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN10_High (1UL) /*!< Pin input is high */
 
-/* Bit 9 : P0.9 pin */
+/* Bit 9 : Pin 9 */
 #define GPIO_IN_PIN9_Pos (9UL) /*!< Position of PIN9 field. */
 #define GPIO_IN_PIN9_Msk (0x1UL << GPIO_IN_PIN9_Pos) /*!< Bit mask of PIN9 field. */
 #define GPIO_IN_PIN9_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN9_High (1UL) /*!< Pin input is high */
 
-/* Bit 8 : P0.8 pin */
+/* Bit 8 : Pin 8 */
 #define GPIO_IN_PIN8_Pos (8UL) /*!< Position of PIN8 field. */
 #define GPIO_IN_PIN8_Msk (0x1UL << GPIO_IN_PIN8_Pos) /*!< Bit mask of PIN8 field. */
 #define GPIO_IN_PIN8_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN8_High (1UL) /*!< Pin input is high */
 
-/* Bit 7 : P0.7 pin */
+/* Bit 7 : Pin 7 */
 #define GPIO_IN_PIN7_Pos (7UL) /*!< Position of PIN7 field. */
 #define GPIO_IN_PIN7_Msk (0x1UL << GPIO_IN_PIN7_Pos) /*!< Bit mask of PIN7 field. */
 #define GPIO_IN_PIN7_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN7_High (1UL) /*!< Pin input is high */
 
-/* Bit 6 : P0.6 pin */
+/* Bit 6 : Pin 6 */
 #define GPIO_IN_PIN6_Pos (6UL) /*!< Position of PIN6 field. */
 #define GPIO_IN_PIN6_Msk (0x1UL << GPIO_IN_PIN6_Pos) /*!< Bit mask of PIN6 field. */
 #define GPIO_IN_PIN6_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN6_High (1UL) /*!< Pin input is high */
 
-/* Bit 5 : P0.5 pin */
+/* Bit 5 : Pin 5 */
 #define GPIO_IN_PIN5_Pos (5UL) /*!< Position of PIN5 field. */
 #define GPIO_IN_PIN5_Msk (0x1UL << GPIO_IN_PIN5_Pos) /*!< Bit mask of PIN5 field. */
 #define GPIO_IN_PIN5_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN5_High (1UL) /*!< Pin input is high */
 
-/* Bit 4 : P0.4 pin */
+/* Bit 4 : Pin 4 */
 #define GPIO_IN_PIN4_Pos (4UL) /*!< Position of PIN4 field. */
 #define GPIO_IN_PIN4_Msk (0x1UL << GPIO_IN_PIN4_Pos) /*!< Bit mask of PIN4 field. */
 #define GPIO_IN_PIN4_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN4_High (1UL) /*!< Pin input is high */
 
-/* Bit 3 : P0.3 pin */
+/* Bit 3 : Pin 3 */
 #define GPIO_IN_PIN3_Pos (3UL) /*!< Position of PIN3 field. */
 #define GPIO_IN_PIN3_Msk (0x1UL << GPIO_IN_PIN3_Pos) /*!< Bit mask of PIN3 field. */
 #define GPIO_IN_PIN3_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN3_High (1UL) /*!< Pin input is high */
 
-/* Bit 2 : P0.2 pin */
+/* Bit 2 : Pin 2 */
 #define GPIO_IN_PIN2_Pos (2UL) /*!< Position of PIN2 field. */
 #define GPIO_IN_PIN2_Msk (0x1UL << GPIO_IN_PIN2_Pos) /*!< Bit mask of PIN2 field. */
 #define GPIO_IN_PIN2_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN2_High (1UL) /*!< Pin input is high */
 
-/* Bit 1 : P0.1 pin */
+/* Bit 1 : Pin 1 */
 #define GPIO_IN_PIN1_Pos (1UL) /*!< Position of PIN1 field. */
 #define GPIO_IN_PIN1_Msk (0x1UL << GPIO_IN_PIN1_Pos) /*!< Bit mask of PIN1 field. */
 #define GPIO_IN_PIN1_Low (0UL) /*!< Pin input is low */
 #define GPIO_IN_PIN1_High (1UL) /*!< Pin input is high */
 
-/* Bit 0 : P0.0 pin */
+/* Bit 0 : Pin 0 */
 #define GPIO_IN_PIN0_Pos (0UL) /*!< Position of PIN0 field. */
 #define GPIO_IN_PIN0_Msk (0x1UL << GPIO_IN_PIN0_Pos) /*!< Bit mask of PIN0 field. */
 #define GPIO_IN_PIN0_Low (0UL) /*!< Pin input is low */
@@ -5671,193 +5667,193 @@
 /* Register: GPIO_DIR */
 /* Description: Direction of GPIO pins */
 
-/* Bit 31 : P0.31 pin */
+/* Bit 31 : Pin 31 */
 #define GPIO_DIR_PIN31_Pos (31UL) /*!< Position of PIN31 field. */
 #define GPIO_DIR_PIN31_Msk (0x1UL << GPIO_DIR_PIN31_Pos) /*!< Bit mask of PIN31 field. */
 #define GPIO_DIR_PIN31_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN31_Output (1UL) /*!< Pin set as output */
 
-/* Bit 30 : P0.30 pin */
+/* Bit 30 : Pin 30 */
 #define GPIO_DIR_PIN30_Pos (30UL) /*!< Position of PIN30 field. */
 #define GPIO_DIR_PIN30_Msk (0x1UL << GPIO_DIR_PIN30_Pos) /*!< Bit mask of PIN30 field. */
 #define GPIO_DIR_PIN30_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN30_Output (1UL) /*!< Pin set as output */
 
-/* Bit 29 : P0.29 pin */
+/* Bit 29 : Pin 29 */
 #define GPIO_DIR_PIN29_Pos (29UL) /*!< Position of PIN29 field. */
 #define GPIO_DIR_PIN29_Msk (0x1UL << GPIO_DIR_PIN29_Pos) /*!< Bit mask of PIN29 field. */
 #define GPIO_DIR_PIN29_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN29_Output (1UL) /*!< Pin set as output */
 
-/* Bit 28 : P0.28 pin */
+/* Bit 28 : Pin 28 */
 #define GPIO_DIR_PIN28_Pos (28UL) /*!< Position of PIN28 field. */
 #define GPIO_DIR_PIN28_Msk (0x1UL << GPIO_DIR_PIN28_Pos) /*!< Bit mask of PIN28 field. */
 #define GPIO_DIR_PIN28_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN28_Output (1UL) /*!< Pin set as output */
 
-/* Bit 27 : P0.27 pin */
+/* Bit 27 : Pin 27 */
 #define GPIO_DIR_PIN27_Pos (27UL) /*!< Position of PIN27 field. */
 #define GPIO_DIR_PIN27_Msk (0x1UL << GPIO_DIR_PIN27_Pos) /*!< Bit mask of PIN27 field. */
 #define GPIO_DIR_PIN27_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN27_Output (1UL) /*!< Pin set as output */
 
-/* Bit 26 : P0.26 pin */
+/* Bit 26 : Pin 26 */
 #define GPIO_DIR_PIN26_Pos (26UL) /*!< Position of PIN26 field. */
 #define GPIO_DIR_PIN26_Msk (0x1UL << GPIO_DIR_PIN26_Pos) /*!< Bit mask of PIN26 field. */
 #define GPIO_DIR_PIN26_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN26_Output (1UL) /*!< Pin set as output */
 
-/* Bit 25 : P0.25 pin */
+/* Bit 25 : Pin 25 */
 #define GPIO_DIR_PIN25_Pos (25UL) /*!< Position of PIN25 field. */
 #define GPIO_DIR_PIN25_Msk (0x1UL << GPIO_DIR_PIN25_Pos) /*!< Bit mask of PIN25 field. */
 #define GPIO_DIR_PIN25_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN25_Output (1UL) /*!< Pin set as output */
 
-/* Bit 24 : P0.24 pin */
+/* Bit 24 : Pin 24 */
 #define GPIO_DIR_PIN24_Pos (24UL) /*!< Position of PIN24 field. */
 #define GPIO_DIR_PIN24_Msk (0x1UL << GPIO_DIR_PIN24_Pos) /*!< Bit mask of PIN24 field. */
 #define GPIO_DIR_PIN24_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN24_Output (1UL) /*!< Pin set as output */
 
-/* Bit 23 : P0.23 pin */
+/* Bit 23 : Pin 23 */
 #define GPIO_DIR_PIN23_Pos (23UL) /*!< Position of PIN23 field. */
 #define GPIO_DIR_PIN23_Msk (0x1UL << GPIO_DIR_PIN23_Pos) /*!< Bit mask of PIN23 field. */
 #define GPIO_DIR_PIN23_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN23_Output (1UL) /*!< Pin set as output */
 
-/* Bit 22 : P0.22 pin */
+/* Bit 22 : Pin 22 */
 #define GPIO_DIR_PIN22_Pos (22UL) /*!< Position of PIN22 field. */
 #define GPIO_DIR_PIN22_Msk (0x1UL << GPIO_DIR_PIN22_Pos) /*!< Bit mask of PIN22 field. */
 #define GPIO_DIR_PIN22_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN22_Output (1UL) /*!< Pin set as output */
 
-/* Bit 21 : P0.21 pin */
+/* Bit 21 : Pin 21 */
 #define GPIO_DIR_PIN21_Pos (21UL) /*!< Position of PIN21 field. */
 #define GPIO_DIR_PIN21_Msk (0x1UL << GPIO_DIR_PIN21_Pos) /*!< Bit mask of PIN21 field. */
 #define GPIO_DIR_PIN21_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN21_Output (1UL) /*!< Pin set as output */
 
-/* Bit 20 : P0.20 pin */
+/* Bit 20 : Pin 20 */
 #define GPIO_DIR_PIN20_Pos (20UL) /*!< Position of PIN20 field. */
 #define GPIO_DIR_PIN20_Msk (0x1UL << GPIO_DIR_PIN20_Pos) /*!< Bit mask of PIN20 field. */
 #define GPIO_DIR_PIN20_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN20_Output (1UL) /*!< Pin set as output */
 
-/* Bit 19 : P0.19 pin */
+/* Bit 19 : Pin 19 */
 #define GPIO_DIR_PIN19_Pos (19UL) /*!< Position of PIN19 field. */
 #define GPIO_DIR_PIN19_Msk (0x1UL << GPIO_DIR_PIN19_Pos) /*!< Bit mask of PIN19 field. */
 #define GPIO_DIR_PIN19_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN19_Output (1UL) /*!< Pin set as output */
 
-/* Bit 18 : P0.18 pin */
+/* Bit 18 : Pin 18 */
 #define GPIO_DIR_PIN18_Pos (18UL) /*!< Position of PIN18 field. */
 #define GPIO_DIR_PIN18_Msk (0x1UL << GPIO_DIR_PIN18_Pos) /*!< Bit mask of PIN18 field. */
 #define GPIO_DIR_PIN18_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN18_Output (1UL) /*!< Pin set as output */
 
-/* Bit 17 : P0.17 pin */
+/* Bit 17 : Pin 17 */
 #define GPIO_DIR_PIN17_Pos (17UL) /*!< Position of PIN17 field. */
 #define GPIO_DIR_PIN17_Msk (0x1UL << GPIO_DIR_PIN17_Pos) /*!< Bit mask of PIN17 field. */
 #define GPIO_DIR_PIN17_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN17_Output (1UL) /*!< Pin set as output */
 
-/* Bit 16 : P0.16 pin */
+/* Bit 16 : Pin 16 */
 #define GPIO_DIR_PIN16_Pos (16UL) /*!< Position of PIN16 field. */
 #define GPIO_DIR_PIN16_Msk (0x1UL << GPIO_DIR_PIN16_Pos) /*!< Bit mask of PIN16 field. */
 #define GPIO_DIR_PIN16_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN16_Output (1UL) /*!< Pin set as output */
 
-/* Bit 15 : P0.15 pin */
+/* Bit 15 : Pin 15 */
 #define GPIO_DIR_PIN15_Pos (15UL) /*!< Position of PIN15 field. */
 #define GPIO_DIR_PIN15_Msk (0x1UL << GPIO_DIR_PIN15_Pos) /*!< Bit mask of PIN15 field. */
 #define GPIO_DIR_PIN15_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN15_Output (1UL) /*!< Pin set as output */
 
-/* Bit 14 : P0.14 pin */
+/* Bit 14 : Pin 14 */
 #define GPIO_DIR_PIN14_Pos (14UL) /*!< Position of PIN14 field. */
 #define GPIO_DIR_PIN14_Msk (0x1UL << GPIO_DIR_PIN14_Pos) /*!< Bit mask of PIN14 field. */
 #define GPIO_DIR_PIN14_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN14_Output (1UL) /*!< Pin set as output */
 
-/* Bit 13 : P0.13 pin */
+/* Bit 13 : Pin 13 */
 #define GPIO_DIR_PIN13_Pos (13UL) /*!< Position of PIN13 field. */
 #define GPIO_DIR_PIN13_Msk (0x1UL << GPIO_DIR_PIN13_Pos) /*!< Bit mask of PIN13 field. */
 #define GPIO_DIR_PIN13_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN13_Output (1UL) /*!< Pin set as output */
 
-/* Bit 12 : P0.12 pin */
+/* Bit 12 : Pin 12 */
 #define GPIO_DIR_PIN12_Pos (12UL) /*!< Position of PIN12 field. */
 #define GPIO_DIR_PIN12_Msk (0x1UL << GPIO_DIR_PIN12_Pos) /*!< Bit mask of PIN12 field. */
 #define GPIO_DIR_PIN12_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN12_Output (1UL) /*!< Pin set as output */
 
-/* Bit 11 : P0.11 pin */
+/* Bit 11 : Pin 11 */
 #define GPIO_DIR_PIN11_Pos (11UL) /*!< Position of PIN11 field. */
 #define GPIO_DIR_PIN11_Msk (0x1UL << GPIO_DIR_PIN11_Pos) /*!< Bit mask of PIN11 field. */
 #define GPIO_DIR_PIN11_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN11_Output (1UL) /*!< Pin set as output */
 
-/* Bit 10 : P0.10 pin */
+/* Bit 10 : Pin 10 */
 #define GPIO_DIR_PIN10_Pos (10UL) /*!< Position of PIN10 field. */
 #define GPIO_DIR_PIN10_Msk (0x1UL << GPIO_DIR_PIN10_Pos) /*!< Bit mask of PIN10 field. */
 #define GPIO_DIR_PIN10_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN10_Output (1UL) /*!< Pin set as output */
 
-/* Bit 9 : P0.9 pin */
+/* Bit 9 : Pin 9 */
 #define GPIO_DIR_PIN9_Pos (9UL) /*!< Position of PIN9 field. */
 #define GPIO_DIR_PIN9_Msk (0x1UL << GPIO_DIR_PIN9_Pos) /*!< Bit mask of PIN9 field. */
 #define GPIO_DIR_PIN9_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN9_Output (1UL) /*!< Pin set as output */
 
-/* Bit 8 : P0.8 pin */
+/* Bit 8 : Pin 8 */
 #define GPIO_DIR_PIN8_Pos (8UL) /*!< Position of PIN8 field. */
 #define GPIO_DIR_PIN8_Msk (0x1UL << GPIO_DIR_PIN8_Pos) /*!< Bit mask of PIN8 field. */
 #define GPIO_DIR_PIN8_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN8_Output (1UL) /*!< Pin set as output */
 
-/* Bit 7 : P0.7 pin */
+/* Bit 7 : Pin 7 */
 #define GPIO_DIR_PIN7_Pos (7UL) /*!< Position of PIN7 field. */
 #define GPIO_DIR_PIN7_Msk (0x1UL << GPIO_DIR_PIN7_Pos) /*!< Bit mask of PIN7 field. */
 #define GPIO_DIR_PIN7_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN7_Output (1UL) /*!< Pin set as output */
 
-/* Bit 6 : P0.6 pin */
+/* Bit 6 : Pin 6 */
 #define GPIO_DIR_PIN6_Pos (6UL) /*!< Position of PIN6 field. */
 #define GPIO_DIR_PIN6_Msk (0x1UL << GPIO_DIR_PIN6_Pos) /*!< Bit mask of PIN6 field. */
 #define GPIO_DIR_PIN6_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN6_Output (1UL) /*!< Pin set as output */
 
-/* Bit 5 : P0.5 pin */
+/* Bit 5 : Pin 5 */
 #define GPIO_DIR_PIN5_Pos (5UL) /*!< Position of PIN5 field. */
 #define GPIO_DIR_PIN5_Msk (0x1UL << GPIO_DIR_PIN5_Pos) /*!< Bit mask of PIN5 field. */
 #define GPIO_DIR_PIN5_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN5_Output (1UL) /*!< Pin set as output */
 
-/* Bit 4 : P0.4 pin */
+/* Bit 4 : Pin 4 */
 #define GPIO_DIR_PIN4_Pos (4UL) /*!< Position of PIN4 field. */
 #define GPIO_DIR_PIN4_Msk (0x1UL << GPIO_DIR_PIN4_Pos) /*!< Bit mask of PIN4 field. */
 #define GPIO_DIR_PIN4_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN4_Output (1UL) /*!< Pin set as output */
 
-/* Bit 3 : P0.3 pin */
+/* Bit 3 : Pin 3 */
 #define GPIO_DIR_PIN3_Pos (3UL) /*!< Position of PIN3 field. */
 #define GPIO_DIR_PIN3_Msk (0x1UL << GPIO_DIR_PIN3_Pos) /*!< Bit mask of PIN3 field. */
 #define GPIO_DIR_PIN3_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN3_Output (1UL) /*!< Pin set as output */
 
-/* Bit 2 : P0.2 pin */
+/* Bit 2 : Pin 2 */
 #define GPIO_DIR_PIN2_Pos (2UL) /*!< Position of PIN2 field. */
 #define GPIO_DIR_PIN2_Msk (0x1UL << GPIO_DIR_PIN2_Pos) /*!< Bit mask of PIN2 field. */
 #define GPIO_DIR_PIN2_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN2_Output (1UL) /*!< Pin set as output */
 
-/* Bit 1 : P0.1 pin */
+/* Bit 1 : Pin 1 */
 #define GPIO_DIR_PIN1_Pos (1UL) /*!< Position of PIN1 field. */
 #define GPIO_DIR_PIN1_Msk (0x1UL << GPIO_DIR_PIN1_Pos) /*!< Bit mask of PIN1 field. */
 #define GPIO_DIR_PIN1_Input (0UL) /*!< Pin set as input */
 #define GPIO_DIR_PIN1_Output (1UL) /*!< Pin set as output */
 
-/* Bit 0 : P0.0 pin */
+/* Bit 0 : Pin 0 */
 #define GPIO_DIR_PIN0_Pos (0UL) /*!< Position of PIN0 field. */
 #define GPIO_DIR_PIN0_Msk (0x1UL << GPIO_DIR_PIN0_Pos) /*!< Bit mask of PIN0 field. */
 #define GPIO_DIR_PIN0_Input (0UL) /*!< Pin set as input */
@@ -6318,11 +6314,199 @@
 #define GPIO_DIRCLR_PIN0_Clear (1UL) /*!< Write: writing a '1' sets pin to input; writing a '0' has no effect */
 
 /* Register: GPIO_LATCH */
-/* Description: Latch indicating which GPIO pins have met the criteria set in PIN_CNF[n].SENSE register */
+/* Description: Latch register indicating what GPIO pins that have met the criteria set in the PIN_CNF[n].SENSE registers */
 
-/* Bits 31..0 : Register holding a '1' for each GPIO pins which has met the criteria set in PIN_CNF[n].SENSE */
-#define GPIO_LATCH_LATCH_Pos (0UL) /*!< Position of LATCH field. */
-#define GPIO_LATCH_LATCH_Msk (0xFFFFFFFFUL << GPIO_LATCH_LATCH_Pos) /*!< Bit mask of LATCH field. */
+/* Bit 31 : Status on whether PIN31 has met criteria set in PIN_CNF31.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN31_Pos (31UL) /*!< Position of PIN31 field. */
+#define GPIO_LATCH_PIN31_Msk (0x1UL << GPIO_LATCH_PIN31_Pos) /*!< Bit mask of PIN31 field. */
+#define GPIO_LATCH_PIN31_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN31_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 30 : Status on whether PIN30 has met criteria set in PIN_CNF30.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN30_Pos (30UL) /*!< Position of PIN30 field. */
+#define GPIO_LATCH_PIN30_Msk (0x1UL << GPIO_LATCH_PIN30_Pos) /*!< Bit mask of PIN30 field. */
+#define GPIO_LATCH_PIN30_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN30_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 29 : Status on whether PIN29 has met criteria set in PIN_CNF29.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN29_Pos (29UL) /*!< Position of PIN29 field. */
+#define GPIO_LATCH_PIN29_Msk (0x1UL << GPIO_LATCH_PIN29_Pos) /*!< Bit mask of PIN29 field. */
+#define GPIO_LATCH_PIN29_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN29_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 28 : Status on whether PIN28 has met criteria set in PIN_CNF28.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN28_Pos (28UL) /*!< Position of PIN28 field. */
+#define GPIO_LATCH_PIN28_Msk (0x1UL << GPIO_LATCH_PIN28_Pos) /*!< Bit mask of PIN28 field. */
+#define GPIO_LATCH_PIN28_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN28_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 27 : Status on whether PIN27 has met criteria set in PIN_CNF27.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN27_Pos (27UL) /*!< Position of PIN27 field. */
+#define GPIO_LATCH_PIN27_Msk (0x1UL << GPIO_LATCH_PIN27_Pos) /*!< Bit mask of PIN27 field. */
+#define GPIO_LATCH_PIN27_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN27_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 26 : Status on whether PIN26 has met criteria set in PIN_CNF26.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN26_Pos (26UL) /*!< Position of PIN26 field. */
+#define GPIO_LATCH_PIN26_Msk (0x1UL << GPIO_LATCH_PIN26_Pos) /*!< Bit mask of PIN26 field. */
+#define GPIO_LATCH_PIN26_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN26_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 25 : Status on whether PIN25 has met criteria set in PIN_CNF25.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN25_Pos (25UL) /*!< Position of PIN25 field. */
+#define GPIO_LATCH_PIN25_Msk (0x1UL << GPIO_LATCH_PIN25_Pos) /*!< Bit mask of PIN25 field. */
+#define GPIO_LATCH_PIN25_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN25_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 24 : Status on whether PIN24 has met criteria set in PIN_CNF24.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN24_Pos (24UL) /*!< Position of PIN24 field. */
+#define GPIO_LATCH_PIN24_Msk (0x1UL << GPIO_LATCH_PIN24_Pos) /*!< Bit mask of PIN24 field. */
+#define GPIO_LATCH_PIN24_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN24_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 23 : Status on whether PIN23 has met criteria set in PIN_CNF23.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN23_Pos (23UL) /*!< Position of PIN23 field. */
+#define GPIO_LATCH_PIN23_Msk (0x1UL << GPIO_LATCH_PIN23_Pos) /*!< Bit mask of PIN23 field. */
+#define GPIO_LATCH_PIN23_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN23_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 22 : Status on whether PIN22 has met criteria set in PIN_CNF22.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN22_Pos (22UL) /*!< Position of PIN22 field. */
+#define GPIO_LATCH_PIN22_Msk (0x1UL << GPIO_LATCH_PIN22_Pos) /*!< Bit mask of PIN22 field. */
+#define GPIO_LATCH_PIN22_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN22_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 21 : Status on whether PIN21 has met criteria set in PIN_CNF21.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN21_Pos (21UL) /*!< Position of PIN21 field. */
+#define GPIO_LATCH_PIN21_Msk (0x1UL << GPIO_LATCH_PIN21_Pos) /*!< Bit mask of PIN21 field. */
+#define GPIO_LATCH_PIN21_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN21_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 20 : Status on whether PIN20 has met criteria set in PIN_CNF20.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN20_Pos (20UL) /*!< Position of PIN20 field. */
+#define GPIO_LATCH_PIN20_Msk (0x1UL << GPIO_LATCH_PIN20_Pos) /*!< Bit mask of PIN20 field. */
+#define GPIO_LATCH_PIN20_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN20_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 19 : Status on whether PIN19 has met criteria set in PIN_CNF19.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN19_Pos (19UL) /*!< Position of PIN19 field. */
+#define GPIO_LATCH_PIN19_Msk (0x1UL << GPIO_LATCH_PIN19_Pos) /*!< Bit mask of PIN19 field. */
+#define GPIO_LATCH_PIN19_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN19_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 18 : Status on whether PIN18 has met criteria set in PIN_CNF18.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN18_Pos (18UL) /*!< Position of PIN18 field. */
+#define GPIO_LATCH_PIN18_Msk (0x1UL << GPIO_LATCH_PIN18_Pos) /*!< Bit mask of PIN18 field. */
+#define GPIO_LATCH_PIN18_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN18_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 17 : Status on whether PIN17 has met criteria set in PIN_CNF17.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN17_Pos (17UL) /*!< Position of PIN17 field. */
+#define GPIO_LATCH_PIN17_Msk (0x1UL << GPIO_LATCH_PIN17_Pos) /*!< Bit mask of PIN17 field. */
+#define GPIO_LATCH_PIN17_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN17_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 16 : Status on whether PIN16 has met criteria set in PIN_CNF16.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN16_Pos (16UL) /*!< Position of PIN16 field. */
+#define GPIO_LATCH_PIN16_Msk (0x1UL << GPIO_LATCH_PIN16_Pos) /*!< Bit mask of PIN16 field. */
+#define GPIO_LATCH_PIN16_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN16_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 15 : Status on whether PIN15 has met criteria set in PIN_CNF15.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN15_Pos (15UL) /*!< Position of PIN15 field. */
+#define GPIO_LATCH_PIN15_Msk (0x1UL << GPIO_LATCH_PIN15_Pos) /*!< Bit mask of PIN15 field. */
+#define GPIO_LATCH_PIN15_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN15_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 14 : Status on whether PIN14 has met criteria set in PIN_CNF14.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN14_Pos (14UL) /*!< Position of PIN14 field. */
+#define GPIO_LATCH_PIN14_Msk (0x1UL << GPIO_LATCH_PIN14_Pos) /*!< Bit mask of PIN14 field. */
+#define GPIO_LATCH_PIN14_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN14_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 13 : Status on whether PIN13 has met criteria set in PIN_CNF13.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN13_Pos (13UL) /*!< Position of PIN13 field. */
+#define GPIO_LATCH_PIN13_Msk (0x1UL << GPIO_LATCH_PIN13_Pos) /*!< Bit mask of PIN13 field. */
+#define GPIO_LATCH_PIN13_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN13_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 12 : Status on whether PIN12 has met criteria set in PIN_CNF12.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN12_Pos (12UL) /*!< Position of PIN12 field. */
+#define GPIO_LATCH_PIN12_Msk (0x1UL << GPIO_LATCH_PIN12_Pos) /*!< Bit mask of PIN12 field. */
+#define GPIO_LATCH_PIN12_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN12_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 11 : Status on whether PIN11 has met criteria set in PIN_CNF11.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN11_Pos (11UL) /*!< Position of PIN11 field. */
+#define GPIO_LATCH_PIN11_Msk (0x1UL << GPIO_LATCH_PIN11_Pos) /*!< Bit mask of PIN11 field. */
+#define GPIO_LATCH_PIN11_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN11_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 10 : Status on whether PIN10 has met criteria set in PIN_CNF10.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN10_Pos (10UL) /*!< Position of PIN10 field. */
+#define GPIO_LATCH_PIN10_Msk (0x1UL << GPIO_LATCH_PIN10_Pos) /*!< Bit mask of PIN10 field. */
+#define GPIO_LATCH_PIN10_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN10_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 9 : Status on whether PIN9 has met criteria set in PIN_CNF9.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN9_Pos (9UL) /*!< Position of PIN9 field. */
+#define GPIO_LATCH_PIN9_Msk (0x1UL << GPIO_LATCH_PIN9_Pos) /*!< Bit mask of PIN9 field. */
+#define GPIO_LATCH_PIN9_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN9_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 8 : Status on whether PIN8 has met criteria set in PIN_CNF8.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN8_Pos (8UL) /*!< Position of PIN8 field. */
+#define GPIO_LATCH_PIN8_Msk (0x1UL << GPIO_LATCH_PIN8_Pos) /*!< Bit mask of PIN8 field. */
+#define GPIO_LATCH_PIN8_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN8_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 7 : Status on whether PIN7 has met criteria set in PIN_CNF7.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN7_Pos (7UL) /*!< Position of PIN7 field. */
+#define GPIO_LATCH_PIN7_Msk (0x1UL << GPIO_LATCH_PIN7_Pos) /*!< Bit mask of PIN7 field. */
+#define GPIO_LATCH_PIN7_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN7_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 6 : Status on whether PIN6 has met criteria set in PIN_CNF6.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN6_Pos (6UL) /*!< Position of PIN6 field. */
+#define GPIO_LATCH_PIN6_Msk (0x1UL << GPIO_LATCH_PIN6_Pos) /*!< Bit mask of PIN6 field. */
+#define GPIO_LATCH_PIN6_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN6_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 5 : Status on whether PIN5 has met criteria set in PIN_CNF5.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN5_Pos (5UL) /*!< Position of PIN5 field. */
+#define GPIO_LATCH_PIN5_Msk (0x1UL << GPIO_LATCH_PIN5_Pos) /*!< Bit mask of PIN5 field. */
+#define GPIO_LATCH_PIN5_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN5_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 4 : Status on whether PIN4 has met criteria set in PIN_CNF4.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN4_Pos (4UL) /*!< Position of PIN4 field. */
+#define GPIO_LATCH_PIN4_Msk (0x1UL << GPIO_LATCH_PIN4_Pos) /*!< Bit mask of PIN4 field. */
+#define GPIO_LATCH_PIN4_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN4_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 3 : Status on whether PIN3 has met criteria set in PIN_CNF3.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN3_Pos (3UL) /*!< Position of PIN3 field. */
+#define GPIO_LATCH_PIN3_Msk (0x1UL << GPIO_LATCH_PIN3_Pos) /*!< Bit mask of PIN3 field. */
+#define GPIO_LATCH_PIN3_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN3_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 2 : Status on whether PIN2 has met criteria set in PIN_CNF2.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN2_Pos (2UL) /*!< Position of PIN2 field. */
+#define GPIO_LATCH_PIN2_Msk (0x1UL << GPIO_LATCH_PIN2_Pos) /*!< Bit mask of PIN2 field. */
+#define GPIO_LATCH_PIN2_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN2_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 1 : Status on whether PIN1 has met criteria set in PIN_CNF1.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN1_Pos (1UL) /*!< Position of PIN1 field. */
+#define GPIO_LATCH_PIN1_Msk (0x1UL << GPIO_LATCH_PIN1_Pos) /*!< Bit mask of PIN1 field. */
+#define GPIO_LATCH_PIN1_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN1_Latched (1UL) /*!< Criteria has been met */
+
+/* Bit 0 : Status on whether PIN0 has met criteria set in PIN_CNF0.SENSE register. Write '1' to clear. */
+#define GPIO_LATCH_PIN0_Pos (0UL) /*!< Position of PIN0 field. */
+#define GPIO_LATCH_PIN0_Msk (0x1UL << GPIO_LATCH_PIN0_Pos) /*!< Bit mask of PIN0 field. */
+#define GPIO_LATCH_PIN0_NotLatched (0UL) /*!< Criteria has not been met */
+#define GPIO_LATCH_PIN0_Latched (1UL) /*!< Criteria has been met */
 
 /* Register: GPIO_DETECTMODE */
 /* Description: Select between default DETECT signal behaviour and LDETECT mode */
@@ -6330,8 +6514,8 @@
 /* Bit 0 : Select between default DETECT signal behaviour and LDETECT mode */
 #define GPIO_DETECTMODE_DETECTMODE_Pos (0UL) /*!< Position of DETECTMODE field. */
 #define GPIO_DETECTMODE_DETECTMODE_Msk (0x1UL << GPIO_DETECTMODE_DETECTMODE_Pos) /*!< Bit mask of DETECTMODE field. */
-#define GPIO_DETECTMODE_DETECTMODE_Default (0UL) /*!< Use default behaviour */
-#define GPIO_DETECTMODE_DETECTMODE_LDETECT (1UL) /*!< Use LDETECT behaviour */
+#define GPIO_DETECTMODE_DETECTMODE_Default (0UL) /*!< DETECT directly connected to PIN DETECT signals */
+#define GPIO_DETECTMODE_DETECTMODE_LDETECT (1UL) /*!< Use the latched LDETECT behaviour */
 
 /* Register: GPIO_PIN_CNF */
 /* Description: Description collection[0]:  Configuration of GPIO pins */
@@ -6350,10 +6534,10 @@
 #define GPIO_PIN_CNF_DRIVE_H0S1 (1UL) /*!< High drive '0', standard '1' */
 #define GPIO_PIN_CNF_DRIVE_S0H1 (2UL) /*!< Standard '0', high drive '1' */
 #define GPIO_PIN_CNF_DRIVE_H0H1 (3UL) /*!< High drive '0', high 'drive '1'' */
-#define GPIO_PIN_CNF_DRIVE_D0S1 (4UL) /*!< Disconnect '0' standard '1' */
-#define GPIO_PIN_CNF_DRIVE_D0H1 (5UL) /*!< Disconnect '0', high drive '1' */
-#define GPIO_PIN_CNF_DRIVE_S0D1 (6UL) /*!< Standard '0'. disconnect '1' */
-#define GPIO_PIN_CNF_DRIVE_H0D1 (7UL) /*!< High drive '0', disconnect '1' */
+#define GPIO_PIN_CNF_DRIVE_D0S1 (4UL) /*!< Disconnect '0' standard '1' (normally used for wired-or connections) */
+#define GPIO_PIN_CNF_DRIVE_D0H1 (5UL) /*!< Disconnect '0', high drive '1' (normally used for wired-or connections) */
+#define GPIO_PIN_CNF_DRIVE_S0D1 (6UL) /*!< Standard '0'. disconnect '1' (normally used for wired-and connections) */
+#define GPIO_PIN_CNF_DRIVE_H0D1 (7UL) /*!< High drive '0', disconnect '1' (normally used for wired-and connections) */
 
 /* Bits 3..2 : Pull configuration */
 #define GPIO_PIN_CNF_PULL_Pos (2UL) /*!< Position of PULL field. */
@@ -6368,7 +6552,7 @@
 #define GPIO_PIN_CNF_INPUT_Connect (0UL) /*!< Connect input buffer */
 #define GPIO_PIN_CNF_INPUT_Disconnect (1UL) /*!< Disconnect input buffer */
 
-/* Bit 0 : Pin direction */
+/* Bit 0 : Pin direction. Same physical register as DIR register */
 #define GPIO_PIN_CNF_DIR_Pos (0UL) /*!< Position of DIR field. */
 #define GPIO_PIN_CNF_DIR_Msk (0x1UL << GPIO_PIN_CNF_DIR_Pos) /*!< Bit mask of DIR field. */
 #define GPIO_PIN_CNF_DIR_Input (0UL) /*!< Configure pin as an input pin */
@@ -6626,7 +6810,7 @@
 #define POWER_RESETREAS_LOCKUP_NotDetected (0UL) /*!< Not detected */
 #define POWER_RESETREAS_LOCKUP_Detected (1UL) /*!< Detected */
 
-/* Bit 2 : Reset from AIRCR.SYSRESETREQ detected */
+/* Bit 2 : Reset from soft reset detected */
 #define POWER_RESETREAS_SREQ_Pos (2UL) /*!< Position of SREQ field. */
 #define POWER_RESETREAS_SREQ_Msk (0x1UL << POWER_RESETREAS_SREQ_Pos) /*!< Bit mask of SREQ field. */
 #define POWER_RESETREAS_SREQ_NotDetected (0UL) /*!< Not detected */
@@ -6685,12 +6869,16 @@
 /* Bits 4..1 : Power failure comparator threshold setting */
 #define POWER_POFCON_THRESHOLD_Pos (1UL) /*!< Position of THRESHOLD field. */
 #define POWER_POFCON_THRESHOLD_Msk (0xFUL << POWER_POFCON_THRESHOLD_Pos) /*!< Bit mask of THRESHOLD field. */
+#define POWER_POFCON_THRESHOLD_V17 (4UL) /*!< Set threshold to 1.7 V */
+#define POWER_POFCON_THRESHOLD_V18 (5UL) /*!< Set threshold to 1.8 V */
 #define POWER_POFCON_THRESHOLD_V19 (6UL) /*!< Set threshold to 1.9 V */
 #define POWER_POFCON_THRESHOLD_V20 (7UL) /*!< Set threshold to 2.0 V */
 #define POWER_POFCON_THRESHOLD_V21 (8UL) /*!< Set threshold to 2.1 V */
 #define POWER_POFCON_THRESHOLD_V22 (9UL) /*!< Set threshold to 2.2 V */
 #define POWER_POFCON_THRESHOLD_V23 (10UL) /*!< Set threshold to 2.3 V */
 #define POWER_POFCON_THRESHOLD_V24 (11UL) /*!< Set threshold to 2.4 V */
+#define POWER_POFCON_THRESHOLD_V25 (12UL) /*!< Set threshold to 2.5 V */
+#define POWER_POFCON_THRESHOLD_V26 (13UL) /*!< Set threshold to 2.6 V */
 #define POWER_POFCON_THRESHOLD_V27 (14UL) /*!< Set threshold to 2.7 V */
 #define POWER_POFCON_THRESHOLD_V28 (15UL) /*!< Set threshold to 2.8 V */
 
@@ -6780,25 +6968,25 @@
 /* Register: POWER_RAM_POWER */
 /* Description: Description cluster[0]:  RAM0 power control register */
 
-/* Bit 17 : Keep retention on RAM section S1 when RAM section is switched off */
+/* Bit 17 : Keep retention on RAM section S1 when RAM section is in OFF */
 #define POWER_RAM_POWER_S1RETENTION_Pos (17UL) /*!< Position of S1RETENTION field. */
 #define POWER_RAM_POWER_S1RETENTION_Msk (0x1UL << POWER_RAM_POWER_S1RETENTION_Pos) /*!< Bit mask of S1RETENTION field. */
 #define POWER_RAM_POWER_S1RETENTION_Off (0UL) /*!< Off */
 #define POWER_RAM_POWER_S1RETENTION_On (1UL) /*!< On */
 
-/* Bit 16 : Keep retention on RAM section S0 when RAM section is switched off */
+/* Bit 16 : Keep retention on RAM section S0 when RAM section is in OFF */
 #define POWER_RAM_POWER_S0RETENTION_Pos (16UL) /*!< Position of S0RETENTION field. */
 #define POWER_RAM_POWER_S0RETENTION_Msk (0x1UL << POWER_RAM_POWER_S0RETENTION_Pos) /*!< Bit mask of S0RETENTION field. */
 #define POWER_RAM_POWER_S0RETENTION_Off (0UL) /*!< Off */
 #define POWER_RAM_POWER_S0RETENTION_On (1UL) /*!< On */
 
-/* Bit 1 : Keep RAM section S1 of RAMm on or off in System ON mode */
+/* Bit 1 : Keep RAM section S1 ON or OFF in System ON mode. */
 #define POWER_RAM_POWER_S1POWER_Pos (1UL) /*!< Position of S1POWER field. */
 #define POWER_RAM_POWER_S1POWER_Msk (0x1UL << POWER_RAM_POWER_S1POWER_Pos) /*!< Bit mask of S1POWER field. */
 #define POWER_RAM_POWER_S1POWER_Off (0UL) /*!< Off */
 #define POWER_RAM_POWER_S1POWER_On (1UL) /*!< On */
 
-/* Bit 0 : Keep RAM section S0 of RAMm on or off in System ON mode */
+/* Bit 0 : Keep RAM section S0 ON or OFF in System ON mode. */
 #define POWER_RAM_POWER_S0POWER_Pos (0UL) /*!< Position of S0POWER field. */
 #define POWER_RAM_POWER_S0POWER_Msk (0x1UL << POWER_RAM_POWER_S0POWER_Pos) /*!< Bit mask of S0POWER field. */
 #define POWER_RAM_POWER_S0POWER_Off (0UL) /*!< Off */
@@ -6817,12 +7005,12 @@
 #define POWER_RAM_POWERSET_S0RETENTION_Msk (0x1UL << POWER_RAM_POWERSET_S0RETENTION_Pos) /*!< Bit mask of S0RETENTION field. */
 #define POWER_RAM_POWERSET_S0RETENTION_On (1UL) /*!< On */
 
-/* Bit 1 : Keep RAM section S1 of RAMm on or off in System ON mode */
+/* Bit 1 : Keep RAM section S1 of RAM0 on or off in System ON mode */
 #define POWER_RAM_POWERSET_S1POWER_Pos (1UL) /*!< Position of S1POWER field. */
 #define POWER_RAM_POWERSET_S1POWER_Msk (0x1UL << POWER_RAM_POWERSET_S1POWER_Pos) /*!< Bit mask of S1POWER field. */
 #define POWER_RAM_POWERSET_S1POWER_On (1UL) /*!< On */
 
-/* Bit 0 : Keep RAM section S0 of RAMm on or off in System ON mode */
+/* Bit 0 : Keep RAM section S0 of RAM0 on or off in System ON mode */
 #define POWER_RAM_POWERSET_S0POWER_Pos (0UL) /*!< Position of S0POWER field. */
 #define POWER_RAM_POWERSET_S0POWER_Msk (0x1UL << POWER_RAM_POWERSET_S0POWER_Pos) /*!< Bit mask of S0POWER field. */
 #define POWER_RAM_POWERSET_S0POWER_On (1UL) /*!< On */
@@ -6840,12 +7028,12 @@
 #define POWER_RAM_POWERCLR_S0RETENTION_Msk (0x1UL << POWER_RAM_POWERCLR_S0RETENTION_Pos) /*!< Bit mask of S0RETENTION field. */
 #define POWER_RAM_POWERCLR_S0RETENTION_Off (1UL) /*!< Off */
 
-/* Bit 1 : Keep RAM section S1 of RAMm on or off in System ON mode */
+/* Bit 1 : Keep RAM section S1 of RAM0 on or off in System ON mode */
 #define POWER_RAM_POWERCLR_S1POWER_Pos (1UL) /*!< Position of S1POWER field. */
 #define POWER_RAM_POWERCLR_S1POWER_Msk (0x1UL << POWER_RAM_POWERCLR_S1POWER_Pos) /*!< Bit mask of S1POWER field. */
 #define POWER_RAM_POWERCLR_S1POWER_Off (1UL) /*!< Off */
 
-/* Bit 0 : Keep RAM section S0 of RAMm on or off in System ON mode */
+/* Bit 0 : Keep RAM section S0 of RAM0 on or off in System ON mode */
 #define POWER_RAM_POWERCLR_S0POWER_Pos (0UL) /*!< Position of S0POWER field. */
 #define POWER_RAM_POWERCLR_S0POWER_Msk (0x1UL << POWER_RAM_POWERCLR_S0POWER_Pos) /*!< Bit mask of S0POWER field. */
 #define POWER_RAM_POWERCLR_S0POWER_Off (1UL) /*!< Off */
@@ -7971,24 +8159,24 @@
 #define PWM_LOOP_CNT_Disabled (0UL) /*!< Looping disabled (stop at the end of the sequence) */
 
 /* Register: PWM_SEQ_PTR */
-/* Description: Description cluster[0]:  Beginning address in Data RAM of sequence A */
+/* Description: Description cluster[0]:  Beginning address in Data RAM of this sequence */
 
-/* Bits 31..0 : Beginning address in Data RAM of sequence A */
+/* Bits 31..0 : Beginning address in Data RAM of this sequence */
 #define PWM_SEQ_PTR_PTR_Pos (0UL) /*!< Position of PTR field. */
 #define PWM_SEQ_PTR_PTR_Msk (0xFFFFFFFFUL << PWM_SEQ_PTR_PTR_Pos) /*!< Bit mask of PTR field. */
 
 /* Register: PWM_SEQ_CNT */
-/* Description: Description cluster[0]:  Amount of values (duty cycles) in sequence A */
+/* Description: Description cluster[0]:  Amount of values (duty cycles) in this sequence */
 
-/* Bits 14..0 : Amount of values (duty cycles) in sequence A */
+/* Bits 14..0 : Amount of values (duty cycles) in this sequence */
 #define PWM_SEQ_CNT_CNT_Pos (0UL) /*!< Position of CNT field. */
 #define PWM_SEQ_CNT_CNT_Msk (0x7FFFUL << PWM_SEQ_CNT_CNT_Pos) /*!< Bit mask of CNT field. */
 #define PWM_SEQ_CNT_CNT_Disabled (0UL) /*!< Sequence is disabled, and shall not be started as it is empty */
 
 /* Register: PWM_SEQ_REFRESH */
-/* Description: Description cluster[0]:  Amount of additional PWM periods between samples loaded to compare register (load every CNT+1 PWM periods) */
+/* Description: Description cluster[0]:  Amount of additional PWM periods between samples loaded into compare register */
 
-/* Bits 23..0 : Amount of additional PWM periods between samples loaded to compare register (load every CNT+1 PWM periods) */
+/* Bits 23..0 : Amount of additional PWM periods between samples loaded into compare register (load every REFRESH.CNT+1 PWM periods) */
 #define PWM_SEQ_REFRESH_CNT_Pos (0UL) /*!< Position of CNT field. */
 #define PWM_SEQ_REFRESH_CNT_Msk (0xFFFFFFUL << PWM_SEQ_REFRESH_CNT_Pos) /*!< Bit mask of CNT field. */
 #define PWM_SEQ_REFRESH_CNT_Continuous (0UL) /*!< Update every PWM period */
@@ -8535,6 +8723,12 @@
 /* Register: RADIO_FREQUENCY */
 /* Description: Frequency */
 
+/* Bit 8 : Channel map selection. */
+#define RADIO_FREQUENCY_MAP_Pos (8UL) /*!< Position of MAP field. */
+#define RADIO_FREQUENCY_MAP_Msk (0x1UL << RADIO_FREQUENCY_MAP_Pos) /*!< Bit mask of MAP field. */
+#define RADIO_FREQUENCY_MAP_Default (0UL) /*!< Channel map between 2400 MHZ .. 2500 MHz */
+#define RADIO_FREQUENCY_MAP_Low (1UL) /*!< Channel map between 2360 MHZ .. 2460 MHz */
+
 /* Bits 6..0 : Radio channel frequency */
 #define RADIO_FREQUENCY_FREQUENCY_Pos (0UL) /*!< Position of FREQUENCY field. */
 #define RADIO_FREQUENCY_FREQUENCY_Msk (0x7FUL << RADIO_FREQUENCY_FREQUENCY_Pos) /*!< Bit mask of FREQUENCY field. */
@@ -8916,8 +9110,8 @@
 /* Bit 0 : Radio ramp-up time */
 #define RADIO_MODECNF0_RU_Pos (0UL) /*!< Position of RU field. */
 #define RADIO_MODECNF0_RU_Msk (0x1UL << RADIO_MODECNF0_RU_Pos) /*!< Bit mask of RU field. */
-#define RADIO_MODECNF0_RU_Default (0UL) /*!< Default ramp-up time, compatible with nRF51 */
-#define RADIO_MODECNF0_RU_Fast (1UL) /*!< Fast ramp-up, see product specification for more information */
+#define RADIO_MODECNF0_RU_Default (0UL) /*!< Default ramp-up time (tRXEN), compatible with firmware written for nRF51 */
+#define RADIO_MODECNF0_RU_Fast (1UL) /*!< Fast ramp-up (tRXEN,FAST), see electrical specification for more information */
 
 /* Register: RADIO_POWER */
 /* Description: Peripheral power control */
@@ -9729,6 +9923,12 @@
 /* Register: SAADC_CH_CONFIG */
 /* Description: Description cluster[0]:  Input configuration for CH[0] */
 
+/* Bit 24 : Enable burst mode */
+#define SAADC_CH_CONFIG_BURST_Pos (24UL) /*!< Position of BURST field. */
+#define SAADC_CH_CONFIG_BURST_Msk (0x1UL << SAADC_CH_CONFIG_BURST_Pos) /*!< Bit mask of BURST field. */
+#define SAADC_CH_CONFIG_BURST_Disabled (0UL) /*!< Burst mode is disabled (normal operation) */
+#define SAADC_CH_CONFIG_BURST_Enabled (1UL) /*!< Burst mode is enabled. SAADC takes 2^OVERSAMPLE number of samples as fast as it can, and sends the average to Data RAM. */
+
 /* Bit 20 : Enable differential mode */
 #define SAADC_CH_CONFIG_MODE_Pos (20UL) /*!< Position of MODE field. */
 #define SAADC_CH_CONFIG_MODE_Msk (0x1UL << SAADC_CH_CONFIG_MODE_Pos) /*!< Bit mask of MODE field. */
@@ -9840,16 +10040,16 @@
 /* Register: SAADC_RESULT_MAXCNT */
 /* Description: Maximum number of buffer words to transfer */
 
-/* Bits 15..0 : Maximum number of buffer words to transfer */
+/* Bits 14..0 : Maximum number of buffer words to transfer */
 #define SAADC_RESULT_MAXCNT_MAXCNT_Pos (0UL) /*!< Position of MAXCNT field. */
-#define SAADC_RESULT_MAXCNT_MAXCNT_Msk (0xFFFFUL << SAADC_RESULT_MAXCNT_MAXCNT_Pos) /*!< Bit mask of MAXCNT field. */
+#define SAADC_RESULT_MAXCNT_MAXCNT_Msk (0x7FFFUL << SAADC_RESULT_MAXCNT_MAXCNT_Pos) /*!< Bit mask of MAXCNT field. */
 
 /* Register: SAADC_RESULT_AMOUNT */
 /* Description: Number of buffer words transferred since last START */
 
-/* Bits 15..0 : Number of buffer words transferred since last START. This register can be read after an END or STOPPED event. */
+/* Bits 14..0 : Number of buffer words transferred since last START. This register can be read after an END or STOPPED event. */
 #define SAADC_RESULT_AMOUNT_AMOUNT_Pos (0UL) /*!< Position of AMOUNT field. */
-#define SAADC_RESULT_AMOUNT_AMOUNT_Msk (0xFFFFUL << SAADC_RESULT_AMOUNT_AMOUNT_Pos) /*!< Bit mask of AMOUNT field. */
+#define SAADC_RESULT_AMOUNT_AMOUNT_Msk (0x7FFFUL << SAADC_RESULT_AMOUNT_AMOUNT_Pos) /*!< Bit mask of AMOUNT field. */
 
 
 /* Peripheral: SPI */
@@ -10749,7 +10949,7 @@
 #define TIMER_MODE_MODE_Pos (0UL) /*!< Position of MODE field. */
 #define TIMER_MODE_MODE_Msk (0x3UL << TIMER_MODE_MODE_Pos) /*!< Bit mask of MODE field. */
 #define TIMER_MODE_MODE_Timer (0UL) /*!< Select Timer mode */
-#define TIMER_MODE_MODE_Counter (1UL) /*!< Select Counter mode */
+#define TIMER_MODE_MODE_Counter (1UL) /*!< Deprecated enumerator -  Select Counter mode */
 #define TIMER_MODE_MODE_LowPowerCounter (2UL) /*!< Select Low Power Counter mode */
 
 /* Register: TIMER_BITMODE */
@@ -10894,18 +11094,21 @@
 #define TWI_ERRORSRC_DNACK_Msk (0x1UL << TWI_ERRORSRC_DNACK_Pos) /*!< Bit mask of DNACK field. */
 #define TWI_ERRORSRC_DNACK_NotPresent (0UL) /*!< Read: error not present */
 #define TWI_ERRORSRC_DNACK_Present (1UL) /*!< Read: error present */
+#define TWI_ERRORSRC_DNACK_Clear (1UL) /*!< Write: clear error on writing '1' */
 
 /* Bit 1 : NACK received after sending the address (write '1' to clear) */
 #define TWI_ERRORSRC_ANACK_Pos (1UL) /*!< Position of ANACK field. */
 #define TWI_ERRORSRC_ANACK_Msk (0x1UL << TWI_ERRORSRC_ANACK_Pos) /*!< Bit mask of ANACK field. */
 #define TWI_ERRORSRC_ANACK_NotPresent (0UL) /*!< Read: error not present */
 #define TWI_ERRORSRC_ANACK_Present (1UL) /*!< Read: error present */
+#define TWI_ERRORSRC_ANACK_Clear (1UL) /*!< Write: clear error on writing '1' */
 
 /* Bit 0 : Overrun error */
 #define TWI_ERRORSRC_OVERRUN_Pos (0UL) /*!< Position of OVERRUN field. */
 #define TWI_ERRORSRC_OVERRUN_Msk (0x1UL << TWI_ERRORSRC_OVERRUN_Pos) /*!< Bit mask of OVERRUN field. */
 #define TWI_ERRORSRC_OVERRUN_NotPresent (0UL) /*!< Read: no overrun occured */
 #define TWI_ERRORSRC_OVERRUN_Present (1UL) /*!< Read: overrun occured */
+#define TWI_ERRORSRC_OVERRUN_Clear (1UL) /*!< Write: clear error on writing '1' */
 
 /* Register: TWI_ENABLE */
 /* Description: Enable TWI */
@@ -11027,6 +11230,12 @@
 #define TWIM_INTEN_RXSTARTED_Disabled (0UL) /*!< Disable */
 #define TWIM_INTEN_RXSTARTED_Enabled (1UL) /*!< Enable */
 
+/* Bit 18 : Enable or disable interrupt for SUSPENDED event */
+#define TWIM_INTEN_SUSPENDED_Pos (18UL) /*!< Position of SUSPENDED field. */
+#define TWIM_INTEN_SUSPENDED_Msk (0x1UL << TWIM_INTEN_SUSPENDED_Pos) /*!< Bit mask of SUSPENDED field. */
+#define TWIM_INTEN_SUSPENDED_Disabled (0UL) /*!< Disable */
+#define TWIM_INTEN_SUSPENDED_Enabled (1UL) /*!< Enable */
+
 /* Bit 9 : Enable or disable interrupt for ERROR event */
 #define TWIM_INTEN_ERROR_Pos (9UL) /*!< Position of ERROR field. */
 #define TWIM_INTEN_ERROR_Msk (0x1UL << TWIM_INTEN_ERROR_Pos) /*!< Bit mask of ERROR field. */
@@ -11069,6 +11278,13 @@
 #define TWIM_INTENSET_RXSTARTED_Disabled (0UL) /*!< Read: Disabled */
 #define TWIM_INTENSET_RXSTARTED_Enabled (1UL) /*!< Read: Enabled */
 #define TWIM_INTENSET_RXSTARTED_Set (1UL) /*!< Enable */
+
+/* Bit 18 : Write '1' to Enable interrupt for SUSPENDED event */
+#define TWIM_INTENSET_SUSPENDED_Pos (18UL) /*!< Position of SUSPENDED field. */
+#define TWIM_INTENSET_SUSPENDED_Msk (0x1UL << TWIM_INTENSET_SUSPENDED_Pos) /*!< Bit mask of SUSPENDED field. */
+#define TWIM_INTENSET_SUSPENDED_Disabled (0UL) /*!< Read: Disabled */
+#define TWIM_INTENSET_SUSPENDED_Enabled (1UL) /*!< Read: Enabled */
+#define TWIM_INTENSET_SUSPENDED_Set (1UL) /*!< Enable */
 
 /* Bit 9 : Write '1' to Enable interrupt for ERROR event */
 #define TWIM_INTENSET_ERROR_Pos (9UL) /*!< Position of ERROR field. */
@@ -11115,6 +11331,13 @@
 #define TWIM_INTENCLR_RXSTARTED_Enabled (1UL) /*!< Read: Enabled */
 #define TWIM_INTENCLR_RXSTARTED_Clear (1UL) /*!< Disable */
 
+/* Bit 18 : Write '1' to Disable interrupt for SUSPENDED event */
+#define TWIM_INTENCLR_SUSPENDED_Pos (18UL) /*!< Position of SUSPENDED field. */
+#define TWIM_INTENCLR_SUSPENDED_Msk (0x1UL << TWIM_INTENCLR_SUSPENDED_Pos) /*!< Bit mask of SUSPENDED field. */
+#define TWIM_INTENCLR_SUSPENDED_Disabled (0UL) /*!< Read: Disabled */
+#define TWIM_INTENCLR_SUSPENDED_Enabled (1UL) /*!< Read: Enabled */
+#define TWIM_INTENCLR_SUSPENDED_Clear (1UL) /*!< Disable */
+
 /* Bit 9 : Write '1' to Disable interrupt for ERROR event */
 #define TWIM_INTENCLR_ERROR_Pos (9UL) /*!< Position of ERROR field. */
 #define TWIM_INTENCLR_ERROR_Msk (0x1UL << TWIM_INTENCLR_ERROR_Pos) /*!< Bit mask of ERROR field. */
@@ -11143,6 +11366,12 @@
 #define TWIM_ERRORSRC_ANACK_Msk (0x1UL << TWIM_ERRORSRC_ANACK_Pos) /*!< Bit mask of ANACK field. */
 #define TWIM_ERRORSRC_ANACK_NotReceived (0UL) /*!< Error did not occur */
 #define TWIM_ERRORSRC_ANACK_Received (1UL) /*!< Error occurred */
+
+/* Bit 0 : Overrun error */
+#define TWIM_ERRORSRC_OVERRUN_Pos (0UL) /*!< Position of OVERRUN field. */
+#define TWIM_ERRORSRC_OVERRUN_Msk (0x1UL << TWIM_ERRORSRC_OVERRUN_Pos) /*!< Bit mask of OVERRUN field. */
+#define TWIM_ERRORSRC_OVERRUN_NotReceived (0UL) /*!< Error did not occur */
+#define TWIM_ERRORSRC_OVERRUN_Received (1UL) /*!< Error occurred */
 
 /* Register: TWIM_ENABLE */
 /* Description: Enable TWIM */
@@ -11732,7 +11961,7 @@
 /* Register: UART_BAUDRATE */
 /* Description: Baud rate */
 
-/* Bits 31..0 : Baud-rate */
+/* Bits 31..0 : Baud rate */
 #define UART_BAUDRATE_BAUDRATE_Pos (0UL) /*!< Position of BAUDRATE field. */
 #define UART_BAUDRATE_BAUDRATE_Msk (0xFFFFFFFFUL << UART_BAUDRATE_BAUDRATE_Pos) /*!< Bit mask of BAUDRATE field. */
 #define UART_BAUDRATE_BAUDRATE_Baud1200 (0x0004F000UL) /*!< 1200 baud (actual rate: 1205) */
@@ -11742,7 +11971,9 @@
 #define UART_BAUDRATE_BAUDRATE_Baud14400 (0x003B0000UL) /*!< 14400 baud (actual rate: 14414) */
 #define UART_BAUDRATE_BAUDRATE_Baud19200 (0x004EA000UL) /*!< 19200 baud (actual rate: 19208) */
 #define UART_BAUDRATE_BAUDRATE_Baud28800 (0x0075F000UL) /*!< 28800 baud (actual rate: 28829) */
+#define UART_BAUDRATE_BAUDRATE_Baud31250 (0x00800000UL) /*!< 31250 baud */
 #define UART_BAUDRATE_BAUDRATE_Baud38400 (0x009D5000UL) /*!< 38400 baud (actual rate: 38462) */
+#define UART_BAUDRATE_BAUDRATE_Baud56000 (0x00E50000UL) /*!< 56000 baud (actual rate: 55944) */
 #define UART_BAUDRATE_BAUDRATE_Baud57600 (0x00EBF000UL) /*!< 57600 baud (actual rate: 57762) */
 #define UART_BAUDRATE_BAUDRATE_Baud76800 (0x013A9000UL) /*!< 76800 baud (actual rate: 76923) */
 #define UART_BAUDRATE_BAUDRATE_Baud115200 (0x01D7E000UL) /*!< 115200 baud (actual rate: 115942) */
@@ -11825,11 +12056,23 @@
 #define UARTE_INTEN_ENDTX_Disabled (0UL) /*!< Disable */
 #define UARTE_INTEN_ENDTX_Enabled (1UL) /*!< Enable */
 
+/* Bit 7 : Enable or disable interrupt for TXDRDY event */
+#define UARTE_INTEN_TXDRDY_Pos (7UL) /*!< Position of TXDRDY field. */
+#define UARTE_INTEN_TXDRDY_Msk (0x1UL << UARTE_INTEN_TXDRDY_Pos) /*!< Bit mask of TXDRDY field. */
+#define UARTE_INTEN_TXDRDY_Disabled (0UL) /*!< Disable */
+#define UARTE_INTEN_TXDRDY_Enabled (1UL) /*!< Enable */
+
 /* Bit 4 : Enable or disable interrupt for ENDRX event */
 #define UARTE_INTEN_ENDRX_Pos (4UL) /*!< Position of ENDRX field. */
 #define UARTE_INTEN_ENDRX_Msk (0x1UL << UARTE_INTEN_ENDRX_Pos) /*!< Bit mask of ENDRX field. */
 #define UARTE_INTEN_ENDRX_Disabled (0UL) /*!< Disable */
 #define UARTE_INTEN_ENDRX_Enabled (1UL) /*!< Enable */
+
+/* Bit 2 : Enable or disable interrupt for RXDRDY event */
+#define UARTE_INTEN_RXDRDY_Pos (2UL) /*!< Position of RXDRDY field. */
+#define UARTE_INTEN_RXDRDY_Msk (0x1UL << UARTE_INTEN_RXDRDY_Pos) /*!< Bit mask of RXDRDY field. */
+#define UARTE_INTEN_RXDRDY_Disabled (0UL) /*!< Disable */
+#define UARTE_INTEN_RXDRDY_Enabled (1UL) /*!< Enable */
 
 /* Bit 1 : Enable or disable interrupt for NCTS event */
 #define UARTE_INTEN_NCTS_Pos (1UL) /*!< Position of NCTS field. */
@@ -11888,12 +12131,26 @@
 #define UARTE_INTENSET_ENDTX_Enabled (1UL) /*!< Read: Enabled */
 #define UARTE_INTENSET_ENDTX_Set (1UL) /*!< Enable */
 
+/* Bit 7 : Write '1' to Enable interrupt for TXDRDY event */
+#define UARTE_INTENSET_TXDRDY_Pos (7UL) /*!< Position of TXDRDY field. */
+#define UARTE_INTENSET_TXDRDY_Msk (0x1UL << UARTE_INTENSET_TXDRDY_Pos) /*!< Bit mask of TXDRDY field. */
+#define UARTE_INTENSET_TXDRDY_Disabled (0UL) /*!< Read: Disabled */
+#define UARTE_INTENSET_TXDRDY_Enabled (1UL) /*!< Read: Enabled */
+#define UARTE_INTENSET_TXDRDY_Set (1UL) /*!< Enable */
+
 /* Bit 4 : Write '1' to Enable interrupt for ENDRX event */
 #define UARTE_INTENSET_ENDRX_Pos (4UL) /*!< Position of ENDRX field. */
 #define UARTE_INTENSET_ENDRX_Msk (0x1UL << UARTE_INTENSET_ENDRX_Pos) /*!< Bit mask of ENDRX field. */
 #define UARTE_INTENSET_ENDRX_Disabled (0UL) /*!< Read: Disabled */
 #define UARTE_INTENSET_ENDRX_Enabled (1UL) /*!< Read: Enabled */
 #define UARTE_INTENSET_ENDRX_Set (1UL) /*!< Enable */
+
+/* Bit 2 : Write '1' to Enable interrupt for RXDRDY event */
+#define UARTE_INTENSET_RXDRDY_Pos (2UL) /*!< Position of RXDRDY field. */
+#define UARTE_INTENSET_RXDRDY_Msk (0x1UL << UARTE_INTENSET_RXDRDY_Pos) /*!< Bit mask of RXDRDY field. */
+#define UARTE_INTENSET_RXDRDY_Disabled (0UL) /*!< Read: Disabled */
+#define UARTE_INTENSET_RXDRDY_Enabled (1UL) /*!< Read: Enabled */
+#define UARTE_INTENSET_RXDRDY_Set (1UL) /*!< Enable */
 
 /* Bit 1 : Write '1' to Enable interrupt for NCTS event */
 #define UARTE_INTENSET_NCTS_Pos (1UL) /*!< Position of NCTS field. */
@@ -11954,12 +12211,26 @@
 #define UARTE_INTENCLR_ENDTX_Enabled (1UL) /*!< Read: Enabled */
 #define UARTE_INTENCLR_ENDTX_Clear (1UL) /*!< Disable */
 
+/* Bit 7 : Write '1' to Disable interrupt for TXDRDY event */
+#define UARTE_INTENCLR_TXDRDY_Pos (7UL) /*!< Position of TXDRDY field. */
+#define UARTE_INTENCLR_TXDRDY_Msk (0x1UL << UARTE_INTENCLR_TXDRDY_Pos) /*!< Bit mask of TXDRDY field. */
+#define UARTE_INTENCLR_TXDRDY_Disabled (0UL) /*!< Read: Disabled */
+#define UARTE_INTENCLR_TXDRDY_Enabled (1UL) /*!< Read: Enabled */
+#define UARTE_INTENCLR_TXDRDY_Clear (1UL) /*!< Disable */
+
 /* Bit 4 : Write '1' to Disable interrupt for ENDRX event */
 #define UARTE_INTENCLR_ENDRX_Pos (4UL) /*!< Position of ENDRX field. */
 #define UARTE_INTENCLR_ENDRX_Msk (0x1UL << UARTE_INTENCLR_ENDRX_Pos) /*!< Bit mask of ENDRX field. */
 #define UARTE_INTENCLR_ENDRX_Disabled (0UL) /*!< Read: Disabled */
 #define UARTE_INTENCLR_ENDRX_Enabled (1UL) /*!< Read: Enabled */
 #define UARTE_INTENCLR_ENDRX_Clear (1UL) /*!< Disable */
+
+/* Bit 2 : Write '1' to Disable interrupt for RXDRDY event */
+#define UARTE_INTENCLR_RXDRDY_Pos (2UL) /*!< Position of RXDRDY field. */
+#define UARTE_INTENCLR_RXDRDY_Msk (0x1UL << UARTE_INTENCLR_RXDRDY_Pos) /*!< Bit mask of RXDRDY field. */
+#define UARTE_INTENCLR_RXDRDY_Disabled (0UL) /*!< Read: Disabled */
+#define UARTE_INTENCLR_RXDRDY_Enabled (1UL) /*!< Read: Enabled */
+#define UARTE_INTENCLR_RXDRDY_Clear (1UL) /*!< Disable */
 
 /* Bit 1 : Write '1' to Disable interrupt for NCTS event */
 #define UARTE_INTENCLR_NCTS_Pos (1UL) /*!< Position of NCTS field. */
@@ -12064,9 +12335,9 @@
 #define UARTE_PSEL_RXD_PIN_Msk (0x1FUL << UARTE_PSEL_RXD_PIN_Pos) /*!< Bit mask of PIN field. */
 
 /* Register: UARTE_BAUDRATE */
-/* Description: Baud rate */
+/* Description: Baud rate. Accuracy depends on the HFCLK source selected. */
 
-/* Bits 31..0 : Baud-rate */
+/* Bits 31..0 : Baud rate */
 #define UARTE_BAUDRATE_BAUDRATE_Pos (0UL) /*!< Position of BAUDRATE field. */
 #define UARTE_BAUDRATE_BAUDRATE_Msk (0xFFFFFFFFUL << UARTE_BAUDRATE_BAUDRATE_Pos) /*!< Bit mask of BAUDRATE field. */
 #define UARTE_BAUDRATE_BAUDRATE_Baud1200 (0x0004F000UL) /*!< 1200 baud (actual rate: 1205) */
@@ -12076,7 +12347,9 @@
 #define UARTE_BAUDRATE_BAUDRATE_Baud14400 (0x003AF000UL) /*!< 14400 baud (actual rate: 14401) */
 #define UARTE_BAUDRATE_BAUDRATE_Baud19200 (0x004EA000UL) /*!< 19200 baud (actual rate: 19208) */
 #define UARTE_BAUDRATE_BAUDRATE_Baud28800 (0x0075C000UL) /*!< 28800 baud (actual rate: 28777) */
+#define UARTE_BAUDRATE_BAUDRATE_Baud31250 (0x00800000UL) /*!< 31250 baud */
 #define UARTE_BAUDRATE_BAUDRATE_Baud38400 (0x009D0000UL) /*!< 38400 baud (actual rate: 38369) */
+#define UARTE_BAUDRATE_BAUDRATE_Baud56000 (0x00E50000UL) /*!< 56000 baud (actual rate: 55944) */
 #define UARTE_BAUDRATE_BAUDRATE_Baud57600 (0x00EB0000UL) /*!< 57600 baud (actual rate: 57554) */
 #define UARTE_BAUDRATE_BAUDRATE_Baud76800 (0x013A9000UL) /*!< 76800 baud (actual rate: 76923) */
 #define UARTE_BAUDRATE_BAUDRATE_Baud115200 (0x01D60000UL) /*!< 115200 baud (actual rate: 115108) */
@@ -12182,9 +12455,9 @@
 #define UICR_PSELRESET_PIN_Msk (0x1FUL << UICR_PSELRESET_PIN_Pos) /*!< Bit mask of PIN field. */
 
 /* Register: UICR_APPROTECT */
-/* Description: Access port protection */
+/* Description: Access Port protection */
 
-/* Bits 7..0 : Blocks debugger read/write access to all CPU registers and memory mapped addresses */
+/* Bits 7..0 : Enable or disable Access Port protection. Any other value than 0xFF being written to this field will enable protection. */
 #define UICR_APPROTECT_PALL_Pos (0UL) /*!< Position of PALL field. */
 #define UICR_APPROTECT_PALL_Msk (0xFFUL << UICR_APPROTECT_PALL_Pos) /*!< Bit mask of PALL field. */
 #define UICR_APPROTECT_PALL_Enabled (0x00UL) /*!< Enable */

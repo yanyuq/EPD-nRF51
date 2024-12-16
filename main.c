@@ -14,8 +14,6 @@
 #include <string.h>
 #include "nordic_common.h"
 #include "nrf.h"
-#include "nrf_log.h"
-#include "nrf_nvmc.h"
 #include "ble.h"
 #include "ble_hci.h"
 #include "ble_srv_common.h"
@@ -23,15 +21,16 @@
 #include "ble_advertising.h"
 #include "ble_conn_params.h"
 #include "softdevice_handler.h"
-#include "pstorage.h"
+#include "fstorage.h"
 #include "app_error.h"
 #include "app_timer.h"
 #include "EPD_ble.h"
-#ifdef DEBUG
-#include "EPD_Test.h"
-#endif
+#define NRF_LOG_MODULE_NAME "main"
+#include "nrf_log.h"
+#include "nrf_log_ctrl.h"
 
-#define IS_SRVC_CHANGED_CHARACT_PRESENT  1                                              /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
+#define CENTRAL_LINK_COUNT              0                                               /**< Number of central links used by the application. When changing this number remember to adjust the RAM settings*/
+#define PERIPHERAL_LINK_COUNT           1                                               /**< Number of peripheral links used by the application. When changing this number remember to adjust the RAM settings*/
 
 #define DEVICE_NAME                      "NRF_EPD"                                      /**< Name of device. Will be included in the advertising data. */
 #define APP_ADV_INTERVAL                 300                                            /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
@@ -86,7 +85,7 @@ static void services_init(void)
 {
     uint32_t       err_code;
 
-    err_code = pstorage_init();
+    err_code = fs_init();
     APP_ERROR_CHECK(err_code);
 
     memset(&m_epd, 0, sizeof(ble_epd_t));
@@ -96,8 +95,8 @@ static void services_init(void)
 
 /**@brief Function for the GAP initialization.
  *
- * @details This function sets up all the necessary GAP (Generic Access Profile) parameters of the
- *          device including the device name, appearance, and the preferred connection parameters.
+ * @details This function will set up all the necessary GAP (Generic Access Profile) parameters of
+ *          the device. It also sets the permissions and appearance.
  */
 static void gap_params_init(void)
 {
@@ -112,7 +111,7 @@ static void gap_params_init(void)
     err_code = sd_ble_gap_address_get(&addr);
     APP_ERROR_CHECK(err_code);
 
-    NRF_LOG_PRINTF("Bluetooth MAC Address: %02X:%02X:%02X:%02X:%02X:%02X\n",
+    NRF_LOG_INFO("Bluetooth MAC Address: %02X:%02X:%02X:%02X:%02X:%02X\n",
                    addr.addr[5], addr.addr[4], addr.addr[3],
                    addr.addr[2], addr.addr[1], addr.addr[0]);
 
@@ -133,13 +132,14 @@ static void gap_params_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-/**@brief Function for handling the Connection Parameters Module.
+/**@brief Function for handling an event from the Connection Parameters Module.
  *
- * @details This function will be called for all events in the Connection Parameters Module which
- *          are passed to the application.
- *          @note All this function does is to disconnect. This could have been done by simply
- *                setting the disconnect_on_fail config parameter, but instead we use the event
- *                handler mechanism to demonstrate its use.
+ * @details This function will be called for all events in the Connection Parameters Module
+ *          which are passed to the application.
+ *
+ * @note All this function does is to disconnect. This could have been done by simply setting
+ *       the disconnect_on_fail config parameter, but instead we use the event handler
+ *       mechanism to demonstrate its use.
  *
  * @param[in] p_evt  Event received from the Connection Parameters Module.
  */
@@ -155,7 +155,7 @@ static void on_conn_params_evt(ble_conn_params_evt_t * p_evt)
 }
 
 
-/**@brief Function for handling a Connection Parameters error.
+/**@brief Function for handling errors from the Connection Parameters module.
  *
  * @param[in] nrf_error  Error code containing information about what went wrong.
  */
@@ -223,9 +223,9 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
     }
 }
 
-/**@brief Function for handling the Application's BLE Stack events.
+/**@brief Function for the application's SoftDevice event handler.
  *
- * @param[in] p_ble_evt  Bluetooth stack event.
+ * @param[in] p_ble_evt SoftDevice event.
  */
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
@@ -234,10 +234,12 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
+            NRF_LOG_INFO("CONNECTED\n");
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
+            NRF_LOG_INFO("DISCONNECTED\n");
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
             err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
             APP_ERROR_CHECK(err_code);
@@ -275,12 +277,13 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 }
 
 
-/**@brief Function for dispatching a BLE stack event to all modules with a BLE stack event handler.
+/**@brief Function for dispatching a SoftDevice event to all modules with a SoftDevice
+ *        event handler.
  *
- * @details This function is called from the BLE Stack event interrupt handler after a BLE stack
- *          event has been received.
+ * @details This function is called from the SoftDevice event interrupt handler after a
+ *          SoftDevice event has been received.
  *
- * @param[in] p_ble_evt  Bluetooth stack event.
+ * @param[in] p_ble_evt  SoftDevice event.
  */
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
@@ -300,33 +303,52 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
  */
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
-    pstorage_sys_event_handler(sys_evt);
+    // Dispatch the system event to the fstorage module, where it will be
+    // dispatched to the Flash Data Storage (FDS) module.
+    fs_sys_event_handler(sys_evt);
+
+    // Dispatch to the Advertising module last, since it will check if there are any
+    // pending flash operations in fstorage. Let fstorage process system events first,
+    // so that it can report correctly to the Advertising module.
     ble_advertising_on_sys_evt(sys_evt);
 }
 
 
-/**@brief Function for initializing the BLE stack.
+/**@brief Function for the SoftDevice initialization.
  *
- * @details Initializes the SoftDevice and the BLE event interrupt.
+ * @details This function initializes the SoftDevice and the BLE event interrupt.
  */
 static void ble_stack_init(void)
 {
     uint32_t err_code;
 
-    // Initialize the SoftDevice handler module.
-    SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_SYNTH_250_PPM, NULL);
+    nrf_clock_lf_cfg_t clock_lf_cfg = {.source        = NRF_CLOCK_LF_SRC_SYNTH,
+                                       .rc_ctiv       = 0,
+                                       .rc_temp_ctiv  = 0,
+                                       .xtal_accuracy = NRF_CLOCK_LF_XTAL_ACCURACY_20_PPM,
+                                      };
 
-    // Enable BLE stack.
+    // Initialize the SoftDevice handler module.
+    SOFTDEVICE_HANDLER_INIT(&clock_lf_cfg, NULL);
+
     ble_enable_params_t ble_enable_params;
-    memset(&ble_enable_params, 0, sizeof(ble_enable_params));
-    err_code = sd_ble_enable(&ble_enable_params);
+    err_code = softdevice_enable_get_default_config(CENTRAL_LINK_COUNT,
+                                                    PERIPHERAL_LINK_COUNT,
+                                                    &ble_enable_params);
+    APP_ERROR_CHECK(err_code);
+    
+    // Check the ram settings against the used number of links
+    CHECK_RAM_START_ADDR(CENTRAL_LINK_COUNT,PERIPHERAL_LINK_COUNT);
+    
+    // Enable BLE stack.
+    err_code = softdevice_enable(&ble_enable_params);
     APP_ERROR_CHECK(err_code);
 
-    // Register with the SoftDevice handler module for BLE events.
+    // Subscribe for BLE events.
     err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
     APP_ERROR_CHECK(err_code);
 
-    // Register with the SoftDevice handler module for BLE events.
+    // Subscribe for System events.
     err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
     APP_ERROR_CHECK(err_code);
 }
@@ -335,13 +357,13 @@ static void ble_stack_init(void)
  */
 static void advertising_init(void)
 {
-    uint32_t      err_code;
-    ble_advdata_t advdata;
-    ble_advdata_t scanrsp;
+    uint32_t               err_code;
+    ble_advdata_t          advdata;
+    ble_advdata_t          scanrsp;
+    ble_adv_modes_config_t options;
 
     // Build advertising data struct to pass into @ref ble_advertising_init.
     memset(&advdata, 0, sizeof(advdata));
-
     advdata.name_type          = BLE_ADVDATA_FULL_NAME;
     advdata.flags              = BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
     
@@ -349,8 +371,8 @@ static void advertising_init(void)
     scanrsp.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
     scanrsp.uuids_complete.p_uuids  = m_adv_uuids;
 
-    ble_adv_modes_config_t options = {0};
-    options.ble_adv_fast_enabled  = BLE_ADV_FAST_ENABLED;
+    memset(&options, 0, sizeof(options));
+    options.ble_adv_fast_enabled  = true;
     options.ble_adv_fast_interval = APP_ADV_INTERVAL;
     options.ble_adv_fast_timeout  = APP_ADV_TIMEOUT_IN_SECONDS;
 
@@ -372,10 +394,10 @@ int main(void)
 {
     uint32_t err_code;
 
-    err_code = NRF_LOG_INIT();
+    err_code = NRF_LOG_INIT(NULL);
     APP_ERROR_CHECK(err_code);
 
-    NRF_LOG_PRINTF("start..\n");
+    NRF_LOG_DEBUG("init..\n");
 
     timers_init();
     ble_stack_init();
@@ -384,17 +406,17 @@ int main(void)
     advertising_init();
     conn_params_init();
 
+    NRF_LOG_DEBUG("start..\n");
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
 
-    NRF_LOG_PRINTF("done.\n");
-
-#ifdef DEBUG
-    EPD_4in2_test();
-#endif
+    NRF_LOG_DEBUG("done.\n");
 
     for (;;)
     {
-        power_manage();
+        if (NRF_LOG_PROCESS() == false)
+        {
+            power_manage();
+        }
     }
 }

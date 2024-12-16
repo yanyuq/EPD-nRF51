@@ -1,25 +1,64 @@
-/* Copyright (c) 2015 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2015 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
+
+#include "sdk_common.h"
+#if NRF_MODULE_ENABLED(ANT_BSC)
+
 #include "nrf_assert.h"
+#include "nrf_error.h"
 #include "app_error.h"
 #include "ant_interface.h"
-#include "app_util.h"
 #include "ant_bsc.h"
 #include "ant_bsc_utils.h"
-#include "ant_bsc_page_logger.h"
-#include "app_error.h"
+
+#define NRF_LOG_MODULE_NAME "ANT_BSC"
+#if ANT_BSC_LOG_ENABLED
+#define NRF_LOG_LEVEL       ANT_BSC_LOG_LEVEL
+#define NRF_LOG_INFO_COLOR  ANT_BSC_INFO_COLOR
+#else // ANT_BSC_LOG_ENABLED
+#define NRF_LOG_LEVEL       0
+#endif // ANT_BSC_LOG_ENABLED
+#include "nrf_log.h"
 
 #define MAIN_DATA_INTERVAL          4       /**< The number of background data pages sent between main data pages.*/
-#define BACKGROUND_DATA_INTERVAL    64      /**< The number of main data pages sent between background data page. 
+#define BACKGROUND_DATA_INTERVAL    64      /**< The number of main data pages sent between background data page.
                                                  Background data page is sent every 65th message. */
 #define TX_TOGGLE_DIVISOR           4       /**< The number of messages between changing state of toggle bit. */
 
@@ -63,7 +102,7 @@ static ret_code_t ant_bsc_init(ant_bsc_profile_t          * p_profile,
     p_profile->page_5       = DEFAULT_ANT_BSC_PAGE5();
     p_profile->page_comb_0  = DEFAULT_ANT_BSC_COMBINED_PAGE0();
 
-    LOG_BSC("ANT BSC channel %u init\n\r", p_profile->channel_number);
+    NRF_LOG_INFO("ANT BSC channel %u init\r\n", p_profile->channel_number);
     return ant_channel_init(p_channel_config);
 }
 
@@ -90,10 +129,10 @@ ret_code_t ant_bsc_sens_init(ant_bsc_profile_t           * p_profile,
     ASSERT(p_profile != NULL);
     ASSERT(p_channel_config != NULL);
     ASSERT(p_sens_config != NULL);
-    ASSERT(p_sens_config->p_cb_buffer != NULL);
+    ASSERT(p_sens_config->p_cb != NULL);
     ASSERT(p_sens_config->evt_handler != NULL);
 
-    ASSERT((p_sens_config->main_page_number == ANT_BSC_PAGE_0) 
+    ASSERT((p_sens_config->main_page_number == ANT_BSC_PAGE_0)
         || (p_sens_config->main_page_number == ANT_BSC_PAGE_5)
         || (p_sens_config->main_page_number == ANT_BSC_COMB_PAGE_0));
 
@@ -103,7 +142,7 @@ ret_code_t ant_bsc_sens_init(ant_bsc_profile_t           * p_profile,
     p_profile->_cb.p_sens_cb->page_1_present    = p_sens_config->page_1_present;
     p_profile->_cb.p_sens_cb->page_4_present    = p_sens_config->page_4_present;
     p_profile->_cb.p_sens_cb->main_page_number  = p_sens_config->main_page_number;
-    p_profile->_cb.p_sens_cb->bkgd_page_number  = 
+    p_profile->_cb.p_sens_cb->bkgd_page_number  =
                             p_sens_config->page_1_present ? ANT_BSC_PAGE_1 : ANT_BSC_PAGE_2;
     p_profile->_cb.p_sens_cb->message_counter   = 0;
     p_profile->_cb.p_sens_cb->toggle_bit        = true;
@@ -120,7 +159,7 @@ ret_code_t ant_bsc_sens_init(ant_bsc_profile_t           * p_profile,
 __STATIC_INLINE void next_bkgd_page_number_set(ant_bsc_profile_t * p_profile)
 {
     /* Determine the last background page*/
-    ant_bsc_page_t last_bkgd_page = 
+    ant_bsc_page_t last_bkgd_page =
                 p_profile->_cb.p_sens_cb->page_4_present ? ANT_BSC_PAGE_4 : ANT_BSC_PAGE_3;
 
     /* Switch the background page according to user settings */
@@ -186,7 +225,7 @@ static void sens_message_encode(ant_bsc_profile_t * p_profile, uint8_t * p_messa
 
     if (p_profile->_cb.p_sens_cb->device_type == BSC_COMBINED_DEVICE_TYPE)
     {
-        LOG_BSC("%-30s \"Combined Speed & Cadence Page\"\n\r", "BSC TX Page:");
+        NRF_LOG_INFO("BSC TX Page: \"Combined Speed & Cadence Page\"\r\n");
         ant_bsc_combined_page_0_encode(p_bsc_message_payload->combined.page_payload,
                                        &(p_profile->page_comb_0));
         bsc_sens_event = (ant_bsc_evt_t) ANT_BSC_COMB_PAGE_0_UPDATED;
@@ -195,14 +234,14 @@ static void sens_message_encode(ant_bsc_profile_t * p_profile, uint8_t * p_messa
     {
         p_bsc_message_payload->speed_or_cadence.page_number = next_page_number_get(p_profile);
         p_bsc_message_payload->speed_or_cadence.toggle_bit  = p_profile->_cb.p_sens_cb->toggle_bit;
-        LOG_BSC("%-30s %u\n\r", "BSC TX Page number:",
+        NRF_LOG_INFO("BSC TX Page number: %u\r\n",
                 p_bsc_message_payload->speed_or_cadence.page_number);
 
         ant_bsc_page_0_encode(p_bsc_message_payload->speed_or_cadence.page_payload,
                               &(p_profile->page_0));
         bsc_sens_event = (ant_bsc_evt_t) p_bsc_message_payload->speed_or_cadence.page_number;
 
-        switch(p_bsc_message_payload->speed_or_cadence.page_number)
+        switch (p_bsc_message_payload->speed_or_cadence.page_number)
         {
             case ANT_BSC_PAGE_0:
                 // No implementation needed
@@ -232,7 +271,6 @@ static void sens_message_encode(ant_bsc_profile_t * p_profile, uint8_t * p_messa
                 break;
         }
     }
-    LOG_BSC("\r\n");
 
     p_profile->evt_handler(p_profile, bsc_sens_event);
 }
@@ -274,7 +312,7 @@ ret_code_t ant_bsc_disp_open(ant_bsc_profile_t * p_profile)
 {
     ASSERT(p_profile != NULL);
 
-    LOG_BSC("ANT BSC channel %u open\n\r", p_profile->channel_number);
+    NRF_LOG_INFO("ANT BSC channel %u open\r\n", p_profile->channel_number);
     return sd_ant_channel_open(p_profile->channel_number);
 }
 
@@ -285,7 +323,7 @@ ret_code_t ant_bsc_sens_open(ant_bsc_profile_t * p_profile)
     // Fill tx buffer for the first frame
     ant_message_send(p_profile);
 
-    LOG_BSC("ANT BSC channel %u open\n\r", p_profile->channel_number);
+    NRF_LOG_INFO("ANT BSC channel %u open\r\n", p_profile->channel_number);
     return sd_ant_channel_open(p_profile->channel_number);
 }
 
@@ -298,20 +336,20 @@ ret_code_t ant_bsc_sens_open(ant_bsc_profile_t * p_profile)
  */
 static void disp_message_decode(ant_bsc_profile_t * p_profile, uint8_t * p_message_payload)
 {
-    const ant_bsc_message_layout_t * p_bsc_message_payload = 
+    const ant_bsc_message_layout_t * p_bsc_message_payload =
                                     (ant_bsc_message_layout_t *)p_message_payload;
     ant_bsc_evt_t                    bsc_disp_event;
 
     if (p_profile->_cb.p_disp_cb->device_type == BSC_COMBINED_DEVICE_TYPE)
     {
-        LOG_BSC("%-30s \"Combined Speed & Cadence Page\"\n\r", "BSC RX Page Number:");
+        NRF_LOG_INFO("BSC RX Page Number: \"Combined Speed & Cadence Page\"\r\n");
         ant_bsc_combined_page_0_decode(p_bsc_message_payload->combined.page_payload,
                                        &(p_profile->page_comb_0));
         bsc_disp_event = (ant_bsc_evt_t) ANT_BSC_COMB_PAGE_0_UPDATED;
     }
     else
     {
-        LOG_BSC("%-30s %u\n\r", "BSC RX Page Number:",
+        NRF_LOG_INFO("BSC RX Page Number: %u\r\n",
                 p_bsc_message_payload->speed_or_cadence.page_number);
         ant_bsc_page_0_decode(p_bsc_message_payload->speed_or_cadence.page_payload,
                               &(p_profile->page_0)); // Page 0 is present in each message
@@ -353,7 +391,6 @@ static void disp_message_decode(ant_bsc_profile_t * p_profile, uint8_t * p_messa
                 break;
         }
     }
-    LOG_BSC("\r\n");
 
     p_profile->evt_handler(p_profile, bsc_disp_event);
 }
@@ -363,7 +400,7 @@ void ant_bsc_disp_evt_handler(ant_bsc_profile_t * p_profile,
 {
     if (p_ant_event->channel == p_profile->channel_number)
     {
-        ANT_MESSAGE * p_message = (ANT_MESSAGE *)p_ant_event->evt_buffer;
+        ANT_MESSAGE * p_message = (ANT_MESSAGE *)p_ant_event->msg.evt_buffer;
         switch (p_ant_event->event)
         {
             case EVENT_RX:
@@ -380,3 +417,5 @@ void ant_bsc_disp_evt_handler(ant_bsc_profile_t * p_profile,
         }
     }
 }
+
+#endif // NRF_MODULE_ENABLED(ANT_BSC)

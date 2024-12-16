@@ -1,9 +1,48 @@
+/**
+ * Copyright (c) 2015 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ */
 #ifndef ANT_SEARCH_CONFIG_H__
 #define ANT_SEARCH_CONFIG_H__
 
 /** @file
  *
- * @defgroup ant_sdk_search_config ANT search configuration
+ * @defgroup ant_search_config ANT search configuration
  * @{
  * @ingroup ant_sdk_utils
  * @brief ANT channel search configuration module.
@@ -11,16 +50,19 @@
 
 #include <stdint.h>
 #include "ant_parameters.h"
+#include "sdk_config.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define ANT_SEARCH_SHARING_CYCLES_DISABLE   0x00    ///< Disable search sharing.
 
 #define ANT_LOW_PRIORITY_SEARCH_DISABLE     0x00    ///< Disable low priority search.
 #define ANT_LOW_PRIORITY_TIMEOUT_DISABLE    0xFF    ///< Disable low priority search time-out.
-#define ANT_DEFAULT_LOW_PRIORITY_TIMEOUT    0x02    ///< Default low priority search time-out.
 
 #define ANT_HIGH_PRIORITY_SEARCH_DISABLE    0x00    ///< Disable high priority search.
 #define ANT_HIGH_PRIORITY_TIMEOUT_DISABLE   0xFF    ///< Disable high priority search time-out.
-#define ANT_DEFAULT_HIGH_PRIORITY_TIMEOUT   0x0A    ///< Default high priority search time-out.
 
 /**@brief Search priority. */
 typedef enum
@@ -77,6 +119,11 @@ typedef struct
  * @retval     NRF_SUCCESS     If the channel was successfully configured. Otherwise, an error code is returned.
  */
 uint32_t ant_search_init(ant_search_config_t const * p_config);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // ANT_SEARCH_CONFIG_H__
 /** @} */

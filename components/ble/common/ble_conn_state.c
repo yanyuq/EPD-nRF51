@@ -1,13 +1,41 @@
-/* Copyright (c) 2015 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2015 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 #include "ble_conn_state.h"
@@ -50,7 +78,7 @@ typedef struct
  */
 typedef struct
 {
-    uint16_t           acquired_flags;                              /**< Bitmap for keeping track of which user flags have been acquired. */
+    uint32_t           acquired_flags;                              /**< Bitmap for keeping track of which user flags have been acquired. */
     uint16_t           valid_conn_handles[SDK_MAPPED_FLAGS_N_KEYS]; /**< List of connection handles used as keys for the sdk_mapped_flags module. */
     union
     {
@@ -149,7 +177,7 @@ static void record_purge_disconnected()
                                    m_bcs.valid_conn_handles,
                                  (~m_bcs.flags.connected_flags) & (m_bcs.flags.valid_flags));
 
-    for (int i = 0; i < disconnected_list.len; i++)
+    for (uint32_t i = 0; i < disconnected_list.len; i++)
     {
         record_invalidate(disconnected_list.flag_keys[i]);
     }
@@ -198,16 +226,9 @@ void ble_conn_state_on_ble_evt(ble_evt_t * p_ble_evt)
             }
             else
             {
-#if   defined(S110)
-                bool is_central = false;
-#elif defined(S120)
-                bool is_central = true;
-#elif defined(S130) || defined(S132) || defined(S332)
                 bool is_central =
                         (p_ble_evt->evt.gap_evt.params.connected.role == BLE_GAP_ROLE_CENTRAL);
-#else
-                /* BLE SoftDevice missing. */
-#endif
+
                 sdk_mapped_flags_update_by_key(m_bcs.valid_conn_handles,
                                               &m_bcs.flags.central_flags,
                                                p_ble_evt->evt.gap_evt.conn_handle,

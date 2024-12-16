@@ -1,16 +1,44 @@
-/* Copyright (c) 2015 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2015 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
-
-#include <stdbool.h>
+#include "sdk_common.h"
+#if NRF_MODULE_ENABLED(APP_TWI)
 #include "app_twi.h"
 #include "nrf_assert.h"
 #include "app_util_platform.h"
@@ -34,7 +62,7 @@ static bool queue_put(app_twi_queue_t *             p_queue,
 
     // If the queue is already full, we cannot put any more elements into it.
     if ((write_idx == p_queue->size && p_queue->read_idx == 0) ||
-        write_idx == p_queue->read_idx-1)
+        write_idx == p_queue->read_idx - 1)
     {
         return false;
     }
@@ -71,7 +99,7 @@ static app_twi_transaction_t const * queue_get(app_twi_queue_t * p_queue)
 }
 
 
-static ret_code_t start_transfer(app_twi_t const * p_app_twi)
+static ret_code_t start_transfer(app_twi_t * p_app_twi)
 {
     ASSERT(p_app_twi != NULL);
 
@@ -82,18 +110,45 @@ static ret_code_t start_transfer(app_twi_t const * p_app_twi)
         &p_app_twi->p_current_transaction->p_transfers[current_transfer_idx];
     uint8_t address = APP_TWI_OP_ADDRESS(p_transfer->operation);
 
-    if (APP_TWI_IS_READ_OP(p_transfer->operation))
+    nrf_drv_twi_xfer_desc_t xfer_desc;
+    uint32_t                flags;
+
+    xfer_desc.address       = address;
+    xfer_desc.p_primary_buf = p_transfer->p_data;
+    xfer_desc.primary_length = p_transfer->length;
+
+    /* If it is possible try to bind two transfers together. They can be combined if:
+     * - there is no stop condition after current transfer.
+     * - current transfer is TX.
+     * - there is at least one more transfer in the transaction.
+     * - address of next trnasfer is the same as current transfer.
+     */
+    if ((p_transfer->flags & APP_TWI_NO_STOP) &&
+        !APP_TWI_IS_READ_OP(p_transfer->operation) &&
+        ((current_transfer_idx + 1) < p_app_twi->p_current_transaction->number_of_transfers) &&
+        APP_TWI_OP_ADDRESS(p_transfer->operation) ==
+        APP_TWI_OP_ADDRESS(p_app_twi->p_current_transaction->p_transfers[current_transfer_idx + 1].operation)
+    )
     {
-        return nrf_drv_twi_rx(&p_app_twi->twi, address,
-            p_transfer->p_data, p_transfer->length,
-            (p_transfer->flags & APP_TWI_NO_STOP));
+        app_twi_transfer_t const * p_second_transfer =
+            &p_app_twi->p_current_transaction->p_transfers[current_transfer_idx + 1];
+        xfer_desc.p_secondary_buf = p_second_transfer->p_data;
+        xfer_desc.secondary_length = p_second_transfer->length;
+        xfer_desc.type = APP_TWI_IS_READ_OP(p_second_transfer->operation) ? NRF_DRV_TWI_XFER_TXRX :
+                                                                            NRF_DRV_TWI_XFER_TXTX;
+        flags = (p_second_transfer->flags & APP_TWI_NO_STOP) ? NRF_DRV_TWI_FLAG_TX_NO_STOP : 0;
+        p_app_twi->current_transfer_idx++;
     }
     else
     {
-        return nrf_drv_twi_tx(&p_app_twi->twi, address,
-            p_transfer->p_data, p_transfer->length,
-            (p_transfer->flags & APP_TWI_NO_STOP));
+        xfer_desc.type = APP_TWI_IS_READ_OP(p_transfer->operation) ? NRF_DRV_TWI_XFER_RX :
+                NRF_DRV_TWI_XFER_TX;
+        xfer_desc.p_secondary_buf = NULL;
+        xfer_desc.secondary_length = 0;
+        flags = (p_transfer->flags & APP_TWI_NO_STOP) ? NRF_DRV_TWI_FLAG_TX_NO_STOP : 0;
     }
+
+    return nrf_drv_twi_xfer(&p_app_twi->twi, &xfer_desc, flags);
 }
 
 
@@ -177,7 +232,7 @@ static void twi_event_handler(nrf_drv_twi_evt_t const * p_event,
     // This callback should be called only during transaction.
     ASSERT(p_app_twi->p_current_transaction != NULL);
 
-    if (p_event->type != NRF_DRV_TWI_ERROR)
+    if (p_event->type == NRF_DRV_TWI_EVT_DONE)
     {
         result = NRF_SUCCESS;
 
@@ -235,10 +290,8 @@ ret_code_t app_twi_init(app_twi_t *                     p_app_twi,
                                 p_twi_config,
                                 twi_event_handler,
                                 p_app_twi);
-    if (err_code != NRF_SUCCESS)
-    {
-        return err_code;
-    }
+    VERIFY_SUCCESS(err_code);
+
     nrf_drv_twi_enable(&p_app_twi->twi);
 
     p_app_twi->queue.p_buffer  = p_queue_buffer;
@@ -336,10 +389,7 @@ ret_code_t app_twi_perform(app_twi_t *                p_app_twi,
             .number_of_transfers = number_of_transfers,
         };
         ret_code_t result = app_twi_schedule(p_app_twi, &internal_transaction);
-        if (result != NRF_SUCCESS)
-        {
-            return result;
-        }
+        VERIFY_SUCCESS(result);
 
         while (p_app_twi->internal_transaction_in_progress)
         {
@@ -352,3 +402,4 @@ ret_code_t app_twi_perform(app_twi_t *                p_app_twi,
         return p_app_twi->internal_transaction_result;
     }
 }
+#endif //NRF_MODULE_ENABLED(APP_TWI)

@@ -1,13 +1,41 @@
-/* Copyright (c) 2014 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2014 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 /**
@@ -17,15 +45,15 @@
 
 #include "nrf_adc.h"
 
-#ifndef NRF52
+#ifdef ADC_PRESENT
 
 /**
  * @brief Function for configuring ADC.
  *
- * This function power on ADC and configure it. ADC is in DISABLE state after configuration,
+ * This function powers on ADC and configures it. ADC is in DISABLE state after configuration,
  * so it should be enabled before using it.
  *
- * @param[in] config is requested configuration
+ * @param[in] config  Requested configuration.
  */
 void nrf_adc_configure(nrf_adc_config_t * config)
 {
@@ -51,14 +79,14 @@ void nrf_adc_configure(nrf_adc_config_t * config)
 /**
  * @brief Blocking function for executing single ADC conversion.
  *
- * This function selects desired input, starts single conversion,
- * waits for its finish  and returns result.
- * ADC is left in STOP state, given input is selected.
+ * This function selects the desired input, starts a single conversion,
+ * waits for it to finish, and returns the result.
+ * ADC is left in STOP state, the given input is selected.
  * This function does not check if ADC is initialized and powered.
  *
- * @param[in] input is requested input to be selected
+ * @param[in] input Requested input to be selected.
  *
- * @return conversion result
+ * @return Conversion result
  */
 int32_t nrf_adc_convert_single(nrf_adc_config_input_t input)
 {

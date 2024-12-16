@@ -13,10 +13,11 @@
 #ifndef EPD_BLE_H__
 #define EPD_BLE_H__
 
-#include "ble.h"
-#include "ble_srv_common.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include "ble.h"
+#include "ble_srv_common.h"
+#include "sdk_config.h"
 #include "DEV_Config.h"
 
 #define BLE_UUID_EPD_SERVICE  0x0001

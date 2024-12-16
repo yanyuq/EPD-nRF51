@@ -1,40 +1,77 @@
-/* Copyright (c) 2014 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
- */
-
 /**
- * @file
- * @brief ADC HAL API.
+ * Copyright (c) 2014 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 #ifndef NRF_ADC_H_
 #define NRF_ADC_H_
 
 /**
- * @defgroup nrf_adc ADC HAL
+ * @defgroup nrf_adc_hal ADC HAL
  * @{
- * @ingroup nrf_drivers
- * @brief Hardware access layer for managing the analog-to-digital converter.
+ * @ingroup nrf_adc
+ * @brief @tagAPI51 Hardware access layer for managing the analog-to-digital converter (ADC).
  */
 
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "nrf_peripherals.h"
 #include "nrf.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#if defined(ADC_PRESENT) || defined(__SDK_DOXYGEN__)
 /**
- * @enum nrf_adc_config_resolution_t
+ * @enum  nrf_adc_config_resolution_t
  * @brief Resolution of the analog-to-digital converter.
  */
-#ifndef NRF52
+
+/**
+ * @brief ADC interrupts.
+ */
+typedef enum
+{
+    NRF_ADC_INT_END_MASK  = ADC_INTENSET_END_Msk,   /**< ADC interrupt on END event. */
+} nrf_adc_int_mask_t;
+
 typedef enum
 {
     NRF_ADC_CONFIG_RES_8BIT  = ADC_CONFIG_RES_8bit,  /**< 8 bit resolution. */
@@ -128,7 +165,7 @@ typedef struct
 /**
  * @brief Function for configuring ADC.
  *
- * This function powers on the analog-to-digital converter and configures it. 
+ * This function powers on the analog-to-digital converter and configures it.
  * After the configuration, the ADC is in DISABLE state and must be
  * enabled before using it.
  *
@@ -201,35 +238,6 @@ __STATIC_INLINE bool nrf_adc_is_busy(void)
     return ( (NRF_ADC->BUSY & ADC_BUSY_BUSY_Msk) == ADC_BUSY_BUSY_Msk);
 }
 
-
-/**
- * @brief Function for enabling interrupts from the ADC.
- *
- * @param[in] interrupts Mask of interrupts to be enabled.
- *
- * @sa nrf_adc_int_disable()
- * @sa nrf_adc_int_get()
- */
-__STATIC_INLINE void nrf_adc_int_enable(uint32_t interrupts)
-{
-    NRF_ADC->INTENSET = interrupts;
-}
-
-
-/**
- * @brief Function for disabling interrupts from the ADC.
- *
- * @param[in] interrupts Mask of interrupts to be disabled.
- *
- * @sa nrf_adc_int_enable()
- * @sa nrf_adc_int_get()
- */
-__STATIC_INLINE void nrf_adc_int_disable(uint32_t interrupts)
-{
-    NRF_ADC->INTENCLR = interrupts;
-}
-
-
 /**
  * @brief Function for getting the ADC's enabled interrupts.
  *
@@ -259,7 +267,7 @@ __STATIC_INLINE void nrf_adc_start(void)
 
 
 /**
- * @brief Function for stopping conversion. 
+ * @brief Function for stopping conversion.
  *
  * If the analog-to-digital converter is in inactive state, power consumption is reduced.
  *
@@ -284,7 +292,7 @@ __STATIC_INLINE bool nrf_adc_conversion_finished(void)
 }
 
 /**
- * @brief Function for cleaning conversion end event.
+ * @brief Function for clearing the conversion END event.
  */
 __STATIC_INLINE void nrf_adc_conversion_event_clean(void)
 {
@@ -298,11 +306,7 @@ __STATIC_INLINE void nrf_adc_conversion_event_clean(void)
  *
  * @return Address of the specified ADC task.
  */
-__STATIC_INLINE uint32_t * nrf_adc_task_address_get(nrf_adc_task_t adc_task)
-{
-    return (uint32_t *)((uint8_t *)NRF_ADC + adc_task);
-}
-
+__STATIC_INLINE uint32_t nrf_adc_task_address_get(nrf_adc_task_t adc_task);
 
 /**
  * @brief Function for getting the address of a specific ADC event register.
@@ -311,14 +315,144 @@ __STATIC_INLINE uint32_t * nrf_adc_task_address_get(nrf_adc_task_t adc_task)
  *
  * @return Address of the specified ADC event.
  */
-__STATIC_INLINE uint32_t * nrf_adc_event_address_get(nrf_adc_event_t adc_event)
+__STATIC_INLINE uint32_t nrf_adc_event_address_get(nrf_adc_event_t adc_event);
+
+/**
+ * @brief Function for setting the CONFIG register in ADC.
+ *
+ * @param[in] configuration Value to be written to the CONFIG register.
+ */
+__STATIC_INLINE void nrf_adc_config_set(uint32_t configuration);
+
+/**
+ * @brief Function for clearing an ADC event.
+ *
+ * @param[in] event Event to clear.
+ */
+__STATIC_INLINE void nrf_adc_event_clear(nrf_adc_event_t event);
+
+/**
+ * @brief Function for checking state of an ADC event.
+ *
+ * @param[in] event Event to check.
+ *
+ * @retval true  If the event is set.
+ * @retval false If the event is not set.
+ */
+__STATIC_INLINE bool nrf_adc_event_check(nrf_adc_event_t event);
+
+/**
+ * @brief Function for enabling specified interrupts.
+ *
+ * @param[in] int_mask  Interrupts to enable.
+ */
+__STATIC_INLINE void nrf_adc_int_enable(uint32_t int_mask);
+
+/**
+ * @brief Function for disabling specified interrupts.
+ *
+ * @param[in] int_mask  Interrupts to disable.
+ */
+__STATIC_INLINE void nrf_adc_int_disable(uint32_t int_mask);
+
+/**
+ * @brief Function for retrieving the state of a given interrupt.
+ *
+ * @param[in] int_mask Interrupt to check.
+ *
+ * @retval true  If the interrupt is enabled.
+ * @retval false If the interrupt is not enabled.
+ */
+__STATIC_INLINE bool nrf_adc_int_enable_check(nrf_adc_int_mask_t int_mask);
+
+/**
+ * @brief Function for activating a specific ADC task.
+ *
+ * @param[in] task Task to activate.
+ */
+__STATIC_INLINE void nrf_adc_task_trigger(nrf_adc_task_t task);
+
+/**
+ * @brief Function for enabling ADC.
+ *
+ */
+__STATIC_INLINE void nrf_adc_enable(void);
+
+/**
+ * @brief Function for disabling ADC.
+ *
+ */
+__STATIC_INLINE void nrf_adc_disable(void);
+
+#ifndef SUPPRESS_INLINE_IMPLEMENTATION
+
+__STATIC_INLINE uint32_t nrf_adc_task_address_get(nrf_adc_task_t adc_task)
 {
-    return (uint32_t *)((uint8_t *)NRF_ADC + adc_event);
+    return (uint32_t)((uint8_t *)NRF_ADC + adc_task);
 }
 
-#endif /* NRF52 */
+__STATIC_INLINE uint32_t nrf_adc_event_address_get(nrf_adc_event_t adc_event)
+{
+    return (uint32_t)((uint8_t *)NRF_ADC + adc_event);
+}
+
+__STATIC_INLINE void nrf_adc_config_set(uint32_t configuration)
+{
+    NRF_ADC->CONFIG = configuration;
+}
+
+__STATIC_INLINE void nrf_adc_event_clear(nrf_adc_event_t event)
+{
+    *((volatile uint32_t *)((uint8_t *)NRF_ADC + (uint32_t)event)) = 0x0UL;
+#if __CORTEX_M == 0x04
+    volatile uint32_t dummy = *((volatile uint32_t *)((uint8_t *)NRF_ADC + (uint32_t)event));
+    (void)dummy;
+#endif
+}
+
+__STATIC_INLINE bool nrf_adc_event_check(nrf_adc_event_t event)
+{
+    return (bool)*(volatile uint32_t *)((uint8_t *)NRF_ADC + (uint32_t)event);
+}
+
+__STATIC_INLINE void nrf_adc_int_enable(uint32_t int_mask)
+{
+    NRF_ADC->INTENSET = int_mask;
+}
+
+__STATIC_INLINE void nrf_adc_int_disable(uint32_t int_mask)
+{
+    NRF_ADC->INTENCLR = int_mask;
+}
+
+__STATIC_INLINE bool nrf_adc_int_enable_check(nrf_adc_int_mask_t int_mask)
+{
+    return (bool)(NRF_ADC->INTENSET & int_mask);
+}
+
+__STATIC_INLINE void nrf_adc_task_trigger(nrf_adc_task_t task)
+{
+    *((volatile uint32_t *)((uint8_t *)NRF_ADC + (uint32_t)task)) = 0x1UL;
+}
+
+__STATIC_INLINE void nrf_adc_enable(void)
+{
+    NRF_ADC->ENABLE = 1;
+}
+
+__STATIC_INLINE void nrf_adc_disable(void)
+{
+    NRF_ADC->ENABLE = 0;
+}
+#endif
+#endif /* ADC_PRESENT */
 /**
  *@}
  **/
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* NRF_ADC_H_ */

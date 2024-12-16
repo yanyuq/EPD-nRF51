@@ -1,54 +1,48 @@
-/* Copyright (c) 2014 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
- */
-#include "sdk_config.h"
-#include "sdk_common.h"
-#include "mem_manager.h"
-#include "app_trace.h"
-#include "nrf_assert.h"
-
 /**
- * @defgroup mem_manager_log Module's Log Macros
- *
- * @details Macros used for creating module logs which can be useful in understanding handling
- *          of events or actions on API requests. These are intended for debugging purposes and
- *          can be enabled by defining the MEM_MANAGER_ENABLE_LOGS.
- *
- * @note If ENABLE_DEBUG_LOG_SUPPORT is disabled, having MEM_MANAGER_ENABLE_LOGS has no effect.
- * @{
+ * Copyright (c) 2014 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
-#if (MEM_MANAGER_ENABLE_LOGS == 1)
-
-#define MM_LOG  app_trace_log                                                                       /**< Used for logging details. */
-#define MM_ERR  app_trace_log                                                                       /**< Used for logging errors in the module. */
-#define MM_TRC  app_trace_log                                                                       /**< Used for getting trace of execution in the module. */
-#define MM_DUMP app_trace_dump                                                                      /**< Used for dumping octet information. */
-
-#else //MEM_MANAGER_ENABLE_LOGS
-
-#define MM_DUMP(...)                                                                                /**< Disables dumping of octet streams. */
-#define MM_LOG(...)                                                                                 /**< Disables detailed logs. */
-#define MM_ERR(...)                                                                                 /**< Disables error logs. */
-#define MM_TRC(...)                                                                                 /**< Disables traces. */
-
-#endif //MEM_MANAGER_ENABLE_LOGS
-/** @} */
-
-#ifdef MEM_MANAGER_ENABLE_DIAGNOSTICS
-#if (MEM_MANAGER_DIAGNOSTICS_LOGS_ONLY == 1)
-#define MMD_LOG  app_trace_log                                                                       /**< Used for logging diagnostic details. */
-#else
-#define MMD_LOG MM_LOG                                                                               /**< Diagnostoc logs same as other module logs, and depend on definition of MEM_MANAGER_ENABLE_LOGS */
-#endif //MEM_MANAGER_DIAGNOSTICS_LOGS_ONLY
-#endif //MEM_MANAGER_ENABLE_DIAGNOSTICS
+#include "sdk_common.h"
+#if NRF_MODULE_ENABLED(MEM_MANAGER)
+#include "mem_manager.h"
+#include "nrf_assert.h"
+#define NRF_LOG_MODULE_NAME "MEM_MNGR"
+#include "nrf_log.h"
 
 /**
  * @defgroup memory_manager_mutex_lock_unlock Module's Mutex Lock/Unlock Macros.
@@ -61,6 +55,13 @@
 #define MM_MUTEX_UNLOCK() SDK_MUTEX_UNLOCK(m_mm_mutex)                                              /**< Unlock module using mutex. */
 /** @} */
 
+#undef NULL_PARAM_CHECK
+#undef NULL_PARAM_CHECK_VOID
+#undef VERIFY_MODULE_INITIALIZED
+#undef VERIFY_MODULE_INITIALIZED_VOID
+#undef VERIFY_REQUESTED_SIZE
+#undef VERIFY_REQUESTED_SIZE_VOID
+
 #if (MEM_MANAGER_DISABLE_API_PARAM_CHECK == 0)
 
 /**
@@ -69,12 +70,12 @@
  *
  * @param[in] PARAM Parameter checked for NULL.
  *
- * @retval (NRF_ERROR_NULL | MEMORY_MANAGER_ERR_BASE) when @ref PARAM is NULL.
+ * @retval (NRF_ERROR_NULL | NRF_ERROR_MEMORY_MANAGER_ERR_BASE) when @ref PARAM is NULL.
  */
 #define NULL_PARAM_CHECK(PARAM)                            \
     if ((PARAM) == NULL)                                   \
     {                                                      \
-        return (NRF_ERROR_NULL | MEMORY_MANAGER_ERR_BASE); \
+        return (NRF_ERROR_NULL | NRF_ERROR_MEMORY_MANAGER_ERR_BASE); \
     }
 
 /**
@@ -93,14 +94,14 @@
  * @brief Macro for verifying module's initialization status.
  *        Returning with an appropriate error code on failure.
  *
- * @retval (NRF_ERROR_INVALID_STATE | MEMORY_MANAGER_ERR_BASE) module is uninitialized.
+ * @retval (NRF_ERROR_INVALID_STATE | NRF_ERROR_MEMORY_MANAGER_ERR_BASE) module is uninitialized.
  */
 #define VERIFY_MODULE_INITIALIZED()                                     \
     do                                                                  \
     {                                                                   \
         if (!m_module_initialized)                                      \
         {                                                               \
-            return (NRF_ERROR_INVALID_STATE | MEMORY_MANAGER_ERR_BASE); \
+            return (NRF_ERROR_INVALID_STATE | NRF_ERROR_MEMORY_MANAGER_ERR_BASE); \
         }                                                               \
     } while (0)
 
@@ -123,7 +124,7 @@
  *
  * @param[in] SIZE Requested size to be allocated.
  *
- * @retval (NRF_ERROR_INVALID_PARAM | MEMORY_MANAGER_ERR_BASE) if requested size is greater
+ * @retval (NRF_ERROR_INVALID_PARAM | NRF_ERROR_MEMORY_MANAGER_ERR_BASE) if requested size is greater
  *         than the largest block size managed by the module.
  */
 #define VERIFY_REQUESTED_SIZE(SIZE)                                     \
@@ -131,7 +132,7 @@
     {                                                                   \
         if (((SIZE) == 0) ||((SIZE) >  MAX_MEM_SIZE))                   \
         {                                                               \
-            return (NRF_ERROR_INVALID_PARAM | MEMORY_MANAGER_ERR_BASE); \
+            return (NRF_ERROR_INVALID_PARAM | NRF_ERROR_MEMORY_MANAGER_ERR_BASE); \
         }                                                               \
     } while (0)
 
@@ -540,8 +541,8 @@ static __INLINE void get_block_coordinates(uint32_t block_index, uint32_t * p_x,
 {
     // Determine position of the block in the bitmap.
     // X determines relevant word for the block. Y determines the actual bit in the word.
-    const uint32_t x = block_index/BITMAP_SIZE;
-    const uint32_t y = (block_index - x*BITMAP_SIZE);
+    const uint32_t x = block_index / BITMAP_SIZE;
+    const uint32_t y = (block_index - x * BITMAP_SIZE);
 
     (*p_x) = x;
     (*p_y) = y;
@@ -624,7 +625,7 @@ static void block_allocate(uint32_t block_index)
 
 uint32_t nrf_mem_init(void)
 {
-    MM_LOG("[MM]: >> nrf_mem_init.\r\n");
+    NRF_LOG_DEBUG("[MM]: >> nrf_mem_init.\r\n");
 
     SDK_MUTEX_INIT(m_mm_mutex);
 
@@ -632,7 +633,7 @@ uint32_t nrf_mem_init(void)
 
     uint32_t block_index = 0;
 
-    for(block_index = 0; block_index < TOTAL_BLOCK_COUNT; block_index++)
+    for (block_index = 0; block_index < TOTAL_BLOCK_COUNT; block_index++)
     {
         block_init(block_index);
     }
@@ -647,7 +648,7 @@ uint32_t nrf_mem_init(void)
 
     MM_MUTEX_UNLOCK();
 
-    MM_LOG("[MM]: << nrf_mem_init.\r\n");
+    NRF_LOG_DEBUG("[MM]: << nrf_mem_init.\r\n");
 
     return NRF_SUCCESS;
 }
@@ -663,16 +664,16 @@ uint32_t nrf_mem_reserve(uint8_t ** pp_buffer, uint32_t * p_size)
 
     VERIFY_REQUESTED_SIZE(requested_size);
 
-    MM_LOG("[MM]: >> nrf_mem_reserve, size 0x%04lX.\r\n", requested_size);
+    NRF_LOG_DEBUG("[MM]: >> nrf_mem_reserve, size 0x%04lX.\r\n", requested_size);
 
     MM_MUTEX_LOCK();
 
     const uint32_t block_cat    = get_block_cat(requested_size, TOTAL_BLOCK_COUNT);
     uint32_t       block_index  = m_block_start[block_cat];
     uint32_t       memory_index = m_block_mem_start[block_cat];
-    uint32_t       err_code     = (NRF_ERROR_NO_MEM | MEMORY_MANAGER_ERR_BASE);
+    uint32_t       err_code     = (NRF_ERROR_NO_MEM | NRF_ERROR_MEMORY_MANAGER_ERR_BASE);
 
-    MM_LOG("[MM]: Start index for the pool = 0x%08lX, total block count 0x%08X\r\n",
+    NRF_LOG_DEBUG("[MM]: Start index for the pool = 0x%08lX, total block count 0x%08X\r\n",
            block_index,
            TOTAL_BLOCK_COUNT);
 
@@ -682,7 +683,7 @@ uint32_t nrf_mem_reserve(uint8_t ** pp_buffer, uint32_t * p_size)
 
         if (is_block_free(block_index) == true)
         {
-            MM_LOG("[MM]: Reserving block 0x%08lX\r\n", block_index);
+            NRF_LOG_DEBUG("[MM]: Reserving block 0x%08lX\r\n", block_index);
 
             // Search succeeded, found free block.
             err_code     = NRF_SUCCESS;
@@ -704,9 +705,9 @@ uint32_t nrf_mem_reserve(uint8_t ** pp_buffer, uint32_t * p_size)
     }
     if (err_code != NRF_SUCCESS)
     {
-        MM_LOG ("[MM]: Memory reservation result %d, memory %p, size %d!",
+        NRF_LOG_DEBUG ("[MM]: Memory reservation result %d, memory %p, size %d!",
                 err_code,
-                (*pp_buffer),
+                (uint32_t)(*pp_buffer),
                 (*p_size));
 
         #ifdef MEM_MANAGER_ENABLE_DIAGNOSTICS
@@ -716,7 +717,8 @@ uint32_t nrf_mem_reserve(uint8_t ** pp_buffer, uint32_t * p_size)
 
     MM_MUTEX_UNLOCK();
 
-    MM_LOG("[MM]: << nrf_mem_reserve %p, result 0x%08lX.\r\n", (*pp_buffer), err_code);
+    NRF_LOG_DEBUG("[MM]: << nrf_mem_reserve %p, result 0x%08lX.\r\n",
+                 (uint32_t)(*pp_buffer), err_code);
 
     return err_code;
 }
@@ -743,17 +745,17 @@ void * nrf_calloc(uint32_t count, uint32_t size)
     uint8_t * buffer = NULL;
     uint32_t allocated_size = (size * count);
 
-    MM_LOG ("[nrf_calloc]: Requested size %d, count %d\r\n", allocated_size, count);
+    NRF_LOG_DEBUG ("[nrf_calloc]: Requested size %d, count %d\r\n", allocated_size, count);
 
     uint32_t retval = nrf_mem_reserve(&buffer,&allocated_size);
     if (retval == NRF_SUCCESS)
     {
-        MM_LOG ("[nrf_calloc]: buffer %p, total size %d\r\n", buffer, allocated_size);
+        NRF_LOG_DEBUG ("[nrf_calloc]: buffer %p, total size %d\r\n", (uint32_t)buffer, allocated_size);
         memset(buffer,0, allocated_size);
     }
     else
     {
-        MM_LOG("[nrf_calloc]: Failed to allocate memory %d\r\n", allocated_size);
+        NRF_LOG_DEBUG("[nrf_calloc]: Failed to allocate memory %d\r\n", allocated_size);
         buffer = NULL;
     }
 
@@ -766,7 +768,7 @@ void nrf_free(void * p_mem)
     VERIFY_MODULE_INITIALIZED_VOID();
     NULL_PARAM_CHECK_VOID(p_mem);
 
-    MM_LOG("[MM]: >> nrf_free %p.\r\n", p_mem);
+    NRF_LOG_DEBUG("[MM]: >> nrf_free %p.\r\n", (uint32_t)p_mem);
 
     MM_MUTEX_LOCK();
 
@@ -778,7 +780,7 @@ void nrf_free(void * p_mem)
         if (&m_memory[memory_index] == p_mem)
         {
             // Found a free block of memory, assign.
-            MM_LOG("[MM]: << Freeing block %d.\r\n", index);
+            NRF_LOG_DEBUG("[MM]: << Freeing block %d.\r\n", index);
             block_init(index);
             break;
         }
@@ -787,7 +789,7 @@ void nrf_free(void * p_mem)
 
     MM_MUTEX_UNLOCK();
 
-    MM_LOG("[MM]: << nrf_free.\r\n");
+    NRF_LOG_DEBUG("[MM]: << nrf_free.\r\n");
     return;
 }
 
@@ -884,7 +886,7 @@ void print_block_info(uint32_t block_cat, uint32_t * p_mem_in_use)
         }
         snprintf(&print_buffer[column_end], 2, "|");
 
-        MMD_LOG("%s\r\n", print_buffer);
+        NRF_LOG_BYTES_DEBUG(print_buffer, strlen(print_buffer));
 
         (*p_mem_in_use) += in_use;
     }
@@ -895,10 +897,10 @@ void nrf_mem_diagnose(void)
 {
     uint32_t in_use = 0;
 
-    MMD_LOG ("\r\n");
-    MMD_LOG ("+------------+------------+------------+------------+------------+------------+\r\n");
-    MMD_LOG ("| Block      | Size       | Total      | In Use     | Min Alloc  | Max Alloc  |\r\n");
-    MMD_LOG ("+------------+------------+------------+------------+------------+------------+\r\n");
+    NRF_LOG_DEBUG ("\r\n");
+    NRF_LOG_DEBUG ("+------------+------------+------------+------------+------------+------------+\r\n");
+    NRF_LOG_DEBUG ("| Block      | Size       | Total      | In Use     | Min Alloc  | Max Alloc  |\r\n");
+    NRF_LOG_DEBUG ("+------------+------------+------------+------------+------------+------------+\r\n");
 
     print_block_info(BLOCK_CAT_XXS, &in_use);
     print_block_info(BLOCK_CAT_XS, &in_use);
@@ -908,11 +910,12 @@ void nrf_mem_diagnose(void)
     print_block_info(BLOCK_CAT_XL, &in_use);
     print_block_info(BLOCK_CAT_XXL, &in_use);
 
-    MMD_LOG ("+------------+------------+------------+------------+------------+------------+\r\n");
-    MMD_LOG ("| Total      | %d      | %d        | %d\r\n",
+    NRF_LOG_DEBUG ("+------------+------------+------------+------------+------------+------------+\r\n");
+    NRF_LOG_DEBUG ("| Total      | %d      | %d        | %d\r\n",
             TOTAL_MEMORY_SIZE, TOTAL_BLOCK_COUNT,in_use);
-    MMD_LOG ("+------------+------------+------------+------------+------------+------------+\r\n");
+    NRF_LOG_DEBUG ("+------------+------------+------------+------------+------------+------------+\r\n");
 }
 
 #endif // MEM_MANAGER_ENABLE_DIAGNOSTICS
 /** @} */
+#endif //NRF_MODULE_ENABLED(MEM_MANAGER)

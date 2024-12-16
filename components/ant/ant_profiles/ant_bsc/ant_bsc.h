@@ -1,18 +1,46 @@
-/* Copyright (c) 2015 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2015 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 /** @file
  *
- * @defgroup ant_sdk_profiles_bsc Bicycle Speed and Cadence profile
+ * @defgroup ant_bsc Bicycle Speed and Cadence profile
  * @{
  * @ingroup ant_sdk_profiles
  * @brief This module implements the Bicycle Speed and Cadence profile.
@@ -193,13 +221,17 @@ typedef enum{
     ANT_BSC_COMB_PAGE_0_UPDATED = ANT_BSC_COMB_PAGE_0,  ///< Combined Speed and cadence data page has been updated (Display) or sent (Sensor).
 } ant_bsc_evt_t;
 
-// Forward declaration of the ant_bsc_profile_t type. 
+// Forward declaration of the ant_bsc_profile_t type.
 typedef struct ant_bsc_profile_s ant_bsc_profile_t;
 
 /**@brief BSC event handler type. */
 typedef void (* ant_bsc_evt_handler_t) (ant_bsc_profile_t *, ant_bsc_evt_t);
 
 #include "ant_bsc_local.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**@brief BSC Display configuration structure. */
 typedef struct
@@ -319,6 +351,11 @@ void ant_bsc_sens_evt_handler(ant_bsc_profile_t * p_profile,
  */
 void ant_bsc_disp_evt_handler(ant_bsc_profile_t * p_profile,
                               ant_evt_t * p_ant_event);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // ANT_BSC_H__
 /** @} */

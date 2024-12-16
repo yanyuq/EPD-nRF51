@@ -1,13 +1,41 @@
-/* Copyright (c) 2013 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2013 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 /** @file
@@ -39,9 +67,30 @@
 #include "app_util.h"
 #include "ble_stack_handler_types.h"
 #include "ant_stack_handler_types.h"
+#if defined(BLE_STACK_SUPPORT_REQD)
+    #include "ble.h"
+#endif
+#include "app_ram_base.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define SOFTDEVICE_SCHED_EVT_SIZE       0                                                 /**< Size of button events being passed through the scheduler (is to be used for computing the maximum size of scheduler events). For SoftDevice events, this size is 0, since the events are being pulled in the event handler. */
 #define SYS_EVT_MSG_BUF_SIZE            sizeof(uint32_t)                                  /**< Size of System (SOC) event message buffer. */
+
+
+
+/** @brief Macro for checking the RAM requirement of the SoftDevice.  */
+#define CHECK_RAM_START_ADDR(C_LINK_CNT, P_LINK_CNT)
+
+
+/**@brief     Function for checking the RAM requirement of the SoftDevice.
+ *
+ * @details   Call this function to check if the project settings have the correct RAM start address in respect to what the SoftDevice requires.
+ *
+ * @note      This function is called using the CHECK_RAM_START_ADDR_INTERN macro and should not be called directly.
+ */
+uint32_t sd_check_ram_start(uint32_t sd_req_ram_start);
 
 /**@brief Type of function for passing events from the stack handler module to the scheduler. */
 typedef uint32_t (*softdevice_evt_schedule_func_t) (void);
@@ -56,7 +105,7 @@ typedef void (*sys_evt_handler_t) (uint32_t evt_id);
  *            events from the stack, making sure the buffer is correctly aligned. It will also
  *            connect the stack event handler to the scheduler/RTOS (if specified).
  *
- * @param[in] CLOCK_SOURCE     Low frequency clock source and accuracy (type nrf_clock_lfclksrc_t,
+ * @param[in] CLOCK_SOURCE     Low frequency clock source and accuracy (type nrf_clock_lf_cfg_t_t,
  *                             see sd_softdevice_enable() for details).
  * @param[in] EVT_HANDLER      scheduler/RTOS event handler function.
  *
@@ -66,7 +115,7 @@ typedef void (*sys_evt_handler_t) (uint32_t evt_id);
  */
 /*lint -emacro(506, SOFTDEVICE_HANDLER_INIT) */ /* Suppress "Constant value Boolean */
 #define SOFTDEVICE_HANDLER_INIT(CLOCK_SOURCE,                                                      \
-                                EVT_HANDLER)                                                     \
+                                EVT_HANDLER)                                                       \
     do                                                                                             \
     {                                                                                              \
         static uint32_t BLE_EVT_BUFFER[CEIL_DIV(BLE_STACK_EVT_MSG_BUF_SIZE, sizeof(uint32_t))];    \
@@ -74,7 +123,7 @@ typedef void (*sys_evt_handler_t) (uint32_t evt_id);
         ERR_CODE = softdevice_handler_init((CLOCK_SOURCE),                                         \
                                            BLE_EVT_BUFFER,                                         \
                                            sizeof(BLE_EVT_BUFFER),                                 \
-                                           EVT_HANDLER);      \
+                                           EVT_HANDLER);                                           \
         APP_ERROR_CHECK(ERR_CODE);                                                                 \
     } while (0)
 
@@ -85,7 +134,7 @@ typedef void (*sys_evt_handler_t) (uint32_t evt_id);
  * @retval false SD is not initialized and SD commands should not be called.
  * @retval true  SD is already initialized
  */
-bool softdevice_handler_isEnabled(void);
+bool softdevice_handler_is_enabled(void);
 
 /**@brief      Function for initializing the stack handler module.
  *
@@ -96,12 +145,12 @@ bool softdevice_handler_isEnabled(void);
  * @note       Normally initialization should be done using the SOFTDEVICE_HANDLER_INIT() macro,
  *             as that will both allocate the event buffer, and also align the buffer correctly.
  *
- * @param[in]  clock_source        Low frequency clock source to be used by the SoftDevice.
+ * @param[in]  p_clock_lf_cfg      Low frequency clock source to be used by the SoftDevice.
  * @param[in]  p_ble_evt_buffer    Buffer for holding one BLE stack event. Since heap is not being
  *                                 used, this buffer must be provided by the application. The
  *                                 buffer must be large enough to hold the biggest stack event the
  *                                 application is supposed to handle. The buffer must be aligned to
- *                                 a 4 byte boundary. This parameter is unused if BLE stack support 
+ *                                 a 4 byte boundary. This parameter is unused if BLE stack support
  *                                 is not required.
  * @param[in]  ble_evt_buffer_size Size of SoftDevice BLE event buffer. This parameter is unused if
  *                                 BLE stack support is not required.
@@ -114,7 +163,7 @@ bool softdevice_handler_isEnabled(void);
  * @retval     NRF_ERROR_INVALID_PARAM   Invalid parameter (buffer not aligned to a 4 byte
  *                                       boundary) or NULL.
  */
-uint32_t softdevice_handler_init(nrf_clock_lfclksrc_t              clock_source,
+uint32_t softdevice_handler_init(nrf_clock_lf_cfg_t *              p_clock_lf_cfg,
                                  void *                            p_ble_evt_buffer,
                                  uint16_t                          ble_evt_buffer_size,
                                  softdevice_evt_schedule_func_t    evt_schedule_func);
@@ -126,6 +175,24 @@ uint32_t softdevice_handler_init(nrf_clock_lfclksrc_t              clock_source,
  *            of this module.
  */
 uint32_t softdevice_handler_sd_disable(void);
+
+/**@brief     Function for suspending the event handler.
+ *
+ * @details   When event handler is disabled, no new events are pulled from SoftDevice.
+ *            Application can suspend pulling incoming events when its event queue is full.
+ */
+void softdevice_handler_suspend(void);
+
+/**@brief     Function for re-enabling the event handler after suspending.
+ */
+void softdevice_handler_resume(void);
+
+/**@brief Function for retrieving the information about the event handler state
+ *
+ * @retval false Event handler is active.
+ * @retval true  Event handler is suspended and events from SD will not be pulled.
+ */
+bool softdevice_handler_is_suspended(void);
 
 
 /**@brief     Function for registering for System (SOC) events.
@@ -144,13 +211,51 @@ uint32_t softdevice_handler_sd_disable(void);
  */
 uint32_t softdevice_sys_evt_handler_set(sys_evt_handler_t sys_evt_handler);
 
+#if defined(BLE_STACK_SUPPORT_REQD)
+/**@brief     Function for fetching the default enable parameters for the SoftDevice.
+ *
+ * @details   The default enable parameters will work for most projects in the SDK.
+ *            They are not optimized with regards to RAM use. This function is meant as a way to abstract the
+ *            details of p_ble_enable_params needed by @ref softdevice_enable. You might want to tweak
+ *            the struct returned by this function or fill in the entire ble_enable_params_t
+ *            instead of fetching it from this function.
+ *
+ * @param[in]  central_links_count Number of central links used by the application.
+ * @param[in]  periph_links_count Number of peripheral links used by the application.
+ * @param[out] p_ble_enable_params Default ble_enable_params_t to be used by @ref softdevice_enable.
+ *
+ * @retval    NRF_SUCCESS     If the operation was successful.
+ */
+uint32_t softdevice_enable_get_default_config(uint8_t central_links_count,
+                                              uint8_t periph_links_count,
+                                              ble_enable_params_t * p_ble_enable_params);
 
+/**@brief     Function for enabling the SoftDevice.
+ *
+ * @details   This function calls the @ref sd_ble_enable SVC call. It has been abstracted to give
+ *            feedback on the app_ram_base. If the app_ram_base is too low, this function will
+ *            return an error. Using a app_ram_base that is too high will not fail, but will
+ *            result in RAM that is never used. If the DEBUG macro is enabled, this
+ *            function will provide the correct app_ram_base as mandated by the SoftDevice.
+ *            This is useful to tweak the RAM use of your application.
+ *
+ * @param[in]  p_ble_enable_params Parameters for configuring links and bandwidths.
+ *
+ * @retval    NRF_SUCCESS     If the operation was successful.
+ */
+uint32_t softdevice_enable(ble_enable_params_t * p_ble_enable_params);
+#endif //BLE_STACK_SUPPORT_REQD
 // Functions for connecting the Stack Event Handler to the scheduler:
 /**@cond NO_DOXYGEN */
 void intern_softdevice_events_execute(void);
 
 
 /**@endcond */
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // SOFTDEVICE_HANDLER_H__
 

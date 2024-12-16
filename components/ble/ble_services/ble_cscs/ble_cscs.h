@@ -1,18 +1,46 @@
-/* Copyright (c) 2012 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 /** @file
  *
- * @defgroup ble_sdk_srv_csc Cycling Speed and Cadence Service
+ * @defgroup ble_cscs Cycling Speed and Cadence Service
  * @{
  * @ingroup ble_sdk_srv
  * @brief Cycling Speed and Cadence Service module.
@@ -22,23 +50,23 @@
  *          calls ble_cscs_measurement_send().
  *
  *          To use this service, you need to provide the the supported features (@ref BLE_CSCS_FEATURES).
- *          If you choose to support Wheel revolution data (feature bit @ref BLE_CSCS_FEATURE_WHEEL_REV_BIT), 
- *          you then need to support the 'setting of cumulative value' operation by the supporting the 
+ *          If you choose to support Wheel revolution data (feature bit @ref BLE_CSCS_FEATURE_WHEEL_REV_BIT),
+ *          you then need to support the 'setting of cumulative value' operation by the supporting the
  *          Speed and Cadence Control Point (@ref ble_sdk_srv_sc_ctrlpt) by setting the @ref BLE_SRV_SC_CTRLPT_CUM_VAL_OP_SUPPORTED
  *          bit of the ctrplt_supported_functions in the @ref ble_cscs_init_t structure.
  *          If you want to support the 'start autocalibration' control point feature, you need, after the @ref BLE_SC_CTRLPT_EVT_START_CALIBRATION
  *          has been received and the auto calibration is finished, to call the @ref ble_sc_ctrlpt_rsp_send to indicate that the operation is finished
  *          and thus be able to receive new control point operations.
- *          If you want to support the 'sensor location' related operation, you need to provide a list of supported location in the 
+ *          If you want to support the 'sensor location' related operation, you need to provide a list of supported location in the
  *          @ref ble_cscs_init_t structure.
- *          
  *
- * @note The application or the service using this module must propagate BLE stack events to the 
- *       Cycling Speead and Candence Service module by calling ble_cscs_on_ble_evt() from the 
+ *
+ * @note The application or the service using this module must propagate BLE stack events to the
+ *       Cycling Speead and Candence Service module by calling ble_cscs_on_ble_evt() from the
  *       from the @ref softdevice_handler function. This service will forward the event to the @ref ble_sdk_srv_sc_ctrlpt module.
  *
- * @note Attention! 
- *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile 
+ * @note Attention!
+ *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile
  *  qualification listings, this section of source code must not be modified.
  */
 
@@ -51,6 +79,10 @@
 #include "ble_srv_common.h"
 #include "ble_sc_ctrlpt.h"
 #include "ble_sensor_location.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** @defgroup BLE_CSCS_FEATURES Cycling Speed and Cadence Service feature bits
  * @{ */
@@ -72,7 +104,7 @@ typedef struct
     ble_cscs_evt_type_t evt_type;                                       /**< Type of event. */
 } ble_cscs_evt_t;
 
-// Forward declaration of the ble_csc_t type. 
+// Forward declaration of the ble_csc_t type.
 typedef struct ble_cscs_s ble_cscs_t;
 
 /**@brief Cycling Speed and Cadence Service event handler type. */
@@ -155,6 +187,11 @@ void ble_cscs_on_ble_evt(ble_cscs_t * p_cscs, ble_evt_t * p_ble_evt);
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
 uint32_t ble_cscs_measurement_send(ble_cscs_t * p_cscs, ble_cscs_meas_t * p_measurement);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // BLE_CSCS_H__
 

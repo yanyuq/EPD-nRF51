@@ -1,13 +1,41 @@
-/* Copyright (c) 2012 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 /** @file
@@ -28,17 +56,15 @@
 #include "ble.h"
 #include "app_util.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #define ADV_LENGTH_FIELD_SIZE              1UL                                 /**< Advertising Data and Scan Response format contains 1 octet for the length. */
 #define ADV_AD_TYPE_FIELD_SIZE             1UL                                 /**< Advertising Data and Scan Response format contains 1 octet for the AD type. */
 #define ADV_AD_DATA_OFFSET                 (ADV_LENGTH_FIELD_SIZE + \
                                             ADV_AD_TYPE_FIELD_SIZE)            /**< Offset for the AD data field of the Advertising Data and Scan Response format. */
-#define AD_TYPE_TK_VALUE_DATA_SIZE         (sizeof(ble_advdata_tk_value_t))    /**< Data size (in octets) of the Security Manager TK value AD type. */
-#define AD_TYPE_TK_VALUE_SIZE              (ADV_AD_DATA_OFFSET + \
-                                            AD_TYPE_TK_VALUE_DATA_SIZE)        /**< Size (in octets) of the Security Manager TK value AD type. */
-#define AD_TYPE_LE_ROLE_DATA_SIZE          1UL                                 /**< Data size (in octets) of the LE Bluetooth Device Address AD type. */
-#define AD_TYPE_LE_ROLE_SIZE               (ADV_AD_DATA_OFFSET + \
-                                            AD_TYPE_LE_ROLE_DATA_SIZE)         /**< Size (in octets) of the LE Bluetooth Device Address AD type. */
 #define AD_TYPE_BLE_DEVICE_ADDR_TYPE_SIZE  1UL                                 /**< Data size (in octets) of the Address type of the LE Bluetooth Device Address AD type. */
 #define AD_TYPE_BLE_DEVICE_ADDR_DATA_SIZE  (BLE_GAP_ADDR_LEN + \
                                             AD_TYPE_BLE_DEVICE_ADDR_TYPE_SIZE) /**< Data size (in octets) of the LE Bluetooth Device Address AD type. */
@@ -58,19 +84,6 @@
                                             AD_TYPE_CONN_INT_DATA_SIZE)        /**< Data size (in octets) of the Slave Connection Interval Range AD type. */
 #define AD_TYPE_MANUF_SPEC_DATA_ID_SIZE    2UL                                 /**< Size (in octets) of the Company Identifier Code, which is a part of the Manufacturer Specific Data AD type. */
 #define AD_TYPE_SERV_DATA_16BIT_UUID_SIZE  2UL                                 /**< Size (in octets) of the 16-bit UUID, which is a part of the Service Data AD type. */
-#define AD_TYPE_OOB_FLAGS_DATA_SIZE        1UL                                 /**< Data size (in octets) of the Security Manager OOB Flags AD type. */
-#define AD_TYPE_OOB_FLAGS_SIZE             (ADV_AD_DATA_OFFSET + \
-                                            AD_TYPE_OOB_FLAGS_DATA_SIZE)       /**< Size (in octets) of the Security Manager OOB Flags AD type. */
-
-#define AD_TYPE_SEC_MGR_OOB_FLAG_SET                   1U                      /**< Security Manager OOB Flag set. Flag selection is done using _POS defines */
-#define AD_TYPE_SEC_MGR_OOB_FLAG_CLEAR                 0U                      /**< Security Manager OOB Flag clear. Flag selection is done using _POS defines */
-#define AD_TYPE_SEC_MGR_OOB_FLAG_OOB_DATA_PRESENT_POS  0UL                     /**< Security Manager OOB Data Present Flag position. */
-#define AD_TYPE_SEC_MGR_OOB_FLAG_OOB_LE_SUPPORTED_POS  1UL                     /**< Security Manager OOB Low Energy Supported Flag position. */
-#define AD_TYPE_SEC_MGR_OOB_FLAG_SIM_LE_AND_EP_POS     2UL                     /**< Security Manager OOB Simultaneous LE and BR/EDR to Same Device Capable Flag position. */
-#define AD_TYPE_SEC_MGR_OOB_ADDRESS_TYPE_PUBLIC        0UL                     /**< Security Manager OOB Public Address type. */
-#define AD_TYPE_SEC_MGR_OOB_ADDRESS_TYPE_RANDOM        1UL                     /**< Security Manager OOB Random Address type. */
-#define AD_TYPE_SEC_MGR_OOB_FLAG_ADDRESS_TYPE_POS      3UL                     /**< Security Manager OOB Address type Flag (0 = Public Address, 1 = Random Address) position. */
-
 
 /**@brief Security Manager TK value. */
 typedef struct
@@ -143,9 +156,10 @@ typedef struct
     ble_advdata_service_data_t * p_service_data_array;                /**< Array of Service data structures. */
     uint8_t                      service_data_count;                  /**< Number of Service data structures. */
     bool                         include_ble_device_addr;             /**< Determines if LE Bluetooth Device Address shall be included. */
-    ble_advdata_le_role_t        le_role;                             /**< LE Role field. Included when different from @ref BLE_ADVDATA_ROLE_NOT_PRESENT.*/
-    ble_advdata_tk_value_t *     p_tk_value;                          /**< Security Manager TK value field. Included when different from NULL.*/
-    uint8_t *                    p_sec_mgr_oob_flags;                 /**< Security Manager Out Of Band Flags field. Included when different from NULL.*/
+    ble_advdata_le_role_t        le_role;                             /**< LE Role field. Included when different from @ref BLE_ADVDATA_ROLE_NOT_PRESENT. @warning This field can be used only for NFC. For BLE advertising, set it to NULL. */
+    ble_advdata_tk_value_t *     p_tk_value;                          /**< Security Manager TK value field. Included when different from NULL. @warning This field can be used only for NFC. For BLE advertising, set it to NULL.*/
+    uint8_t *                    p_sec_mgr_oob_flags;                 /**< Security Manager Out Of Band Flags field. Included when different from NULL. @warning This field can be used only for NFC. For BLE advertising, set it to NULL.*/
+    ble_gap_lesc_oob_data_t *    p_lesc_data;                         /**< LE Secure Connections OOB data. Included when different from NULL. @warning This field can be used only for NFC. For BLE advertising, set it to NULL.*/
 } ble_advdata_t;
 
 /**@brief Function for encoding data in the Advertising and Scan Response data format
@@ -206,6 +220,11 @@ uint32_t adv_data_encode(ble_advdata_t const * const p_advdata,
  * if the preference is too large to fit in the provided buffer, the name can be truncated further.
  */
 uint32_t ble_advdata_set(const ble_advdata_t * p_advdata, const ble_advdata_t * p_srdata);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // BLE_ADVDATA_H__
 

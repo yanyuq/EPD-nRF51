@@ -1,24 +1,52 @@
-/* Copyright (c) 2012 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
+/**
+ * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 /** @file
  *
- * @defgroup ble_sdk_srv_hids Human Interface Device Service
+ * @defgroup ble_hids Human Interface Device Service
  * @{
  * @ingroup ble_sdk_srv
  * @brief Human Interface Device Service module.
  *
  * @details This module implements the Human Interface Device Service with the corresponding set of
- *          characteristics. During initialization it adds the Human Interface Device Service and 
+ *          characteristics. During initialization it adds the Human Interface Device Service and
  *          a set of characteristics as per the Human Interface Device Service specification and
  *          the user requirements to the BLE stack database.
  *
@@ -31,8 +59,8 @@
  * @note The application must propagate BLE stack events to the Human Interface Device Service
  *       module by calling ble_hids_on_ble_evt() from the @ref softdevice_handler callback.
  *
- * @note Attention! 
- *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile 
+ * @note Attention!
+ *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile
  *  qualification listings, this section of source code must not be modified.
  */
 
@@ -43,6 +71,10 @@
 #include <stdbool.h>
 #include "ble.h"
 #include "ble_srv_common.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** @name Report Type values
  * @anchor BLE_HIDS_REPORT_TYPE @{
@@ -98,7 +130,7 @@ typedef struct
             ble_hids_char_id_t char_id;             /**< Id of characteristic having been written. */
             uint16_t           offset;              /**< Offset for the write operation. */
             uint16_t           len;                 /**< Length of the incoming data. */
-            uint8_t*           data;                /**< Incoming data, variable length */            
+            uint8_t*           data;                /**< Incoming data, variable length */
         } char_write;
         struct
         {
@@ -108,7 +140,7 @@ typedef struct
     ble_evt_t * p_ble_evt;                          /**< corresponding received ble event, NULL if not relevant */
 } ble_hids_evt_t;
 
-// Forward declaration of the ble_hids_t type. 
+// Forward declaration of the ble_hids_t type.
 typedef struct ble_hids_s ble_hids_t;
 
 /**@brief HID Service event handler type. */
@@ -123,7 +155,7 @@ typedef struct
     ble_srv_security_mode_t       security_mode;    /**< Security mode for the HID Information characteristic. */
 } ble_hids_hid_information_t;
 
-/**@brief HID Service Input Report characteristic init structure. This contains all options and 
+/**@brief HID Service Input Report characteristic init structure. This contains all options and
  *        data needed for initialization of one Input Report characteristic. */
 typedef struct
 {
@@ -133,7 +165,7 @@ typedef struct
     uint8_t                       read_resp : 1;    /**< Should application generate a response to read requests. */
 } ble_hids_inp_rep_init_t;
 
-/**@brief HID Service Output Report characteristic init structure. This contains all options and 
+/**@brief HID Service Output Report characteristic init structure. This contains all options and
  *        data needed for initialization of one Output Report characteristic. */
 typedef struct
 {
@@ -143,7 +175,7 @@ typedef struct
     uint8_t                       read_resp : 1;    /**< Should application generate a response to read requests. */
 } ble_hids_outp_rep_init_t;
 
-/**@brief HID Service Feature Report characteristic init structure. This contains all options and 
+/**@brief HID Service Feature Report characteristic init structure. This contains all options and
  *        data needed for initialization of one Feature Report characteristic. */
 typedef struct
 {
@@ -153,7 +185,7 @@ typedef struct
     uint8_t                       read_resp : 1;    /**< Should application generate a response to read requests. */
 } ble_hids_feature_rep_init_t;
 
-/**@brief HID Service Report Map characteristic init structure. This contains all options and data 
+/**@brief HID Service Report Map characteristic init structure. This contains all options and data
  *        needed for initialization of the Report Map characteristic. */
 typedef struct
 {
@@ -171,7 +203,7 @@ typedef struct
     uint16_t                      ref_handle;       /**< Handle of the Report Reference descriptor. */
 } ble_hids_rep_char_t;
 
-/**@brief HID Service init structure. This contains all options and data needed for initialization 
+/**@brief HID Service init structure. This contains all options and data needed for initialization
  *        of the service. */
 typedef struct
 {
@@ -244,16 +276,16 @@ void ble_hids_on_ble_evt(ble_hids_t * p_hids, ble_evt_t * p_ble_evt);
  * @details Sends data on an Input Report characteristic.
  *
  * @param[in]   p_hids       HID Service structure.
- * @param[in]   rep_index    Index of the characteristic (corresponding to the index in 
+ * @param[in]   rep_index    Index of the characteristic (corresponding to the index in
  *                           ble_hids_t.inp_rep_array as passed to ble_hids_init()).
  * @param[in]   len          Length of data to be sent.
  * @param[in]   p_data       Pointer to data to be sent.
  *
  * @return      NRF_SUCCESS on successful sending of input report, otherwise an error code.
  */
-uint32_t ble_hids_inp_rep_send(ble_hids_t * p_hids, 
-                               uint8_t      rep_index, 
-                               uint16_t     len, 
+uint32_t ble_hids_inp_rep_send(ble_hids_t * p_hids,
+                               uint8_t      rep_index,
+                               uint16_t     len,
                                uint8_t *    p_data);
 
 /**@brief Function for sending Boot Keyboard Input Report.
@@ -266,8 +298,8 @@ uint32_t ble_hids_inp_rep_send(ble_hids_t * p_hids,
  *
  * @return      NRF_SUCCESS on successful sending of the report, otherwise an error code.
  */
-uint32_t ble_hids_boot_kb_inp_rep_send(ble_hids_t * p_hids, 
-                                       uint16_t     len, 
+uint32_t ble_hids_boot_kb_inp_rep_send(ble_hids_t * p_hids,
+                                       uint16_t     len,
                                        uint8_t *    p_data);
 
 /**@brief Function for sending Boot Mouse Input Report.
@@ -283,9 +315,9 @@ uint32_t ble_hids_boot_kb_inp_rep_send(ble_hids_t * p_hids,
  *
  * @return      NRF_SUCCESS on successful sending of the report, otherwise an error code.
  */
-uint32_t ble_hids_boot_mouse_inp_rep_send(ble_hids_t * p_hids, 
-                                          uint8_t      buttons, 
-                                          int8_t       x_delta, 
+uint32_t ble_hids_boot_mouse_inp_rep_send(ble_hids_t * p_hids,
+                                          uint8_t      buttons,
+                                          int8_t       x_delta,
                                           int8_t       y_delta,
                                           uint16_t     optional_data_len,
                                           uint8_t *    p_optional_data);
@@ -308,6 +340,11 @@ uint32_t ble_hids_outp_rep_get(ble_hids_t * p_hids,
                                uint16_t     len,
                                uint8_t      offset,
                                uint8_t *    p_outp_rep);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // BLE_HIDS_H__
 

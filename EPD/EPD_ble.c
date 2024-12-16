@@ -16,12 +16,13 @@
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 #include "nrf_soc.h"
-#include "nrf_log.h"
-#include "pstorage.h"
+#include "fstorage.h"
 #include "EPD_4in2.h"
 #include "EPD_4in2_V2.h"
 #include "EPD_4in2b_V2.h"
 #include "EPD_ble.h"
+#define NRF_LOG_MODULE_NAME "EPD_ble"
+#include "nrf_log.h"
 
 #define BLE_EPD_CONFIG_ADDR                (NRF_FICR->CODEPAGESIZE * (NRF_FICR->CODESIZE - 1)) // Last page of the flash
 #define BLE_EPD_BASE_UUID                  {{0XEC, 0X5A, 0X67, 0X1C, 0XC1, 0XB6, 0X46, 0XFB, \
@@ -30,8 +31,6 @@
 
 #define ARRAY_SIZE(arr)                    (sizeof(arr) / sizeof((arr)[0]))
 #define EPD_CONFIG_SIZE                    (sizeof(epd_config_t) / sizeof(uint8_t))
-
-static pstorage_handle_t     m_flash_handle;
 
 /** EPD drivers */
 static epd_driver_t epd_drivers[] = {
@@ -58,24 +57,33 @@ static epd_driver_t *epd_driver_get(uint8_t id)
     return NULL;
 }
 
+static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result)
+{
+    NRF_LOG_DEBUG("fs_evt_handler: %d\n", result);
+}
+
+// fstorage configuration
+FS_REGISTER_CFG(fs_config_t fs_config) =
+{
+    .callback  = fs_evt_handler,
+    .num_pages = 1,
+};
+
 static uint32_t epd_config_load(epd_config_t *cfg)
 {
-    return pstorage_load((uint8_t *)cfg, &m_flash_handle, sizeof(epd_config_t), 0);
+    memcpy(cfg, (void *)BLE_EPD_CONFIG_ADDR, sizeof(epd_config_t));
+    return NRF_SUCCESS;
 }
 
 static uint32_t epd_config_clear(epd_config_t *cfg)
 {
-    return pstorage_clear(&m_flash_handle, sizeof(epd_config_t));
+    return fs_erase(&fs_config, fs_config.p_start_addr, 1, NULL);;
 }
 
 static uint32_t epd_config_save(epd_config_t *cfg)
 {
-    uint32_t err_code;
-    if ((err_code = epd_config_clear(cfg)) != NRF_SUCCESS)
-    {
-        return err_code;
-    }
-    return pstorage_store(&m_flash_handle, (uint8_t *)cfg, sizeof(epd_config_t), 0);
+    uint16_t const len = (sizeof(epd_config_t) + sizeof(uint32_t) - 1) / sizeof(uint32_t);
+    return fs_store(&fs_config, fs_config.p_start_addr, (uint32_t *) cfg, len, NULL);
 }
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_CONNECTED event from the S110 SoftDevice.
@@ -113,7 +121,7 @@ static void on_disconnect(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t length)
 {
     if (p_data == NULL || length <= 0) return;
-    NRF_LOG_PRINTF("[EPD]: CMD=0x%02x, LEN=%d\n", p_data[0], length);
+    NRF_LOG_DEBUG("[EPD]: CMD=0x%02x, LEN=%d\n", p_data[0], length);
 
     uint32_t    err_code;
 
@@ -132,10 +140,8 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
           EPD_BUSY_PIN = p_epd->config.busy_pin = p_data[6];
           EPD_BS_PIN = p_epd->config.bs_pin = p_data[7];
           err_code = epd_config_save(&p_epd->config);
-          NRF_LOG_PRINTF("epd_config_save: %d\n", err_code);
-          
-          NRF_LOG_PRINTF("[EPD]: MOSI=0x%02x SCLK=0x%02x CS=0x%02x DC=0x%02x RST=0x%02x BUSY=0x%02x BS=0x%02x\n",
-                         EPD_MOSI_PIN, EPD_SCLK_PIN, EPD_CS_PIN, EPD_DC_PIN, EPD_RST_PIN, EPD_BUSY_PIN, EPD_BS_PIN);
+          NRF_LOG_DEBUG("epd_config_save: %d\n", err_code);
+
           DEV_Module_Init();
           break;
 
@@ -148,11 +154,11 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
                   p_epd->driver = driver;
                   p_epd->config.driver_id = driver->id;
                   err_code = epd_config_save(&p_epd->config);
-                  NRF_LOG_PRINTF("epd_config_save: %d\n", err_code);
+                  NRF_LOG_DEBUG("epd_config_save: %d\n", err_code);
               }
           }
 
-          NRF_LOG_PRINTF("[EPD]: DRIVER=%d\n", p_epd->driver->id);
+          NRF_LOG_INFO("[EPD]: DRIVER=%d\n", p_epd->driver->id);
           p_epd->driver->init();
           break;
 
@@ -381,15 +387,6 @@ void ble_epd_sleep_prepare(ble_epd_t * p_epd)
     }
 }
 
-static void pstorage_callback(pstorage_handle_t * p_handle,
-                                  uint8_t             op_code,
-                                  uint32_t            result,
-                                  uint8_t           * p_data,
-                                  uint32_t            data_len)
-{
-    NRF_LOG_PRINTF("pstorage_callback: op_code=%d, result=%d\n", op_code, result);
-}
-
 uint32_t ble_epd_init(ble_epd_t * p_epd)
 {
     if (p_epd == NULL)
@@ -402,20 +399,10 @@ uint32_t ble_epd_init(ble_epd_t * p_epd)
     p_epd->is_notification_enabled = false;
     
     uint32_t                err_code;
-    pstorage_module_param_t param;
-
-    param.block_count = 1;
-    param.block_size = sizeof(epd_config_t);
-    param.cb = pstorage_callback;
-
-    err_code = pstorage_register(&param, &m_flash_handle);
+    err_code = epd_config_load(&p_epd->config);
     if (err_code == NRF_SUCCESS)
     {
-        err_code = epd_config_load(&p_epd->config);
-        if (err_code == NRF_SUCCESS)
-        {
-            epd_config_init(p_epd);
-        }
+        epd_config_init(p_epd);
     }
 
     // Init led pin

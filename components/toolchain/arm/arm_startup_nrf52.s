@@ -1,38 +1,38 @@
-; Copyright (c) 2015, Nordic Semiconductor ASA
-; All rights reserved.
-; 
-; Redistribution and use in source and binary forms, with or without
-; modification, are permitted provided that the following conditions are met:
-; 
-; * Redistributions of source code must retain the above copyright notice, this
-;   list of conditions and the following disclaimer.
-; 
-; * Redistributions in binary form must reproduce the above copyright notice,
-;   this list of conditions and the following disclaimer in the documentation
-;   and/or other materials provided with the distribution.
-; 
-; * Neither the name of Nordic Semiconductor ASA nor the names of its
-;   contributors may be used to endorse or promote products derived from
-;   this software without specific prior written permission.
-; 
-; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-; DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-; FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-; DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-; SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-; CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- 
-; NOTE: Template files (including this one) are application specific and therefore 
-; expected to be copied into the application project folder prior to its use!
+;/* Copyright (c) 2012 ARM LIMITED
+;
+;   All rights reserved.
+;   Redistribution and use in source and binary forms, with or without
+;   modification, are permitted provided that the following conditions are met:
+;   - Redistributions of source code must retain the above copyright
+;     notice, this list of conditions and the following disclaimer.
+;   - Redistributions in binary form must reproduce the above copyright
+;     notice, this list of conditions and the following disclaimer in the
+;     documentation and/or other materials provided with the distribution.
+;   - Neither the name of ARM nor the names of its contributors may be used
+;     to endorse or promote products derived from this software without
+;     specific prior written permission.
+;   *
+;   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;   ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS AND CONTRIBUTORS BE
+;   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;   POSSIBILITY OF SUCH DAMAGE.
+;   ---------------------------------------------------------------------------*/
 
-; Description message
+                IF :DEF: __STARTUP_CONFIG
+#include "startup_config.h"
+                ENDIF
 
-                IF :DEF: __STACK_SIZE
-Stack_Size      EQU     __STACK_SIZE
+                IF :DEF: __STARTUP_CONFIG
+Stack_Size      EQU __STARTUP_CONFIG_STACK_SIZE
+                ELIF :DEF: __STACK_SIZE
+Stack_Size      EQU __STACK_SIZE
                 ELSE
 Stack_Size      EQU     8192
                 ENDIF
@@ -41,8 +41,10 @@ Stack_Size      EQU     8192
 Stack_Mem       SPACE   Stack_Size
 __initial_sp
 
-                IF :DEF: __HEAP_SIZE
-Heap_Size       EQU     __HEAP_SIZE
+                IF :DEF: __STARTUP_CONFIG
+Heap_Size       EQU __STARTUP_CONFIG_HEAP_SIZE
+                ELIF :DEF: __HEAP_SIZE
+Heap_Size       EQU __HEAP_SIZE
                 ELSE
 Heap_Size       EQU     8192
                 ENDIF
@@ -74,7 +76,7 @@ __Vectors       DCD     __initial_sp              ; Top of Stack
                 DCD     0                         ; Reserved
                 DCD     0                         ; Reserved
                 DCD     SVC_Handler
-                DCD     0                         ; Reserved
+                DCD     DebugMon_Handler
                 DCD     0                         ; Reserved
                 DCD     PendSV_Handler
                 DCD     SysTick_Handler
@@ -118,7 +120,7 @@ __Vectors       DCD     __initial_sp              ; Top of Stack
                 DCD     SPIM2_SPIS2_SPI2_IRQHandler
                 DCD     RTC2_IRQHandler
                 DCD     I2S_IRQHandler
-                DCD     0                         ; Reserved
+                DCD     FPU_IRQHandler
                 DCD     0                         ; Reserved
                 DCD     0                         ; Reserved
                 DCD     0                         ; Reserved
@@ -334,7 +336,8 @@ Reset_Handler   PROC
                 EXPORT  Reset_Handler             [WEAK]
                 IMPORT  SystemInit
                 IMPORT  __main
-                
+
+
                 LDR     R0, =SystemInit
                 BLX     R0
                 LDR     R0, =__main
@@ -369,6 +372,11 @@ UsageFault_Handler\
                 ENDP
 SVC_Handler     PROC
                 EXPORT  SVC_Handler               [WEAK]
+                B       .
+                ENDP
+DebugMon_Handler\
+                PROC
+                EXPORT  DebugMon_Handler          [WEAK]
                 B       .
                 ENDP
 PendSV_Handler  PROC
@@ -418,6 +426,7 @@ Default_Handler PROC
                 EXPORT   SPIM2_SPIS2_SPI2_IRQHandler [WEAK]
                 EXPORT   RTC2_IRQHandler [WEAK]
                 EXPORT   I2S_IRQHandler [WEAK]
+                EXPORT   FPU_IRQHandler [WEAK]
 POWER_CLOCK_IRQHandler
 RADIO_IRQHandler
 UARTE0_UART0_IRQHandler
@@ -454,6 +463,7 @@ PWM2_IRQHandler
 SPIM2_SPIS2_SPI2_IRQHandler
 RTC2_IRQHandler
 I2S_IRQHandler
+FPU_IRQHandler
                 B .
                 ENDP
                 ALIGN
@@ -461,7 +471,7 @@ I2S_IRQHandler
 ; User Initial Stack & Heap
 
                 IF      :DEF:__MICROLIB
-                
+
                 EXPORT  __initial_sp
                 EXPORT  __heap_base
                 EXPORT  __heap_limit
@@ -470,13 +480,15 @@ I2S_IRQHandler
 
                 IMPORT  __use_two_region_memory
                 EXPORT  __user_initial_stackheap
-__user_initial_stackheap
+
+__user_initial_stackheap PROC
 
                 LDR     R0, = Heap_Mem
                 LDR     R1, = (Stack_Mem + Stack_Size)
                 LDR     R2, = (Heap_Mem + Heap_Size)
                 LDR     R3, = Stack_Mem
                 BX      LR
+                ENDP
 
                 ALIGN
 

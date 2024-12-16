@@ -1,291 +1,285 @@
+/**
+ * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ */
+
+
 #ifndef SECTION_VARS_H__
 #define SECTION_VARS_H__
 
-#include "app_util.h"
-
-#if defined __ICC_ARM__
-
-// turn on language extensions for iar
-#pragma language=extended
-
+#ifdef __cplusplus
+extern "C" {
 #endif
+
 
 /**
  * @defgroup section_vars Section variables
  * @ingroup app_common
  * @{
+ *
  * @brief Section variables.
  */
 
-/**@brief Macro to delay macro expression of pragma
- *
- */
-#define NRF_PRAGMA(x) _Pragma(#x)
 
-
-/**@brief Macro to register section by name in code
- *
- * @param[in]   section_name    Name of the section to register
- **/
-#if defined __CC_ARM
-
-// Not required by this compiler
-#define NRF_SECTION_VARS_REGISTER_SECTION(section_name)
-
-#elif defined __GNUC__
-
-// Not required by this compiler
-#define NRF_SECTION_VARS_REGISTER_SECTION(section_name)
-
-#elif defined __ICCARM__
-
-#define NRF_SECTION_VARS_REGISTER_SECTION(section_name) NRF_PRAGMA(section = ## #section_name )
-
-#else
-
-#error TODO
-
+#if defined(__ICCARM__)
+// Enable IAR language extensions
+#pragma language=extended
 #endif
 
-/*lint -save -e27 */
 
-/**@brief Macro for accessing start of a named data section by symbol 
+// Macro to delay macro expansion.
+#define NRF_PRAGMA(x)                                       _Pragma(#x)
+
+
+//lint -save -e27 Illegal character (0x24)
+
+
+/**@brief   Macro to obtain the symbol marking the beginning of a given section.
  *
- * @details     The symbol that this macro resolves to is used to access the section 
- *              by start address.
+ * @details The symbol that this macro resolves to is used to obtain a section start address.
  *
- * @param[in]   section_name    Name of the section
+ * @param[in]   section_name    Name of the section.
  */
-#if defined __CC_ARM
+#if defined(__CC_ARM)
 
 #define NRF_SECTION_VARS_START_SYMBOL(section_name)         section_name ## $$Base
 
-#elif defined __GNUC__
+#elif defined(__GNUC__)
 
 #define NRF_SECTION_VARS_START_SYMBOL(section_name)         __start_ ## section_name
 
-#elif defined __ICCARM__
+#elif defined(__ICCARM__)
 
 #define NRF_SECTION_VARS_START_SYMBOL(section_name)         __section_begin(#section_name)
-
-#else
-
-#error TODO
 
 #endif
 
 
-/**@brief Macro for accessing end of a named data section by symbol
+/**@brief   Macro to obtain the symbol marking the end of a given section.
  *
- * @details     The symbol that this macro resolves to is used to access the section
- *              by end address.
+ * @details The symbol that this macro resolves to is used to obtain a section stop address.
  *
- * @param[in]   section_name    Name of the section    
+ * @param[in]   section_name    Name of the section.
  */
-#if defined __CC_ARM
+#if defined(__CC_ARM)
 
 #define NRF_SECTION_VARS_END_SYMBOL(section_name)           section_name ## $$Limit
 
-#elif defined __GNUC__
+#elif defined(__GNUC__)
 
 #define NRF_SECTION_VARS_END_SYMBOL(section_name)           __stop_ ## section_name
 
-#elif defined __ICCARM__
+#elif defined(__ICCARM__)
 
 #define NRF_SECTION_VARS_END_SYMBOL(section_name)           __section_end(#section_name)
 
 #endif
 
-/*lint -restore */
+
+//lint -restore
 
 
-/**@brief Macro for accessing Length of a named section
+/**@brief   Macro for retrieving the length of a given section, in bytes.
  *
- * @details     This macro is used to get the size of a named section.
- *
- * @param[in]   section_name    Name of the section
+ * @param[in]   section_name    Name of the section.
  */
-
-#if defined __CC_ARM
+#if defined(__CC_ARM)
 
 #define NRF_SECTION_VARS_LENGTH(section_name) \
     ((uint32_t)&NRF_SECTION_VARS_END_SYMBOL(section_name) - (uint32_t)&NRF_SECTION_VARS_START_SYMBOL(section_name))
 
-#elif defined __GNUC__
+#elif defined(__GNUC__)
 
  #define NRF_SECTION_VARS_LENGTH(section_name) \
     ((uint32_t)&NRF_SECTION_VARS_END_SYMBOL(section_name) - (uint32_t)&NRF_SECTION_VARS_START_SYMBOL(section_name))
 
-#elif defined __ICCARM__
+#elif defined(__ICCARM__)
 
  #define NRF_SECTION_VARS_LENGTH(section_name) \
     ((uint32_t)NRF_SECTION_VARS_END_SYMBOL(section_name) - (uint32_t)NRF_SECTION_VARS_START_SYMBOL(section_name))
 
-#else
-
-#error TODO
-
 #endif
-      
 
-/**@brief Macro for accessing the start address of a named section
+
+/**@brief   Macro to obtain the address of the beginning of a section.
  *
- * param[in]    section_name    Name of the section to get the start address from
+ * param[in]    section_name    Name of the section.
  */
-#if defined __CC_ARM
+#if defined(__CC_ARM)
 
 #define NRF_SECTION_VARS_START_ADDR(section_name)       (uint32_t)&NRF_SECTION_VARS_START_SYMBOL(section_name)
-      
-#elif defined __GNUC__
-      
+
+#elif defined(__GNUC__)
+
 #define NRF_SECTION_VARS_START_ADDR(section_name)       (uint32_t)&NRF_SECTION_VARS_START_SYMBOL(section_name)
-      
-#elif defined __ICCARM__
-      
+
+#elif defined(__ICCARM__)
+
 #define NRF_SECTION_VARS_START_ADDR(section_name)       (uint32_t)iar_ ## section_name ## _start
 
-#else
-      
-#error TODO
-      
 #endif
 
-      
-/*@brief Macro for accessing the end address of a named section
+
+/**@brief    Macro to obtain the address of end of a section.
  *
- * @param[in]   section_name    Name of the section to get end address from
+ * @param[in]   section_name    Name of the section.
  */
-#if defined __CC_ARM
+#if defined(__CC_ARM)
 
 #define NRF_SECTION_VARS_END_ADDR(section_name)         (uint32_t)&NRF_SECTION_VARS_END_SYMBOL(section_name)
-      
-#elif defined __GNUC__
+
+#elif defined(__GNUC__)
 
 #define NRF_SECTION_VARS_END_ADDR(section_name)         (uint32_t)&NRF_SECTION_VARS_END_SYMBOL(section_name)
-      
-#elif defined __ICCARM__
+
+#elif defined(__ICCARM__)
 
 #define NRF_SECTION_VARS_END_ADDR(section_name)         (uint32_t)iar_ ## section_name ## _end
 
-#else
-      
-#error TODO
-      
 #endif
 
 
-/**@brief Macro for declaring symbols for named sections
+//lint -save -e19 -esym(526, fs_dataBase) -esym(526, fs_dataLimit) -esym(526, dfu_transBase) -esym(526, dfu_transLimit)
+
+/**@brief   Macro to create a section to register variables in.
  *
- * @note    These external declarations of section specific symbols are required for the linker in GCC and Keil (not IAR)
+ * @param[in]   data_type       The data type of the variables to be registered in the section.
+ * @param[in]   section_name    Name of the section.
  *
- * @param[in]   type_name       Name of the type stored in the section
- * @param[in]   section_name    Name of the section
+ * @warning The data type must be word aligned to prevent padding.
  */
-#if defined __CC_ARM
+#if defined(__CC_ARM)
 
-#define NRF_SECTION_VARS_REGISTER_SYMBOLS(type_name, section_name)      \
-    extern type_name* NRF_SECTION_VARS_START_SYMBOL(section_name);      \
-    extern void* NRF_SECTION_VARS_END_SYMBOL(section_name)
+#define NRF_SECTION_VARS_CREATE_SECTION(section_name, data_type)    \
+    extern data_type * NRF_SECTION_VARS_START_SYMBOL(section_name); \
+    extern void      * NRF_SECTION_VARS_END_SYMBOL(section_name)
 
-#elif defined __GNUC__
+#elif defined(__GNUC__)
 
-#define NRF_SECTION_VARS_REGISTER_SYMBOLS(type_name, section_name)      \
-    extern type_name* NRF_SECTION_VARS_START_SYMBOL(section_name);      \
-    extern void* NRF_SECTION_VARS_END_SYMBOL(section_name)
+#define NRF_SECTION_VARS_CREATE_SECTION(section_name, data_type)    \
+    extern data_type * NRF_SECTION_VARS_START_SYMBOL(section_name); \
+    extern void      * NRF_SECTION_VARS_END_SYMBOL(section_name)
 
-#elif defined __ICCARM__
+#elif defined(__ICCARM__)
 
-// No symbol registration required for IAR      
-#define NRF_SECTION_VARS_REGISTER_SYMBOLS(type_name, section_name)                              \
-    extern void*   iar_ ## section_name ## _start   = __section_begin(#section_name);            \
-    extern void*   iar_ ## section_name ## _end     = __section_end(#section_name)
-      
-#else
-      
-#error TODO
+// No symbol registration required for IAR.
+#define NRF_SECTION_VARS_CREATE_SECTION(section_name, data_type)                    \
+    NRF_PRAGMA(section = #section_name);                                            \
+    extern void * iar_ ## section_name ## _start = __section_begin(#section_name);  \
+    extern void * iar_ ## section_name ## _end   = __section_end(#section_name)
+
+#endif
+
+//lint -restore
+
+
+/**@brief   Macro to declare a variable and register it in a section.
+ *
+ * @details Declares a variable and registers it in a named section. This macro ensures that the
+ *          variable is not stripped away when using optimizations.
+ *
+ * @note The order with which variables are placed in a section is dependant on the order with
+ *       which the linker encouters the variables during linking.
+ *
+ * @param[in]   section_name    Name of the section.
+ * @param[in]   section_var     The variable to register in the given section.
+ */
+#if defined(__CC_ARM)
+
+#define NRF_SECTION_VARS_REGISTER_VAR(section_name, section_var) \
+    static section_var __attribute__ ((section(#section_name))) __attribute__((used))
+
+#elif defined(__GNUC__)
+
+#define NRF_SECTION_VARS_REGISTER_VAR(section_name, section_var) \
+    static section_var __attribute__ ((section("."#section_name))) __attribute__((used))
+
+#elif defined(__ICCARM__)
+
+#define NRF_SECTION_VARS_REGISTER_VAR(section_name, section_var) \
+    __root section_var @ #section_name
 
 #endif
 
 
-/**@brief Macro to add symbols to a named section
+/**@brief   Macro to retrieve a variable from a section.
  *
- * @details     The symbols are placed in a named section. All calls to this macro
- *              will result in symbols being placed in a contiguous manner in the named section. 
- *              This macro ensures that the symbol is not removed because of optimization level.
- *
- * @warning     There is no guarantee for ordering of placement. If ordering is required
- *
- * @warning     The symbols added in the named section must be word aligned to
- *              ensure that compilers do not pad the section during symbol placement.
- *
- * @param[in]   section_name    Name of the section
- * @param[in]   type_def        Datatype of the symbol to place in the given section
- */
-#if defined __CC_ARM
-    
-#define NRF_SECTION_VARS_ADD(section_name, type_def) \
-    static type_def __attribute__((section( #section_name ))) __attribute__((used))
-
-#elif defined __GNUC__
-
-#define NRF_SECTION_VARS_ADD(section_name, type_def) \
-    static type_def __attribute__ ((section( #section_name ))) __attribute__ ((used))
-
-#elif defined __ICCARM__
-
-#define NRF_SECTION_VARS_ADD(section_name, type_def) \
-    __root type_def @ #section_name
-
-#else
-      
-#error    TODO
-      
-#endif    
-
-      
-/**@brief Macro to get symbol from named section
- *
- * @warning     The stored symbol can only be resolved using this macro if the 
- *              type of the data is word aligned. The operation of acquiring 
- *              the stored symbol relies on sizeof of the stored type, no 
- *              padding can exist in the named section in between individual 
+ * @warning     The stored symbol can only be resolved using this macro if the
+ *              type of the data is word aligned. The operation of acquiring
+ *              the stored symbol relies on sizeof of the stored type, no
+ *              padding can exist in the named section in between individual
  *              stored items or this macro will fail.
  *
- * @param[in]   i               Index of item in section
- * @param[in]   type_name       Type name of item in section
- * @param[in]   section_name    Name of the section
+ * @param[in]   i               Index of the variable in section.
+ * @param[in]   data_type       Data type of the variable.
+ * @param[in]   section_name    Name of the section.
  */
-      
-#if defined __CC_ARM
+#if defined(__CC_ARM)
 
-#define NRF_SECTION_VARS_GET(i, type_name, section_name) \
-    (type_name*)(NRF_SECTION_VARS_START_ADDR(section_name) + i * sizeof(type_name))
-      
-#elif defined __GNUC__
+#define NRF_SECTION_VARS_GET(i, data_type, section_name) \
+    (data_type*)(NRF_SECTION_VARS_START_ADDR(section_name) + i * sizeof(data_type))
 
-#define NRF_SECTION_VARS_GET(i, type_name, section_name) \
-    (type_name*)(NRF_SECTION_VARS_START_ADDR(section_name) + i * sizeof(type_name))
-      
-#elif defined __ICCARM__
+#elif defined(__GNUC__)
 
-#define NRF_SECTION_VARS_GET(i, type_name, section_name) \
-      (type_name*)iar_ ## section_name ## _start + (i * sizeof(type_name))
+#define NRF_SECTION_VARS_GET(i, data_type, section_name) \
+    (data_type*)(NRF_SECTION_VARS_START_ADDR(section_name) + i * sizeof(data_type))
 
-#else
+#elif defined(__ICCARM__)
 
-#error TODO
+#define NRF_SECTION_VARS_GET(i, data_type, section_name) \
+    (data_type*)(NRF_SECTION_VARS_START_ADDR(section_name) + i * sizeof(data_type))
 
 #endif
 
 
-/**@brief Macro to get number of items in named section
+/**@brief   Macro to get number of variables registered in a section.
  *
- * @param[in]   type_name       Type name of item in section
- * @param[in]   section_name    Name of the section
+ * @param[in]   data_type       Data type of the variables in the section.
+ * @param[in]   section_name    Name of the section.
  */
-#define NRF_SECTION_VARS_COUNT(type_name, section_name) \
-    NRF_SECTION_VARS_LENGTH(section_name) / sizeof(type_name)
+#define NRF_SECTION_VARS_COUNT(data_type, section_name) \
+    NRF_SECTION_VARS_LENGTH(section_name) / sizeof(data_type)
 
 /** @} */
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // SECTION_VARS_H__
