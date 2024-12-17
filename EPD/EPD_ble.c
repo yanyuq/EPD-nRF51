@@ -24,6 +24,12 @@
 #define NRF_LOG_MODULE_NAME "EPD_ble"
 #include "nrf_log.h"
 
+#ifdef NRF51802
+#define EPD_CFG_DEFAULT {0x0A, 0x0B, 0x0C, 0x0D, 0x0D, 0x0E, 0x0F, 0x10, 0x03, 0x09, 0x03}
+#else
+#define EPD_CFG_DEFAULT {0x05, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x01, 0x07}
+#endif
+
 #define BLE_EPD_CONFIG_ADDR                (NRF_FICR->CODEPAGESIZE * (NRF_FICR->CODESIZE - 1)) // Last page of the flash
 #define BLE_EPD_BASE_UUID                  {{0XEC, 0X5A, 0X67, 0X1C, 0XC1, 0XB6, 0X46, 0XFB, \
                                              0X8D, 0X91, 0X28, 0XD8, 0X22, 0X36, 0X75, 0X62}}
@@ -352,7 +358,7 @@ static void epd_config_init(ble_epd_t * p_epd)
     // write default config
     if (is_empty_config)
     {
-        uint8_t cfg[] = {0x05, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x01, 0x07};
+        uint8_t cfg[] = EPD_CFG_DEFAULT;
         memcpy(&p_epd->config, cfg, ARRAY_SIZE(cfg));
         epd_config_save(&p_epd->config);
     }
