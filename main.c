@@ -321,12 +321,12 @@ static void sys_evt_dispatch(uint32_t sys_evt)
 static void ble_stack_init(void)
 {
     uint32_t err_code;
-
-    nrf_clock_lf_cfg_t clock_lf_cfg = {.source        = NRF_CLOCK_LF_SRC_SYNTH,
-                                       .rc_ctiv       = 0,
-                                       .rc_temp_ctiv  = 0,
-                                       .xtal_accuracy = NRF_CLOCK_LF_XTAL_ACCURACY_20_PPM,
-                                      };
+    nrf_clock_lf_cfg_t  clock_lf_cfg = {
+        .source        = NRF_CLOCK_LF_SRC_SYNTH,
+        .rc_ctiv       = 0,
+        .rc_temp_ctiv  = 0,
+        .xtal_accuracy = NRF_CLOCK_LF_XTAL_ACCURACY_20_PPM,
+    };
 
     // Initialize the SoftDevice handler module.
     SOFTDEVICE_HANDLER_INIT(&clock_lf_cfg, NULL);
@@ -336,7 +336,7 @@ static void ble_stack_init(void)
                                                     PERIPHERAL_LINK_COUNT,
                                                     &ble_enable_params);
     APP_ERROR_CHECK(err_code);
-    
+
     // Check the ram settings against the used number of links
     CHECK_RAM_START_ADDR(CENTRAL_LINK_COUNT,PERIPHERAL_LINK_COUNT);
     
@@ -350,6 +350,21 @@ static void ble_stack_init(void)
 
     // Subscribe for System events.
     err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
+    APP_ERROR_CHECK(err_code);
+}
+
+// Set BW Config to HIGH.
+static void ble_options_set(void)
+{
+    uint32_t err_code;
+    ble_opt_t ble_opt;
+
+    memset(&ble_opt, 0, sizeof(ble_opt));
+    ble_opt.common_opt.conn_bw.role = BLE_GAP_ROLE_PERIPH;
+    ble_opt.common_opt.conn_bw.conn_bw.conn_bw_rx = BLE_CONN_BW_HIGH;
+    ble_opt.common_opt.conn_bw.conn_bw.conn_bw_tx = BLE_CONN_BW_HIGH;
+
+    err_code = sd_ble_opt_set(BLE_COMMON_OPT_CONN_BW, &ble_opt);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -401,6 +416,7 @@ int main(void)
 
     timers_init();
     ble_stack_init();
+    ble_options_set();
     gap_params_init();
     services_init();
     advertising_init();
