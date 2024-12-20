@@ -2527,7 +2527,7 @@
 // <e> TWI_ENABLED - nrf_drv_twi - TWI/TWIM peripheral driver
 //==========================================================
 #ifndef TWI_ENABLED
-#define TWI_ENABLED 1
+#define TWI_ENABLED 0
 #endif
 #if  TWI_ENABLED
 // <o> TWI_DEFAULT_CONFIG_FREQUENCY  - Frequency
