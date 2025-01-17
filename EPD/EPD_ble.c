@@ -25,12 +25,11 @@
 #include "nrf_log.h"
 
 #ifdef NRF51802
-#define EPD_CFG_DEFAULT {0x0A, 0x0B, 0x0C, 0x0D, 0x0D, 0x0E, 0x0F, 0x10, 0x03, 0x09, 0x03}
+#define EPD_CFG_DEFAULT {0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x03, 0x09, 0x03}
 #else
 #define EPD_CFG_DEFAULT {0x05, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x01, 0x07}
 #endif
 
-#define BLE_EPD_CONFIG_ADDR                (NRF_FICR->CODEPAGESIZE * (NRF_FICR->CODESIZE - 1)) // Last page of the flash
 #define BLE_EPD_BASE_UUID                  {{0XEC, 0X5A, 0X67, 0X1C, 0XC1, 0XB6, 0X46, 0XFB, \
                                              0X8D, 0X91, 0X28, 0XD8, 0X22, 0X36, 0X75, 0X62}}
 #define BLE_UUID_EPD_CHARACTERISTIC        0x0002
@@ -77,7 +76,7 @@ FS_REGISTER_CFG(fs_config_t fs_config) =
 
 static uint32_t epd_config_load(epd_config_t *cfg)
 {
-    memcpy(cfg, (void *)BLE_EPD_CONFIG_ADDR, sizeof(epd_config_t));
+    memcpy(cfg, fs_config.p_start_addr, sizeof(epd_config_t));
     return NRF_SUCCESS;
 }
 
@@ -88,6 +87,11 @@ static uint32_t epd_config_clear(epd_config_t *cfg)
 
 static uint32_t epd_config_save(epd_config_t *cfg)
 {
+    uint32_t err_code;
+    if ((err_code = epd_config_clear(cfg)) != NRF_SUCCESS)
+    {
+        return err_code;
+    }
     uint16_t const len = (sizeof(epd_config_t) + sizeof(uint32_t) - 1) / sizeof(uint32_t);
     return fs_store(&fs_config, fs_config.p_start_addr, (uint32_t *) cfg, len, NULL);
 }
@@ -208,6 +212,7 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
       
       case EPD_CMD_CFG_ERASE:
           epd_config_clear(&p_epd->config);
+          nrf_delay_ms(10); // required
           NVIC_SystemReset();
           break;
 
@@ -224,6 +229,7 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
 static void on_write(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 {
     ble_gatts_evt_write_t * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
+    uint32_t err_code;
 
     if (
         (p_evt_write->handle == p_epd->char_handles.cccd_handle)
@@ -234,7 +240,12 @@ static void on_write(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
         if (ble_srv_is_notification_enabled(p_evt_write->data))
         {
             p_epd->is_notification_enabled = true;
-            ble_epd_string_send(p_epd, (uint8_t *)&p_epd->config, sizeof(epd_config_t));
+            static uint16_t length = sizeof(epd_config_t);
+            err_code = ble_epd_string_send(p_epd, (uint8_t *)&p_epd->config, length);
+            if (err_code != NRF_ERROR_INVALID_STATE)
+            {
+                APP_ERROR_CHECK(err_code);
+            }
         }
         else
         {
