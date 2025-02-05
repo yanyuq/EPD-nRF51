@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "html/*"
+      - "html/**"
   workflow_dispatch:
 
 permissions:
