@@ -79,6 +79,7 @@ Keil/Objects/*
 # !my_customized_scatter_file.sct
 
 !/components/softdevice/*/hex/*.hex
+_build/
 RTE_Components.h
 EventRecorderStub.scvd
 JLinkLog.txt

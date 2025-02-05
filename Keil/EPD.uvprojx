@@ -186,6 +186,7 @@
             <RvdsVP>0</RvdsVP>
             <RvdsMve>0</RvdsMve>
             <RvdsCdeCp>0</RvdsCdeCp>
+            <nBranchProt>0</nBranchProt>
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
@@ -339,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>BLE_STACK_SUPPORT_REQD NRF51822 NRF_SD_BLE_API_VERSION=2 S130 NRF51 SOFTDEVICE_PRESENT SWI_DISABLE0</Define>
               <Undefine></Undefine>
-              <IncludePath>..\config;..\EPD;..\components\toolchain;..\components\drivers_nrf\clock;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\twi_master;..\components\drivers_ext\segger_rtt;..\components\libraries\fstorage;..\components\libraries\experimental_section_vars;..\components\libraries\log;..\components\libraries\log\src;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s130\headers;..\components\softdevice\s130\headers\nrf51</IncludePath>
+              <IncludePath>..\config;..\EPD;..\components\toolchain;..\components\toolchain\cmsis\include;..\components\drivers_nrf\clock;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\twi_master;..\components\drivers_ext\segger_rtt;..\components\libraries\fstorage;..\components\libraries\experimental_section_vars;..\components\libraries\log;..\components\libraries\log\src;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s130\headers;..\components\softdevice\s130\headers\nrf51</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -357,7 +358,7 @@
               <MiscControls></MiscControls>
               <Define>BLE_STACK_SUPPORT_REQD NRF51822 NRF_SD_BLE_API_VERSION=2 S130 NRF51 SOFTDEVICE_PRESENT SWI_DISABLE0</Define>
               <Undefine></Undefine>
-              <IncludePath>..\components;..\components\drivers_nrf\common;..\components\libraries\log;..\components\libraries\log\src;..\components\drivers_nrf\hal;..\components\drivers_nrf\delay;..\components\drivers_nrf\nrf_soc_nosd;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\uart;..\components\libraries\util;..\components\toolchain;..\config;..\EPD;..\GUI</IncludePath>
+              <IncludePath>..\config;..\EPD;..\components\toolchain;..\components\toolchain\cmsis\include;..\components\drivers_nrf\clock;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\twi_master;..\components\drivers_ext\segger_rtt;..\components\libraries\fstorage;..\components\libraries\experimental_section_vars;..\components\libraries\log;..\components\libraries\log\src;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s130\headers;..\components\softdevice\s130\headers\nrf51</IncludePath>
             </VariousControls>
           </Aads>
           <LDads>
@@ -546,79 +547,19 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>::CMSIS</GroupName>
-        </Group>
-        <Group>
-          <GroupName>::Device</GroupName>
-          <GroupOption>
-            <CommonProperty>
-              <UseCPPCompiler>0</UseCPPCompiler>
-              <RVCTCodeConst>0</RVCTCodeConst>
-              <RVCTZI>0</RVCTZI>
-              <RVCTOtherData>0</RVCTOtherData>
-              <ModuleSelection>0</ModuleSelection>
-              <IncludeInBuild>1</IncludeInBuild>
-              <AlwaysBuild>2</AlwaysBuild>
-              <GenerateAssemblyFile>2</GenerateAssemblyFile>
-              <AssembleAssemblyFile>2</AssembleAssemblyFile>
-              <PublicsOnly>2</PublicsOnly>
-              <StopOnExitCode>11</StopOnExitCode>
-              <CustomArgument></CustomArgument>
-              <IncludeLibraryModules></IncludeLibraryModules>
-              <ComprImg>1</ComprImg>
-            </CommonProperty>
-            <GroupArmAds>
-              <Cads>
-                <interw>2</interw>
-                <Optim>0</Optim>
-                <oTime>2</oTime>
-                <SplitLS>2</SplitLS>
-                <OneElfS>2</OneElfS>
-                <Strict>2</Strict>
-                <EnumInt>2</EnumInt>
-                <PlainCh>2</PlainCh>
-                <Ropi>2</Ropi>
-                <Rwpi>2</Rwpi>
-                <wLevel>0</wLevel>
-                <uThumb>2</uThumb>
-                <uSurpInc>2</uSurpInc>
-                <uC99>2</uC99>
-                <uGnu>2</uGnu>
-                <useXO>2</useXO>
-                <v6Lang>0</v6Lang>
-                <v6LangP>0</v6LangP>
-                <vShortEn>2</vShortEn>
-                <vShortWch>2</vShortWch>
-                <v6Lto>2</v6Lto>
-                <v6WtE>2</v6WtE>
-                <v6Rtti>2</v6Rtti>
-                <VariousControls>
-                  <MiscControls></MiscControls>
-                  <Define></Define>
-                  <Undefine></Undefine>
-                  <IncludePath></IncludePath>
-                </VariousControls>
-              </Cads>
-              <Aads>
-                <interw>2</interw>
-                <Ropi>2</Ropi>
-                <Rwpi>2</Rwpi>
-                <thumb>2</thumb>
-                <SplitLS>2</SplitLS>
-                <SwStkChk>2</SwStkChk>
-                <NoWarn>2</NoWarn>
-                <uSurpInc>2</uSurpInc>
-                <useXO>2</useXO>
-                <ClangAsOpt>0</ClangAsOpt>
-                <VariousControls>
-                  <MiscControls></MiscControls>
-                  <Define></Define>
-                  <Undefine></Undefine>
-                  <IncludePath></IncludePath>
-                </VariousControls>
-              </Aads>
-            </GroupArmAds>
-          </GroupOption>
+          <GroupName>Startup</GroupName>
+          <Files>
+            <File>
+              <FileName>arm_startup_nrf51.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\components\toolchain\arm\arm_startup_nrf51.s</FilePath>
+            </File>
+            <File>
+              <FileName>system_nrf51.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\toolchain\system_nrf51.c</FilePath>
+            </File>
+          </Files>
         </Group>
       </Groups>
     </Target>
@@ -802,6 +743,7 @@
             <RvdsVP>0</RvdsVP>
             <RvdsMve>0</RvdsMve>
             <RvdsCdeCp>0</RvdsCdeCp>
+            <nBranchProt>0</nBranchProt>
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
@@ -955,7 +897,7 @@
               <MiscControls></MiscControls>
               <Define>BLE_STACK_SUPPORT_REQD NRF51802 NRF_SD_BLE_API_VERSION=2 S130 NRF51 SOFTDEVICE_PRESENT SWI_DISABLE0</Define>
               <Undefine></Undefine>
-              <IncludePath>..\config;..\EPD;..\components\toolchain;..\components\drivers_nrf\clock;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\gpiote;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\twi_master;..\components\drivers_ext\segger_rtt;..\components\libraries\fstorage;..\components\libraries\experimental_section_vars;..\components\libraries\log;..\components\libraries\log\src;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s130\headers;..\components\softdevice\s130\headers\nrf51</IncludePath>
+              <IncludePath>..\config;..\EPD;..\components\toolchain;..\components\toolchain\cmsis\include;..\components\drivers_nrf\clock;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\twi_master;..\components\drivers_ext\segger_rtt;..\components\libraries\fstorage;..\components\libraries\experimental_section_vars;..\components\libraries\log;..\components\libraries\log\src;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s130\headers;..\components\softdevice\s130\headers\nrf51</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -973,7 +915,7 @@
               <MiscControls></MiscControls>
               <Define>BLE_STACK_SUPPORT_REQD NRF51802 NRF_SD_BLE_API_VERSION=2 S130 NRF51 SOFTDEVICE_PRESENT SWI_DISABLE0</Define>
               <Undefine></Undefine>
-              <IncludePath>..\components;..\components\drivers_nrf\common;..\components\libraries\log;..\components\libraries\log\src;..\components\drivers_nrf\hal;..\components\drivers_nrf\delay;..\components\drivers_nrf\nrf_soc_nosd;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\uart;..\components\libraries\util;..\components\toolchain;..\config;..\EPD;..\GUI</IncludePath>
+              <IncludePath>..\config;..\EPD;..\components\toolchain;..\components\toolchain\cmsis\include;..\components\drivers_nrf\clock;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\twi_master;..\components\drivers_ext\segger_rtt;..\components\libraries\fstorage;..\components\libraries\experimental_section_vars;..\components\libraries\log;..\components\libraries\log\src;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s130\headers;..\components\softdevice\s130\headers\nrf51</IncludePath>
             </VariousControls>
           </Aads>
           <LDads>
@@ -1162,79 +1104,19 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>::CMSIS</GroupName>
-        </Group>
-        <Group>
-          <GroupName>::Device</GroupName>
-          <GroupOption>
-            <CommonProperty>
-              <UseCPPCompiler>0</UseCPPCompiler>
-              <RVCTCodeConst>0</RVCTCodeConst>
-              <RVCTZI>0</RVCTZI>
-              <RVCTOtherData>0</RVCTOtherData>
-              <ModuleSelection>0</ModuleSelection>
-              <IncludeInBuild>1</IncludeInBuild>
-              <AlwaysBuild>2</AlwaysBuild>
-              <GenerateAssemblyFile>2</GenerateAssemblyFile>
-              <AssembleAssemblyFile>2</AssembleAssemblyFile>
-              <PublicsOnly>2</PublicsOnly>
-              <StopOnExitCode>11</StopOnExitCode>
-              <CustomArgument></CustomArgument>
-              <IncludeLibraryModules></IncludeLibraryModules>
-              <ComprImg>1</ComprImg>
-            </CommonProperty>
-            <GroupArmAds>
-              <Cads>
-                <interw>2</interw>
-                <Optim>0</Optim>
-                <oTime>2</oTime>
-                <SplitLS>2</SplitLS>
-                <OneElfS>2</OneElfS>
-                <Strict>2</Strict>
-                <EnumInt>2</EnumInt>
-                <PlainCh>2</PlainCh>
-                <Ropi>2</Ropi>
-                <Rwpi>2</Rwpi>
-                <wLevel>0</wLevel>
-                <uThumb>2</uThumb>
-                <uSurpInc>2</uSurpInc>
-                <uC99>2</uC99>
-                <uGnu>2</uGnu>
-                <useXO>2</useXO>
-                <v6Lang>0</v6Lang>
-                <v6LangP>0</v6LangP>
-                <vShortEn>2</vShortEn>
-                <vShortWch>2</vShortWch>
-                <v6Lto>2</v6Lto>
-                <v6WtE>2</v6WtE>
-                <v6Rtti>2</v6Rtti>
-                <VariousControls>
-                  <MiscControls></MiscControls>
-                  <Define></Define>
-                  <Undefine></Undefine>
-                  <IncludePath></IncludePath>
-                </VariousControls>
-              </Cads>
-              <Aads>
-                <interw>2</interw>
-                <Ropi>2</Ropi>
-                <Rwpi>2</Rwpi>
-                <thumb>2</thumb>
-                <SplitLS>2</SplitLS>
-                <SwStkChk>2</SwStkChk>
-                <NoWarn>2</NoWarn>
-                <uSurpInc>2</uSurpInc>
-                <useXO>2</useXO>
-                <ClangAsOpt>0</ClangAsOpt>
-                <VariousControls>
-                  <MiscControls></MiscControls>
-                  <Define></Define>
-                  <Undefine></Undefine>
-                  <IncludePath></IncludePath>
-                </VariousControls>
-              </Aads>
-            </GroupArmAds>
-          </GroupOption>
+          <GroupName>Startup</GroupName>
+          <Files>
+            <File>
+              <FileName>arm_startup_nrf51.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\components\toolchain\arm\arm_startup_nrf51.s</FilePath>
+            </File>
+            <File>
+              <FileName>system_nrf51.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\toolchain\system_nrf51.c</FilePath>
+            </File>
+          </Files>
         </Group>
       </Groups>
     </Target>
@@ -1418,6 +1300,7 @@
             <RvdsVP>0</RvdsVP>
             <RvdsMve>0</RvdsMve>
             <RvdsCdeCp>0</RvdsCdeCp>
+            <nBranchProt>0</nBranchProt>
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
@@ -1571,7 +1454,7 @@
               <MiscControls></MiscControls>
               <Define>BLE_STACK_SUPPORT_REQD NRF51822 NRF_SD_BLE_API_VERSION=2 S130 NRF51 SOFTDEVICE_PRESENT SWI_DISABLE0</Define>
               <Undefine></Undefine>
-              <IncludePath>..\config;..\EPD;..\components\toolchain;..\components\drivers_nrf\clock;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\gpiote;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\twi_master;..\components\drivers_ext\segger_rtt;..\components\libraries\fstorage;..\components\libraries\experimental_section_vars;..\components\libraries\log;..\components\libraries\log\src;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s130\headers;..\components\softdevice\s130\headers\nrf51</IncludePath>
+              <IncludePath></IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1589,7 +1472,7 @@
               <MiscControls></MiscControls>
               <Define>BLE_STACK_SUPPORT_REQD NRF51822 NRF_SD_BLE_API_VERSION=2 S130 NRF51 SOFTDEVICE_PRESENT SWI_DISABLE0</Define>
               <Undefine></Undefine>
-              <IncludePath>..\components;..\components\drivers_nrf\common;..\components\libraries\log;..\components\libraries\log\src;..\components\drivers_nrf\hal;..\components\drivers_nrf\delay;..\components\drivers_nrf\nrf_soc_nosd;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\uart;..\components\libraries\util;..\components\toolchain;..\config;..\EPD;..\GUI</IncludePath>
+              <IncludePath></IncludePath>
             </VariousControls>
           </Aads>
           <LDads>
@@ -1778,79 +1661,19 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>::CMSIS</GroupName>
-        </Group>
-        <Group>
-          <GroupName>::Device</GroupName>
-          <GroupOption>
-            <CommonProperty>
-              <UseCPPCompiler>0</UseCPPCompiler>
-              <RVCTCodeConst>0</RVCTCodeConst>
-              <RVCTZI>0</RVCTZI>
-              <RVCTOtherData>0</RVCTOtherData>
-              <ModuleSelection>0</ModuleSelection>
-              <IncludeInBuild>1</IncludeInBuild>
-              <AlwaysBuild>2</AlwaysBuild>
-              <GenerateAssemblyFile>2</GenerateAssemblyFile>
-              <AssembleAssemblyFile>2</AssembleAssemblyFile>
-              <PublicsOnly>2</PublicsOnly>
-              <StopOnExitCode>11</StopOnExitCode>
-              <CustomArgument></CustomArgument>
-              <IncludeLibraryModules></IncludeLibraryModules>
-              <ComprImg>1</ComprImg>
-            </CommonProperty>
-            <GroupArmAds>
-              <Cads>
-                <interw>2</interw>
-                <Optim>0</Optim>
-                <oTime>2</oTime>
-                <SplitLS>2</SplitLS>
-                <OneElfS>2</OneElfS>
-                <Strict>2</Strict>
-                <EnumInt>2</EnumInt>
-                <PlainCh>2</PlainCh>
-                <Ropi>2</Ropi>
-                <Rwpi>2</Rwpi>
-                <wLevel>0</wLevel>
-                <uThumb>2</uThumb>
-                <uSurpInc>2</uSurpInc>
-                <uC99>2</uC99>
-                <uGnu>2</uGnu>
-                <useXO>2</useXO>
-                <v6Lang>0</v6Lang>
-                <v6LangP>0</v6LangP>
-                <vShortEn>2</vShortEn>
-                <vShortWch>2</vShortWch>
-                <v6Lto>2</v6Lto>
-                <v6WtE>2</v6WtE>
-                <v6Rtti>2</v6Rtti>
-                <VariousControls>
-                  <MiscControls></MiscControls>
-                  <Define></Define>
-                  <Undefine></Undefine>
-                  <IncludePath></IncludePath>
-                </VariousControls>
-              </Cads>
-              <Aads>
-                <interw>2</interw>
-                <Ropi>2</Ropi>
-                <Rwpi>2</Rwpi>
-                <thumb>2</thumb>
-                <SplitLS>2</SplitLS>
-                <SwStkChk>2</SwStkChk>
-                <NoWarn>2</NoWarn>
-                <uSurpInc>2</uSurpInc>
-                <useXO>2</useXO>
-                <ClangAsOpt>0</ClangAsOpt>
-                <VariousControls>
-                  <MiscControls></MiscControls>
-                  <Define></Define>
-                  <Undefine></Undefine>
-                  <IncludePath></IncludePath>
-                </VariousControls>
-              </Aads>
-            </GroupArmAds>
-          </GroupOption>
+          <GroupName>Startup</GroupName>
+          <Files>
+            <File>
+              <FileName>arm_startup_nrf51.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\components\toolchain\arm\arm_startup_nrf51.s</FilePath>
+            </File>
+            <File>
+              <FileName>system_nrf51.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\toolchain\system_nrf51.c</FilePath>
+            </File>
+          </Files>
         </Group>
       </Groups>
     </Target>
@@ -2034,6 +1857,7 @@
             <RvdsVP>0</RvdsVP>
             <RvdsMve>0</RvdsMve>
             <RvdsCdeCp>0</RvdsCdeCp>
+            <nBranchProt>0</nBranchProt>
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
@@ -2187,7 +2011,7 @@
               <MiscControls></MiscControls>
               <Define>BLE_STACK_SUPPORT_REQD NRF51802 NRF_SD_BLE_API_VERSION=2 S130 NRF51 SOFTDEVICE_PRESENT SWI_DISABLE0</Define>
               <Undefine></Undefine>
-              <IncludePath>..\config;..\EPD;..\components\toolchain;..\components\drivers_nrf\clock;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\gpiote;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\twi_master;..\components\drivers_ext\segger_rtt;..\components\libraries\fstorage;..\components\libraries\experimental_section_vars;..\components\libraries\log;..\components\libraries\log\src;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s130\headers;..\components\softdevice\s130\headers\nrf51</IncludePath>
+              <IncludePath></IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -2205,7 +2029,7 @@
               <MiscControls></MiscControls>
               <Define>BLE_STACK_SUPPORT_REQD NRF51802 NRF_SD_BLE_API_VERSION=2 S130 NRF51 SOFTDEVICE_PRESENT SWI_DISABLE0</Define>
               <Undefine></Undefine>
-              <IncludePath>..\components;..\components\drivers_nrf\common;..\components\libraries\log;..\components\libraries\log\src;..\components\drivers_nrf\hal;..\components\drivers_nrf\delay;..\components\drivers_nrf\nrf_soc_nosd;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\uart;..\components\libraries\util;..\components\toolchain;..\config;..\EPD;..\GUI</IncludePath>
+              <IncludePath></IncludePath>
             </VariousControls>
           </Aads>
           <LDads>
@@ -2394,79 +2218,19 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>::CMSIS</GroupName>
-        </Group>
-        <Group>
-          <GroupName>::Device</GroupName>
-          <GroupOption>
-            <CommonProperty>
-              <UseCPPCompiler>0</UseCPPCompiler>
-              <RVCTCodeConst>0</RVCTCodeConst>
-              <RVCTZI>0</RVCTZI>
-              <RVCTOtherData>0</RVCTOtherData>
-              <ModuleSelection>0</ModuleSelection>
-              <IncludeInBuild>1</IncludeInBuild>
-              <AlwaysBuild>2</AlwaysBuild>
-              <GenerateAssemblyFile>2</GenerateAssemblyFile>
-              <AssembleAssemblyFile>2</AssembleAssemblyFile>
-              <PublicsOnly>2</PublicsOnly>
-              <StopOnExitCode>11</StopOnExitCode>
-              <CustomArgument></CustomArgument>
-              <IncludeLibraryModules></IncludeLibraryModules>
-              <ComprImg>1</ComprImg>
-            </CommonProperty>
-            <GroupArmAds>
-              <Cads>
-                <interw>2</interw>
-                <Optim>0</Optim>
-                <oTime>2</oTime>
-                <SplitLS>2</SplitLS>
-                <OneElfS>2</OneElfS>
-                <Strict>2</Strict>
-                <EnumInt>2</EnumInt>
-                <PlainCh>2</PlainCh>
-                <Ropi>2</Ropi>
-                <Rwpi>2</Rwpi>
-                <wLevel>0</wLevel>
-                <uThumb>2</uThumb>
-                <uSurpInc>2</uSurpInc>
-                <uC99>2</uC99>
-                <uGnu>2</uGnu>
-                <useXO>2</useXO>
-                <v6Lang>0</v6Lang>
-                <v6LangP>0</v6LangP>
-                <vShortEn>2</vShortEn>
-                <vShortWch>2</vShortWch>
-                <v6Lto>2</v6Lto>
-                <v6WtE>2</v6WtE>
-                <v6Rtti>2</v6Rtti>
-                <VariousControls>
-                  <MiscControls></MiscControls>
-                  <Define></Define>
-                  <Undefine></Undefine>
-                  <IncludePath></IncludePath>
-                </VariousControls>
-              </Cads>
-              <Aads>
-                <interw>2</interw>
-                <Ropi>2</Ropi>
-                <Rwpi>2</Rwpi>
-                <thumb>2</thumb>
-                <SplitLS>2</SplitLS>
-                <SwStkChk>2</SwStkChk>
-                <NoWarn>2</NoWarn>
-                <uSurpInc>2</uSurpInc>
-                <useXO>2</useXO>
-                <ClangAsOpt>0</ClangAsOpt>
-                <VariousControls>
-                  <MiscControls></MiscControls>
-                  <Define></Define>
-                  <Undefine></Undefine>
-                  <IncludePath></IncludePath>
-                </VariousControls>
-              </Aads>
-            </GroupArmAds>
-          </GroupOption>
+          <GroupName>Startup</GroupName>
+          <Files>
+            <File>
+              <FileName>arm_startup_nrf51.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\components\toolchain\arm\arm_startup_nrf51.s</FilePath>
+            </File>
+            <File>
+              <FileName>system_nrf51.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\toolchain\system_nrf51.c</FilePath>
+            </File>
+          </Files>
         </Group>
       </Groups>
     </Target>
@@ -2477,14 +2241,6 @@
       <filter>
         <targetInfos/>
       </filter>
-      <package name="CMSIS" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="ARM" version="4.5.0">
-        <targetInfos>
-          <targetInfo name="nRF51802_xxAA" versionMatchMode="fixed"/>
-          <targetInfo name="nRF51802_xxAA_flash_softdevice" versionMatchMode="fixed"/>
-          <targetInfo name="nRF51822_xxAB" versionMatchMode="fixed"/>
-          <targetInfo name="nRF51822_xxAB_flash_softdevice" versionMatchMode="fixed"/>
-        </targetInfos>
-      </package>
       <package name="nRF_DeviceFamilyPack" schemaVersion="1.3" url="http://developer.nordicsemi.com/nRF5_SDK/pieces/nRF_DeviceFamilyPack/" vendor="NordicSemiconductor" version="8.11.1">
         <targetInfos>
           <targetInfo name="nRF51802_xxAA" versionMatchMode="fixed"/>
@@ -2495,64 +2251,31 @@
       </package>
     </packages>
     <apis/>
-    <components>
-      <component Cclass="CMSIS" Cgroup="CORE" Cvendor="ARM" Cversion="4.3.0" condition="Cortex-M Device">
-        <package name="CMSIS" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="ARM" version="4.5.0"/>
-        <targetInfos>
-          <targetInfo name="nRF51802_xxAA"/>
-          <targetInfo name="nRF51802_xxAA_flash_softdevice"/>
-          <targetInfo name="nRF51822_xxAB"/>
-          <targetInfo name="nRF51822_xxAB_flash_softdevice"/>
-        </targetInfos>
-      </component>
-      <component Cclass="Device" Cgroup="Startup" Cvendor="NordicSemiconductor" Cversion="8.11.1" condition="nRF51 Series and CMSIS">
-        <package name="nRF_DeviceFamilyPack" schemaVersion="1.3" url="http://developer.nordicsemi.com/nRF5_SDK/pieces/nRF_DeviceFamilyPack/" vendor="NordicSemiconductor" version="8.11.1"/>
-        <targetInfos>
-          <targetInfo name="nRF51802_xxAA"/>
-          <targetInfo name="nRF51802_xxAA_flash_softdevice"/>
-          <targetInfo name="nRF51822_xxAB"/>
-          <targetInfo name="nRF51822_xxAB_flash_softdevice"/>
-        </targetInfos>
-      </component>
-    </components>
+    <components/>
     <files>
       <file attr="config" category="source" condition="ARM Compiler" name="Device\Source\arm\arm_startup_nrf51.s" version="8.11.1">
-        <instance index="0">RTE\Device\nRF51802_xxAA\arm_startup_nrf51.s</instance>
+        <instance index="0" removed="1">RTE\Device\nRF51802_xxAA\arm_startup_nrf51.s</instance>
         <component Cclass="Device" Cgroup="Startup" Cvendor="NordicSemiconductor" Cversion="8.11.1" condition="nRF51 Series and CMSIS"/>
         <package name="nRF_DeviceFamilyPack" schemaVersion="1.3" url="http://developer.nordicsemi.com/nRF5_SDK/pieces/nRF_DeviceFamilyPack/" vendor="NordicSemiconductor" version="8.11.1"/>
-        <targetInfos>
-          <targetInfo name="nRF51802_xxAA"/>
-          <targetInfo name="nRF51802_xxAA_flash_softdevice"/>
-        </targetInfos>
+        <targetInfos/>
       </file>
       <file attr="config" category="source" name="Device\Source\system_nrf51.c" version="8.11.1">
-        <instance index="0">RTE\Device\nRF51802_xxAA\system_nrf51.c</instance>
+        <instance index="0" removed="1">RTE\Device\nRF51802_xxAA\system_nrf51.c</instance>
         <component Cclass="Device" Cgroup="Startup" Cvendor="NordicSemiconductor" Cversion="8.11.1" condition="nRF51 Series and CMSIS"/>
         <package name="nRF_DeviceFamilyPack" schemaVersion="1.3" url="http://developer.nordicsemi.com/nRF5_SDK/pieces/nRF_DeviceFamilyPack/" vendor="NordicSemiconductor" version="8.11.1"/>
-        <targetInfos>
-          <targetInfo name="nRF51802_xxAA"/>
-          <targetInfo name="nRF51802_xxAA_flash_softdevice"/>
-        </targetInfos>
+        <targetInfos/>
       </file>
       <file attr="config" category="source" condition="ARM Compiler" name="Device\Source\arm\arm_startup_nrf51.s" version="8.11.1">
-        <instance index="0">RTE\Device\nRF51822_xxAB\arm_startup_nrf51.s</instance>
+        <instance index="0" removed="1">RTE\Device\nRF51822_xxAB\arm_startup_nrf51.s</instance>
         <component Cclass="Device" Cgroup="Startup" Cvendor="NordicSemiconductor" Cversion="8.11.1" condition="nRF51 Series and CMSIS"/>
         <package name="nRF_DeviceFamilyPack" schemaVersion="1.3" url="http://developer.nordicsemi.com/nRF5_SDK/pieces/nRF_DeviceFamilyPack/" vendor="NordicSemiconductor" version="8.11.1"/>
-        <targetInfos>
-          <targetInfo name="nRF51822_xxAB"/>
-          <targetInfo name="nRF51822_xxAB_flash_softdevice"/>
-          <targetInfo name="nrf51822_4in2_V2"/>
-        </targetInfos>
+        <targetInfos/>
       </file>
       <file attr="config" category="source" name="Device\Source\system_nrf51.c" version="8.11.1">
-        <instance index="0">RTE\Device\nRF51822_xxAB\system_nrf51.c</instance>
+        <instance index="0" removed="1">RTE\Device\nRF51822_xxAB\system_nrf51.c</instance>
         <component Cclass="Device" Cgroup="Startup" Cvendor="NordicSemiconductor" Cversion="8.11.1" condition="nRF51 Series and CMSIS"/>
         <package name="nRF_DeviceFamilyPack" schemaVersion="1.3" url="http://developer.nordicsemi.com/nRF5_SDK/pieces/nRF_DeviceFamilyPack/" vendor="NordicSemiconductor" version="8.11.1"/>
-        <targetInfos>
-          <targetInfo name="nRF51822_xxAB"/>
-          <targetInfo name="nRF51822_xxAB_flash_softdevice"/>
-          <targetInfo name="nrf51822_4in2_V2"/>
-        </targetInfos>
+        <targetInfos/>
       </file>
     </files>
   </RTE>

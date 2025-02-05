@@ -1,0 +1,29 @@
+name: Build
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install ARM GCC
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        id: arm-none-eabi-gcc-action
+        with:
+          release: '4.9-2015-q3'
+      - name: Build
+        run: |
+          gcc_path=${{ steps.arm-none-eabi-gcc-action.outputs.path }}
+          sudo ln -s `dirname ${gcc_path}` /usr/local/gcc-arm-none-eabi-4_9-2015q3
+          make
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nrf51822_xxaa
+          path: |
+            _build/nrf51822_xxaa.hex
+            components/softdevice/s130/hex/s130_nrf51_2.0.1_softdevice.hex
