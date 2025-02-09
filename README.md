@@ -48,15 +48,14 @@
 ## 开发
 
 > **注意:**
-> - 必须使用 [Keil 5.36](https://img.anfulai.cn/bbs/96992/MDK536.EXE) 或以下版本，nRF51 SDK 只支持 V5 版本的 ARM 编译器，从 5.37 版本开始 Keil 已经不再内置 V5 版本编译器。
-> - `sdk10` 分支为旧版 SDK 代码归档（不再维护），好处是蓝牙协议栈占用的空间小一些，对于小 ROM 芯片友好一点点。
+> - 必须使用 [Keil 5.36](https://img.anfulai.cn/bbs/96992/MDK536.EXE) 或以下版本，nRF51 SDK 只支持 V5 版本的 ARM 编译器，从 5.37 版本开始 Keil 已经不再内置 V5 版本编译器
+> - `sdk10` 分支为旧版 SDK 代码，蓝牙协议栈占用的空间小一些，用于支持 128K Flash 芯片
 > - **交流群:** [1033086563](https://qm.qq.com/q/WEBAZgyyc2) (点击链接加入群聊)
 
 项目配置有几个 `Target`：
 
-- `nRF51822_xxAB`: 用于编译 nRF51822 固件, 内置黑白双色版本配置
-- `nRF51802_xxAA`: 用于编译 nRF51802 固件, 内置黑白红三色版本配置
-- `flash_softdevice` 结尾的 `Target`: 刷蓝牙协议栈用（只需刷一次）
+- `nRF51802_xxAA`: 用于编译 256K Flash 固件
+- `flash_softdevice`: 刷蓝牙协议栈用（只需刷一次）
 
 烧录器可以使用 J-Link 或者 DAPLink（可使用 [RTTView](https://github.com/XIVN1987/RTTView) 查看 RTT 日志）。
 
@@ -65,8 +64,8 @@
 > 如不修改代码，建议到 [Releases](https://github.com/tsl0922/EPD-nRF51/releases) 下载二进制固件，开箱即用。
 
 1. 全部擦除 (Keil 擦除后刷不了的话，使用烧录器的上位机软件擦除试试)
-2. 切换到 MCU 对应的 `flash_softdevice` `Target`，**不要编译直接下载**（只需刷一次）
-3. 切换到 MCU 对应的 `Target`，先编译再下载
+2. 切换到 `flash_softdevice`，**不要编译直接下载**（只需刷一次）
+3. 切换到 `nRF51802_xxAA`，先编译再下载
 
 ## 致谢
 
