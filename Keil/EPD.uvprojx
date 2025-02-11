@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>BLE_STACK_SUPPORT_REQD NRF51822 NRF_SD_BLE_API_VERSION=2 S130 NRF51 SOFTDEVICE_PRESENT SWI_DISABLE0</Define>
               <Undefine></Undefine>
-              <IncludePath>..\config;..\EPD;..\GUI;..\components\toolchain;..\components\toolchain\cmsis\include;..\components\drivers_nrf\clock;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\gpiote;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\twi_master;..\components\drivers_ext\segger_rtt;..\components\libraries\fstorage;..\components\libraries\experimental_section_vars;..\components\libraries\log;..\components\libraries\log\src;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s130\headers;..\components\softdevice\s130\headers\nrf51</IncludePath>
+              <IncludePath>..\config;..\EPD;..\GUI;..\components\toolchain;..\components\toolchain\cmsis\include;..\components\drivers_nrf\clock;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\gpiote;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\twi_master;..\components\drivers_ext\segger_rtt;..\components\libraries\fstorage;..\components\libraries\experimental_section_vars;..\components\libraries\log;..\components\libraries\log\src;..\components\libraries\scheduler;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s130\headers;..\components\softdevice\s130\headers\nrf51</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -358,7 +358,7 @@
               <MiscControls></MiscControls>
               <Define>BLE_STACK_SUPPORT_REQD NRF51822 NRF_SD_BLE_API_VERSION=2 S130 NRF51 SOFTDEVICE_PRESENT SWI_DISABLE0</Define>
               <Undefine></Undefine>
-              <IncludePath>..\config;..\EPD;..\GUI;..\components\toolchain;..\components\toolchain\cmsis\include;..\components\drivers_nrf\clock;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\gpiote;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\twi_master;..\components\drivers_ext\segger_rtt;..\components\libraries\fstorage;..\components\libraries\experimental_section_vars;..\components\libraries\log;..\components\libraries\log\src;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s130\headers;..\components\softdevice\s130\headers\nrf51</IncludePath>
+              <IncludePath>..\config;..\EPD;..\GUI;..\components\toolchain;..\components\toolchain\cmsis\include;..\components\drivers_nrf\clock;..\components\drivers_nrf\common;..\components\drivers_nrf\delay;..\components\drivers_nrf\gpiote;..\components\drivers_nrf\hal;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\twi_master;..\components\drivers_ext\segger_rtt;..\components\libraries\fstorage;..\components\libraries\experimental_section_vars;..\components\libraries\log;..\components\libraries\log\src;..\components\libraries\scheduler;..\components\libraries\trace;..\components\libraries\timer;..\components\libraries\util;..\components\ble\common;..\components\ble\ble_advertising;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s130\headers;..\components\softdevice\s130\headers\nrf51</IncludePath>
             </VariousControls>
           </Aads>
           <LDads>
@@ -445,14 +445,14 @@
               <FilePath>..\GUI\fonts.c</FilePath>
             </File>
             <File>
-              <FileName>Adafruit_GFX.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\GUI\Adafruit_GFX.c</FilePath>
-            </File>
-            <File>
               <FileName>u8g2_font.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\GUI\u8g2_font.c</FilePath>
+            </File>
+            <File>
+              <FileName>Adafruit_GFX.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\GUI\Adafruit_GFX.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -518,6 +518,11 @@
               <FileName>app_error_weak.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\components\libraries\util\app_error_weak.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_scheduler.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\libraries\scheduler\app_scheduler.c</FilePath>
             </File>
             <File>
               <FileName>app_timer.c</FileName>
@@ -1037,14 +1042,14 @@
               <FilePath>..\GUI\fonts.c</FilePath>
             </File>
             <File>
-              <FileName>Adafruit_GFX.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\GUI\Adafruit_GFX.c</FilePath>
-            </File>
-            <File>
               <FileName>u8g2_font.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\GUI\u8g2_font.c</FilePath>
+            </File>
+            <File>
+              <FileName>Adafruit_GFX.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\GUI\Adafruit_GFX.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1110,6 +1115,11 @@
               <FileName>app_error_weak.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\components\libraries\util\app_error_weak.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_scheduler.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\libraries\scheduler\app_scheduler.c</FilePath>
             </File>
             <File>
               <FileName>app_timer.c</FileName>

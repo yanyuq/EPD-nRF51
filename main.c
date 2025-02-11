@@ -24,6 +24,7 @@
 #include "fstorage.h"
 #include "app_error.h"
 #include "app_timer.h"
+#include "app_scheduler.h"
 #include "nrf_drv_gpiote.h"
 #include "EPD_ble.h"
 #include "Calendar.h"
@@ -49,16 +50,19 @@
 #define NEXT_CONN_PARAMS_UPDATE_DELAY    APP_TIMER_TICKS(30000, APP_TIMER_PRESCALER)    /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
 #define MAX_CONN_PARAMS_UPDATE_COUNT     3                                              /**< Number of attempts before giving up the connection parameter negotiation. */
 
+#define SCHED_MAX_EVENT_DATA_SIZE       0                                               /**< Maximum size of scheduler events. */
+#define SCHED_QUEUE_SIZE                10                                              /**< Maximum number of events in the scheduler queue. */
+
 #define CLOCK_TIMER_INTERVAL             APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)     /**< Clock timer interval (ticks). */
 
 #define DEAD_BEEF                        0xDEADBEEF                                     /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 static uint16_t                          m_driver_refs = 0;
 static uint16_t                          m_conn_handle = BLE_CONN_HANDLE_INVALID;       /**< Handle of the current connection. */
-static ble_uuid_t                        m_adv_uuids[] = {{BLE_UUID_EPD_SERVICE, EPD_SERVICE_UUID_TYPE}};  /**< Universally unique service identifier. */
+static ble_uuid_t                        m_adv_uuids[] = {{BLE_UUID_EPD_SERVICE, \
+                                                           EPD_SERVICE_UUID_TYPE}};     /**< Universally unique service identifier. */
 static ble_epd_t                         m_epd;                                         /**< Structure to identify the EPD Service. */
 static uint32_t                          m_timestamp = 1735689600;                      /**< Current timestamp. */
-static bool                              m_update_calendar = false;                     /**< Update calendar if true */
 static bool                              m_calendar_mode = false;                       /**< Whether we are in calendar mode */
 
 APP_TIMER_DEF(m_clock_timer_id);                                                        /**< Clock timer. */
@@ -79,6 +83,20 @@ static void epd_driver_exit()
         NRF_LOG_DEBUG("[EPD]: driver exit\n");
         DEV_Module_Exit();
     }
+}
+
+static void calendar_update(void * p_event_data, uint16_t event_size)
+{
+    m_calendar_mode = true;
+    epd_driver_init();
+    m_epd.driver->init();
+    DrawCalendar(m_timestamp);
+    epd_driver_exit();
+}
+
+static uint32_t calendar_update_schedule(void)
+{
+    return app_sched_event_put(NULL, 0, calendar_update);
 }
 
 /**@brief Callback function for asserts in the SoftDevice.
@@ -105,9 +123,14 @@ static void clock_timer_timeout_handler(void * p_context)
 
     // Update calendar on 00:00:00
     if (m_calendar_mode && m_timestamp % 86400 == 0)
-    {
-        m_update_calendar = true;
-    }
+        calendar_update_schedule();
+}
+
+/**@brief Function for the Event Scheduler initialization.
+ */
+static void scheduler_init(void)
+{
+    APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 }
 
 /**@brief Function for the Timer initialization.
@@ -154,9 +177,7 @@ bool epd_cmd_callback(uint8_t cmd, uint8_t *data, uint16_t len)
             m_timestamp = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
             m_timestamp += (len > 4 ? (int8_t)data[4] : 8) * 60 * 60; // timezone
             app_timer_start(m_clock_timer_id, CLOCK_TIMER_INTERVAL, NULL);
-
-            m_calendar_mode = true;
-            m_update_calendar = true;
+            calendar_update_schedule();
             return true;
         case EPD_CMD_CLEAR:
         case EPD_CMD_DISPLAY:
@@ -532,17 +553,6 @@ static void power_manage(void)
     APP_ERROR_CHECK(err_code);
 }
 
-static void calendar_update(void)
-{
-    if (!m_update_calendar) return;
-
-    m_update_calendar = false;
-    epd_driver_init();
-    m_epd.driver->init();
-    DrawCalendar(m_timestamp);
-    epd_driver_exit();
-}
-
 #if NRF_MODULE_ENABLED(NRF_LOG)
 static uint32_t timestamp_func(void)
 {
@@ -563,6 +573,7 @@ int main(void)
 
     timers_init();
     ble_stack_init();
+    scheduler_init();
     ble_options_set();
     gap_params_init();
     services_init();
@@ -580,10 +591,9 @@ int main(void)
 
     for (;;)
     {
-        while(NRF_LOG_PROCESS());
+        app_sched_execute();
         
-        calendar_update();
-        
-        power_manage();
+        if (NRF_LOG_PROCESS() == false)
+            power_manage();
     }
 }
