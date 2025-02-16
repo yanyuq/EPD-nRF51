@@ -8,8 +8,6 @@
 
 ## 支持设备
 
-> **交流群:** [1033086563](https://qm.qq.com/q/WEBAZgyyc2) (点击链接加入群聊)
-
 - 老五 4.2 寸价签，黑白双色版本
 
 	```
@@ -41,11 +39,14 @@
 
 ## 上位机
 
-地址：https://tsl0922.github.io/EPD-nRF51/ 
+本项目自带一个基于浏览器蓝牙接口实现的网页版上位机，可通过上面网址访问，或者在本地直接双击打开 `html/index.html` 来使用。
+
+- 地址：https://tsl0922.github.io/EPD-nRF51
+- 演示：https://www.bilibili.com/video/BV1KWAVe1EKs
+- 交流群: [1033086563](https://qm.qq.com/q/WEBAZgyyc2) (点击链接加入群聊)
 
 ![](html/images/0.jpg)
 
-本项目自带一个基于浏览器蓝牙接口实现的网页版上位机，可通过上面网址访问，或者在本地直接双击打开 `html/index.html` 来使用。
 
 ## 开发
 
