@@ -415,11 +415,6 @@
               <FilePath>..\EPD\EPD_4in2.c</FilePath>
             </File>
             <File>
-              <FileName>EPD_4in2_V2.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\EPD\EPD_4in2_V2.c</FilePath>
-            </File>
-            <File>
               <FileName>EPD_4in2b_V2.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\EPD\EPD_4in2b_V2.c</FilePath>
@@ -1010,11 +1005,6 @@
               <FileName>EPD_4in2.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\EPD\EPD_4in2.c</FilePath>
-            </File>
-            <File>
-              <FileName>EPD_4in2_V2.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\EPD\EPD_4in2_V2.c</FilePath>
             </File>
             <File>
               <FileName>EPD_4in2b_V2.c</FileName>
