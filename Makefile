@@ -34,8 +34,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/toolchain/system_nrf51.c \
   $(SDK_ROOT)/components/softdevice/common/softdevice_handler/softdevice_handler.c \
   $(PROJ_DIR)/main.c \
-  $(PROJ_DIR)/EPD/EPD_4in2.c \
-  $(PROJ_DIR)/EPD/EPD_4in2b_V2.c \
+  $(PROJ_DIR)/EPD/UC8176.c \
   $(PROJ_DIR)/EPD/EPD_driver.c \
   $(PROJ_DIR)/EPD/EPD_ble.c \
   $(PROJ_DIR)/GUI/Calendar.c \
