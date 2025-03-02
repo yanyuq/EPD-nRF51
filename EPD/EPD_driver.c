@@ -15,6 +15,8 @@
 #include "nrf_drv_spi.h"
 #include "EPD_driver.h"
 
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
 uint32_t EPD_MOSI_PIN = 5;
 uint32_t EPD_SCLK_PIN = 8;
 uint32_t EPD_CS_PIN = 9;
@@ -72,7 +74,7 @@ function: Initialize Arduino, Initialize Pins, and SPI
 parameter:
 Info:
 ******************************************************************************/
-UBYTE DEV_Module_Init(void)
+uint8_t DEV_Module_Init(void)
 {
     nrf_gpio_cfg_output(EPD_CS_PIN);
     nrf_gpio_cfg_output(EPD_DC_PIN);
@@ -117,24 +119,17 @@ note:
   SPI4W_Write_Byte(value) : 
     Register hardware SPI
 *********************************************/  
-void DEV_SPI_WriteByte(UBYTE value)
+void DEV_SPI_WriteByte(uint8_t value)
 {
     nrf_drv_spi_transfer(&spi, &value, 1, NULL, 0);
 }
 
-void DEV_SPI_WriteBytes(UBYTE *value, UBYTE len)
+void DEV_SPI_WriteBytes(uint8_t *value, uint8_t len)
 {
     nrf_drv_spi_transfer(&spi, value, len, NULL, 0);
 }
 
-UBYTE DEV_SPI_ReadByte(void)
-{
-    UBYTE value;
-    nrf_drv_spi_transfer(&spi, NULL, 0, &value, 1);
-    return value;
-}
-
-void EPD_WriteCommand(UBYTE Reg)
+void EPD_WriteCommand(uint8_t Reg)
 {
     DEV_Digital_Write(EPD_DC_PIN, 0);
     DEV_Digital_Write(EPD_CS_PIN, 0);
@@ -142,7 +137,7 @@ void EPD_WriteCommand(UBYTE Reg)
     DEV_Digital_Write(EPD_CS_PIN, 1);
 }
 
-void EPD_WriteByte(UBYTE Data)
+void EPD_WriteByte(uint8_t Data)
 {
     DEV_Digital_Write(EPD_DC_PIN, 1);
     DEV_Digital_Write(EPD_CS_PIN, 0);
@@ -150,7 +145,7 @@ void EPD_WriteByte(UBYTE Data)
     DEV_Digital_Write(EPD_CS_PIN, 1);
 }
 
-void EPD_WriteData(UBYTE *Data, UBYTE Len)
+void EPD_WriteData(uint8_t *Data, uint8_t Len)
 {
     DEV_Digital_Write(EPD_DC_PIN, 1);
     DEV_Digital_Write(EPD_CS_PIN, 0);

@@ -20,17 +20,6 @@
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(arr)                    (sizeof(arr) / sizeof((arr)[0]))
-#endif
-
-/**
- * data
-**/
-#define UBYTE   uint8_t
-#define UWORD   uint16_t
-#define UDOUBLE uint32_t
-
 /**< EPD driver IDs. */
 enum EPD_DRIVER_IDS
 {
@@ -49,10 +38,10 @@ typedef struct
 	uint16_t height;
     void (*init)(void);                               /**< Initialize the e-Paper register */
     void (*clear)(void);                              /**< Clear screen */
-    void (*send_command)(UBYTE Reg);                  /**< send command */
-	void (*send_byte)(UBYTE Reg);                     /**< send byte */
-    void (*send_data)(UBYTE *Data, UBYTE Len);        /**< send data */
-    void (*write_image)(UBYTE *black, UBYTE *color, UWORD x, UWORD y, UWORD w, UWORD h); /**< write image */
+    void (*send_command)(uint8_t Reg);                  /**< send command */
+	void (*send_byte)(uint8_t Reg);                     /**< send byte */
+    void (*send_data)(uint8_t *Data, uint8_t Len);        /**< send data */
+    void (*write_image)(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t w, uint16_t h); /**< write image */
     void (*refresh)(void);                            /**< Sends the image buffer in RAM to e-Paper and displays */
     void (*sleep)(void);                              /**< Enter sleep mode */
 } epd_driver_t;
@@ -77,15 +66,15 @@ extern uint32_t EPD_BS_PIN;
 #define DEV_Delay_ms(__xms) nrf_delay_ms(__xms);
 #define DEV_Delay_us(__xus) nrf_delay_us(__xus);
 
-UBYTE DEV_Module_Init(void);
+uint8_t DEV_Module_Init(void);
 void DEV_Module_Exit(void);
 
-void DEV_SPI_WriteByte(UBYTE value);
-void DEV_SPI_WriteBytes(UBYTE *value, UBYTE len);
+void DEV_SPI_WriteByte(uint8_t value);
+void DEV_SPI_WriteBytes(uint8_t *value, uint8_t len);
 
-void EPD_WriteCommand(UBYTE Reg);
-void EPD_WriteByte(UBYTE Data);
-void EPD_WriteData(UBYTE *Data, UBYTE Len);
+void EPD_WriteCommand(uint8_t Reg);
+void EPD_WriteByte(uint8_t Data);
+void EPD_WriteData(uint8_t *Data, uint8_t Len);
 
 epd_driver_t *epd_driver_get(void);
 epd_driver_t *epd_driver_by_id(uint8_t id);

@@ -41,7 +41,7 @@ static void EPD_4IN2_Reset(void)
 {
     DEV_Digital_Write(EPD_RST_PIN, 1);
     DEV_Delay_ms(10);
-    for (UBYTE i = 0; i < 3; i++)
+    for (uint8_t i = 0; i < 3; i++)
     {
         DEV_Digital_Write(EPD_RST_PIN, 0);
         DEV_Delay_ms(10);
@@ -115,20 +115,20 @@ parameter:
 ******************************************************************************/
 void EPD_4IN2_Clear(void)
 {
-    UWORD Width, Height;
+    uint16_t Width, Height;
     Width = (EPD_4IN2_WIDTH % 8 == 0)? (EPD_4IN2_WIDTH / 8 ): (EPD_4IN2_WIDTH / 8 + 1);
     Height = EPD_4IN2_HEIGHT;
 
     EPD_WriteCommand(0x10);
-    for (UWORD j = 0; j < Height; j++) {
-        for (UWORD i = 0; i < Width; i++) {
+    for (uint16_t j = 0; j < Height; j++) {
+        for (uint16_t i = 0; i < Width; i++) {
             EPD_WriteByte(0xFF);
         }
     }
 
     EPD_WriteCommand(0x13);
-    for (UWORD j = 0; j < Height; j++) {
-        for (UWORD i = 0; i < Width; i++) {
+    for (uint16_t j = 0; j < Height; j++) {
+        for (uint16_t i = 0; i < Width; i++) {
             EPD_WriteByte(0xFF);
         }
     }
@@ -136,58 +136,58 @@ void EPD_4IN2_Clear(void)
     EPD_4IN2_Refresh();
 }
 
-static void _setPartialRamArea(UWORD x, UWORD y, UWORD w, UWORD h)
+static void _setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
-  uint16_t xe = (x + w - 1) | 0x0007; // byte boundary inclusive (last byte)
-  uint16_t ye = y + h - 1;
-  x &= 0xFFF8; // byte boundary
-  xe |= 0x0007; // byte boundary
-  EPD_WriteCommand(0x90); // partial window
-  EPD_WriteByte(x / 256);
-  EPD_WriteByte(x % 256);
-  EPD_WriteByte(xe / 256);
-  EPD_WriteByte(xe % 256);
-  EPD_WriteByte(y / 256);
-  EPD_WriteByte(y % 256);
-  EPD_WriteByte(ye / 256);
-  EPD_WriteByte(ye % 256);
-  EPD_WriteByte(0x01);
+    uint16_t xe = (x + w - 1) | 0x0007; // byte boundary inclusive (last byte)
+    uint16_t ye = y + h - 1;
+    x &= 0xFFF8; // byte boundary
+    xe |= 0x0007; // byte boundary
+    EPD_WriteCommand(0x90); // partial window
+    EPD_WriteByte(x / 256);
+    EPD_WriteByte(x % 256);
+    EPD_WriteByte(xe / 256);
+    EPD_WriteByte(xe % 256);
+    EPD_WriteByte(y / 256);
+    EPD_WriteByte(y % 256);
+    EPD_WriteByte(ye / 256);
+    EPD_WriteByte(ye % 256);
+    EPD_WriteByte(0x01);
 }
 
-void EPD_4IN2_Write_Image(UBYTE *black, UBYTE *color, UWORD x, UWORD y, UWORD w, UWORD h)
+void EPD_4IN2_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
-    UWORD wb = (w + 7) / 8; // width bytes, bitmaps are padded
+    uint16_t wb = (w + 7) / 8; // width bytes, bitmaps are padded
     x -= x % 8; // byte boundary
     w = wb * 8; // byte boundary
     if (x + w > EPD_4IN2_WIDTH || y + h > EPD_4IN2_HEIGHT) return;
     EPD_WriteCommand(0x91); // partial in
     _setPartialRamArea(x, y, w, h);
     EPD_WriteCommand(0x13);
-    for (UWORD i = 0; i < h; i++) {
-        for (UWORD j = 0; j < w / 8; j++) {
+    for (uint16_t i = 0; i < h; i++) {
+        for (uint16_t j = 0; j < w / 8; j++) {
             EPD_WriteByte(black[j + i * wb]);
         }
     }
     EPD_WriteCommand(0x92); // partial out
 }
 
-void EPD_4IN2B_V2_Write_Image(UBYTE *black, UBYTE *color, UWORD x, UWORD y, UWORD w, UWORD h)
+void EPD_4IN2B_V2_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
-    UWORD wb = (w + 7) / 8; // width bytes, bitmaps are padded
+    uint16_t wb = (w + 7) / 8; // width bytes, bitmaps are padded
     x -= x % 8; // byte boundary
     w = wb * 8; // byte boundary
     if (x + w > EPD_4IN2_WIDTH || y + h > EPD_4IN2_HEIGHT) return;
     EPD_WriteCommand(0x91); // partial in
     _setPartialRamArea(x, y, w, h);
     EPD_WriteCommand(0x10);
-    for (UWORD i = 0; i < h; i++) {
-        for (UWORD j = 0; j < w / 8; j++) {
+    for (uint16_t i = 0; i < h; i++) {
+        for (uint16_t j = 0; j < w / 8; j++) {
             EPD_WriteByte(black ? black[j + i * wb] : 0xFF);
         }
     }
     EPD_WriteCommand(0x13);
-    for (UWORD i = 0; i < h; i++) {
-        for (UWORD j = 0; j < w / 8; j++) {
+    for (uint16_t i = 0; i < h; i++) {
+        for (uint16_t j = 0; j < w / 8; j++) {
             EPD_WriteByte(color ? color[j + i * wb] : 0xFF);
         }
     }
