@@ -3,7 +3,7 @@ TARGETS          := nrf51822_xxaa
 OUTPUT_DIRECTORY := _build
 
 PROJ_DIR := $(CURDIR)
-SDK_ROOT := $(PROJ_DIR)
+SDK_ROOT := $(PROJ_DIR)/SDK/12.3.0_d7731ad
 SD_PATH  := $(SDK_ROOT)/components/softdevice/s130
 
 $(OUTPUT_DIRECTORY)/nrf51822_xxaa.out: \
@@ -11,6 +11,9 @@ $(OUTPUT_DIRECTORY)/nrf51822_xxaa.out: \
 
 # Source files common to all targets
 SRC_FILES += \
+  $(SDK_ROOT)/external/segger_rtt/RTT_Syscalls_GCC.c \
+  $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
+  $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_printf.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_serial.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
   $(SDK_ROOT)/components/libraries/util/app_error.c \
@@ -23,9 +26,6 @@ SRC_FILES += \
   $(SDK_ROOT)/components/drivers_nrf/clock/nrf_drv_clock.c \
   $(SDK_ROOT)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c \
   $(SDK_ROOT)/components/drivers_nrf/spi_master/nrf_drv_spi.c \
-  $(SDK_ROOT)/components/drivers_ext/segger_rtt/RTT_Syscalls_GCC.c \
-  $(SDK_ROOT)/components/drivers_ext/segger_rtt/SEGGER_RTT.c \
-  $(SDK_ROOT)/components/drivers_ext/segger_rtt/SEGGER_RTT_printf.c \
   $(SDK_ROOT)/components/ble/common/ble_advdata.c \
   $(SDK_ROOT)/components/ble/ble_advertising/ble_advertising.c \
   $(SDK_ROOT)/components/ble/common/ble_conn_params.c \
@@ -34,9 +34,9 @@ SRC_FILES += \
   $(SDK_ROOT)/components/toolchain/system_nrf51.c \
   $(SDK_ROOT)/components/softdevice/common/softdevice_handler/softdevice_handler.c \
   $(PROJ_DIR)/main.c \
-  $(PROJ_DIR)/EPD/UC8176.c \
   $(PROJ_DIR)/EPD/EPD_driver.c \
   $(PROJ_DIR)/EPD/EPD_ble.c \
+  $(PROJ_DIR)/EPD/UC8176.c \
   $(PROJ_DIR)/GUI/Calendar.c \
   $(PROJ_DIR)/GUI/Lunar.c \
   $(PROJ_DIR)/GUI/fonts.c \
@@ -48,6 +48,8 @@ INC_FOLDERS += \
   $(PROJ_DIR)/config \
   $(PROJ_DIR)/EPD \
   $(PROJ_DIR)/GUI \
+  $(SDK_ROOT) \
+  $(SDK_ROOT)/external/segger_rtt \
   $(SDK_ROOT)/components/toolchain \
   $(SDK_ROOT)/components/drivers_nrf/clock \
   $(SDK_ROOT)/components/drivers_nrf/hal \
@@ -55,7 +57,6 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/drivers_nrf/delay \
   $(SDK_ROOT)/components/drivers_nrf/gpiote \
   $(SDK_ROOT)/components/drivers_nrf/spi_master \
-  $(SDK_ROOT)/components/drivers_ext/segger_rtt \
   $(SDK_ROOT)/components/libraries/fstorage \
   $(SDK_ROOT)/components/libraries/experimental_section_vars \
   $(SDK_ROOT)/components/libraries/log \
