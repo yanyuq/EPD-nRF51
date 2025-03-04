@@ -11,18 +11,20 @@
  */
 
 #include <string.h>
-#include "nordic_common.h"
+#include "sdk_macros.h"
 #include "ble_srv_common.h"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 #include "nrf_soc.h"
 #include "nrf_nvic.h"
-#include "fstorage.h"
-#include "EPD_ble.h"
-#define NRF_LOG_MODULE_NAME "EPD_ble"
+#include "EPD_service.h"
 #include "nrf_log.h"
 
-#define EPD_CFG_DEFAULT {0x05, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x01, 0x07}
+#if defined(S112)
+#define EPD_CFG_DEFAULT {0x14, 0x13, 0x06, 0x05, 0x04, 0x03, 0x02, 0x03, 0xFF, 0x12, 0x07}
+#else
+//#define EPD_CFG_DEFAULT {0x05, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x01, 0x07}
+#endif
 
 #ifndef EPD_CFG_DEFAULT
 #define EPD_CFG_DEFAULT {0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x03, 0x09, 0x03}
@@ -35,38 +37,16 @@
 #define ARRAY_SIZE(arr)                    (sizeof(arr) / sizeof((arr)[0]))
 #define EPD_CONFIG_SIZE                    (sizeof(epd_config_t) / sizeof(uint8_t))
 
-static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result)
+static void led_on(ble_epd_t * p_epd)
 {
-    NRF_LOG_DEBUG("fs_evt_handler: %d\n", result);
+    if (p_epd->config.led_pin == 0xFF) return;
+    nrf_gpio_pin_clear(p_epd->config.led_pin);
 }
 
-// fstorage configuration
-FS_REGISTER_CFG(fs_config_t fs_config) =
+static void led_off(ble_epd_t * p_epd)
 {
-    .callback  = fs_evt_handler,
-    .num_pages = 1,
-};
-
-static uint32_t epd_config_load(epd_config_t *cfg)
-{
-    memcpy(cfg, fs_config.p_start_addr, sizeof(epd_config_t));
-    return NRF_SUCCESS;
-}
-
-static uint32_t epd_config_clear(epd_config_t *cfg)
-{
-    return fs_erase(&fs_config, fs_config.p_start_addr, 1, NULL);;
-}
-
-static uint32_t epd_config_save(epd_config_t *cfg)
-{
-    uint32_t err_code;
-    if ((err_code = epd_config_clear(cfg)) != NRF_SUCCESS)
-    {
-        return err_code;
-    }
-    uint16_t const len = (sizeof(epd_config_t) + sizeof(uint32_t) - 1) / sizeof(uint32_t);
-    return fs_store(&fs_config, fs_config.p_start_addr, (uint32_t *) cfg, len, NULL);
+    if (p_epd->config.led_pin == 0xFF) return;
+    nrf_gpio_pin_set(p_epd->config.led_pin);
 }
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_CONNECTED event from the S110 SoftDevice.
@@ -76,10 +56,7 @@ static uint32_t epd_config_save(epd_config_t *cfg)
  */
 static void on_connect(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 {
-    if (p_epd->config.led_pin != 0xFF)
-    {
-        nrf_gpio_pin_toggle(p_epd->config.led_pin);
-    }
+    led_on(p_epd);
     p_epd->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 }
 
@@ -92,10 +69,7 @@ static void on_connect(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 static void on_disconnect(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 {
     UNUSED_PARAMETER(p_ble_evt);
-    if (p_epd->config.led_pin != 0xFF)
-    {
-        nrf_gpio_pin_toggle(p_epd->config.led_pin);
-    }
+    led_off(p_epd);
     p_epd->conn_handle = BLE_CONN_HANDLE_INVALID;
 }
 
@@ -123,6 +97,8 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
           EPD_RST_PIN = p_epd->config.rst_pin = p_data[5];
           EPD_BUSY_PIN = p_epd->config.busy_pin = p_data[6];
           EPD_BS_PIN = p_epd->config.bs_pin = p_data[7];
+          if (length > 8)
+            EPD_EN_PIN = p_epd->config.en_pin = p_data[8];
           epd_config_save(&p_epd->config);
 
           DEV_Module_Init();
@@ -181,7 +157,7 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
       
       case EPD_CMD_CFG_ERASE:
           epd_config_clear(&p_epd->config);
-          nrf_delay_ms(10); // required
+          nrf_delay_ms(100); // required
           sd_nvic_SystemReset();
           break;
 
@@ -231,6 +207,15 @@ static void on_write(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
     }
 }
 
+#if defined(S112)
+void ble_epd_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
+{
+    if (p_context == NULL || p_ble_evt == NULL) return;
+    
+    ble_epd_t *p_epd = (ble_epd_t *)p_context;
+    ble_epd_on_ble_evt(p_epd, (ble_evt_t *)p_ble_evt);
+}
+#endif
 
 void ble_epd_on_ble_evt(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 {
@@ -262,66 +247,39 @@ void ble_epd_on_ble_evt(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 
 static uint32_t epd_service_init(ble_epd_t * p_epd)
 {
-    ble_uuid128_t base_uuid = BLE_EPD_BASE_UUID;
-    ble_uuid_t  ble_uuid;
-    uint32_t    err_code;
+    uint32_t              err_code;
+    ble_uuid_t            ble_uuid;
+    ble_uuid128_t         base_uuid = BLE_EPD_BASE_UUID;
+    ble_add_char_params_t add_char_params;
  
-    err_code = sd_ble_uuid_vs_add(&base_uuid, &ble_uuid.type);
-    if (err_code != NRF_SUCCESS)
-    {
-        return err_code;
-    }
+    err_code = sd_ble_uuid_vs_add(&base_uuid, &p_epd->uuid_type);
+    VERIFY_SUCCESS(err_code);
 
+    ble_uuid.type = p_epd->uuid_type;
     ble_uuid.uuid = BLE_UUID_EPD_SERVICE;
     err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY,
                                         &ble_uuid,
                                         &p_epd->service_handle);
-    if (err_code != NRF_SUCCESS)
-    {
-        return err_code;
-    }
+    VERIFY_SUCCESS(err_code);
 
-    ble_gatts_char_md_t char_md;
-    ble_gatts_attr_md_t cccd_md;
-    ble_gatts_attr_t    attr_char_value;
-    ble_uuid_t          char_uuid;
-    ble_gatts_attr_md_t attr_md;
+    memset(&add_char_params, 0, sizeof(add_char_params));
+    add_char_params.uuid                     = BLE_UUID_EPD_CHARACTERISTIC;
+    add_char_params.uuid_type                = p_epd->uuid_type;
+    add_char_params.max_len                  = BLE_EPD_MAX_DATA_LEN;
+    add_char_params.init_len                 = sizeof(uint8_t);
+    add_char_params.is_var_len               = true;
+    add_char_params.char_props.notify        = 1;
+    add_char_params.char_props.write         = 1;
+    add_char_params.char_props.write_wo_resp = 1;
 
-    memset(&cccd_md, 0, sizeof(cccd_md));
-    cccd_md.vloc = BLE_GATTS_VLOC_STACK;
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.write_perm);
+    add_char_params.read_access  = SEC_OPEN;
+    add_char_params.write_access = SEC_OPEN;
+    add_char_params.cccd_write_access = SEC_OPEN;
 
-    memset(&char_md, 0, sizeof(char_md));
-    char_md.char_props.read   = 1;
-    char_md.char_props.notify = 1;
-    char_md.char_props.write  = 1;
-    char_md.char_props.write_wo_resp  = 1;
-    char_md.p_cccd_md         = &cccd_md;
-
-    char_uuid.type = ble_uuid.type;
-    char_uuid.uuid = BLE_UUID_EPD_CHARACTERISTIC;
-
-    memset(&attr_md, 0, sizeof(attr_md));
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.write_perm);
-    attr_md.vloc    = BLE_GATTS_VLOC_STACK;
-
-    memset(&attr_char_value, 0, sizeof(attr_char_value));
-    attr_char_value.p_uuid    = &char_uuid;
-    attr_char_value.p_attr_md = &attr_md;
-    attr_char_value.init_len  = sizeof(uint8_t);
-    attr_char_value.init_offs = 0;
-    attr_char_value.max_len   = BLE_EPD_MAX_DATA_LEN;
-
-    err_code = sd_ble_gatts_characteristic_add(p_epd->service_handle,
-                                               &char_md,
-                                               &attr_char_value,
-                                               &p_epd->char_handles);
-    return err_code;
+    return characteristic_add(p_epd->service_handle, &add_char_params, &p_epd->char_handles);
 }
 
-static void epd_config_init(ble_epd_t * p_epd)
+static void ble_epd_config_load(ble_epd_t * p_epd)
 {
     bool is_empty_config = true;
 
@@ -332,6 +290,7 @@ static void epd_config_init(ble_epd_t * p_epd)
             is_empty_config = false;
         }
     }
+    NRF_LOG_DEBUG("is_empty_config: %d\n", is_empty_config);
     // write default config
     if (is_empty_config)
     {
@@ -348,6 +307,7 @@ static void epd_config_init(ble_epd_t * p_epd)
     EPD_RST_PIN = p_epd->config.rst_pin;
     EPD_BUSY_PIN = p_epd->config.busy_pin;
     EPD_BS_PIN = p_epd->config.bs_pin;
+    EPD_EN_PIN = p_epd->config.en_pin;
 
     epd_driver_set(p_epd->config.driver_id);
 	p_epd->driver = epd_driver_get();
@@ -356,10 +316,7 @@ static void epd_config_init(ble_epd_t * p_epd)
 void ble_epd_sleep_prepare(ble_epd_t * p_epd)
 {
     // Turn off led
-    if (p_epd->config.led_pin != 0xFF)
-    {
-        nrf_gpio_pin_set(p_epd->config.led_pin);
-    }
+    led_off(p_epd);
     // Prepare wakeup pin
     if (p_epd->config.wakeup_pin != 0xFF)
     {
@@ -369,36 +326,29 @@ void ble_epd_sleep_prepare(ble_epd_t * p_epd)
 
 uint32_t ble_epd_init(ble_epd_t * p_epd, epd_callback_t cmd_cb)
 {
-    if (p_epd == NULL)
-    {
-        return NRF_ERROR_NULL;
-    }
+    if (p_epd == NULL) return NRF_ERROR_NULL;
     p_epd->epd_cmd_cb = cmd_cb;
 
     // Initialize the service structure.
     p_epd->conn_handle             = BLE_CONN_HANDLE_INVALID;
     p_epd->is_notification_enabled = false;
 
-    uint32_t                err_code;
-    err_code = epd_config_load(&p_epd->config);
-    if (err_code == NRF_SUCCESS)
-    {
-        epd_config_init(p_epd);
-    }
+    epd_config_init(&p_epd->config);
+    epd_config_load(&p_epd->config);
+    ble_epd_config_load(p_epd);
 
     // Init led pin
     if (p_epd->config.led_pin != 0xFF)
     {
         nrf_gpio_cfg_output(p_epd->config.led_pin);
-        nrf_gpio_pin_clear(p_epd->config.led_pin);
+        led_on(p_epd);
         nrf_delay_ms(50);
-        nrf_gpio_pin_set(p_epd->config.led_pin);
+        led_off(p_epd);
     }
 
     // Add the service.
     return epd_service_init(p_epd);
 }
-
 
 uint32_t ble_epd_string_send(ble_epd_t * p_epd, uint8_t * p_string, uint16_t length)
 {

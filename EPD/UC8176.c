@@ -28,6 +28,7 @@
 #
 ******************************************************************************/
 #include "EPD_driver.h"
+#include "nrf_log.h"
 
 // Display resolution
 #define EPD_4IN2_WIDTH       400
@@ -56,9 +57,11 @@ parameter:
 ******************************************************************************/
 void EPD_4IN2_ReadBusy(void)
 {
-    while(DEV_Digital_Read(EPD_BUSY_PIN) == 0) {      //LOW: idle, HIGH: busy
+    do {
+        NRF_LOG_DEBUG("EPD_4IN2_ReadBusy\n");
+        EPD_WriteCommand(0x71);
         DEV_Delay_ms(100);
-    }
+    } while (!DEV_Digital_Read(EPD_BUSY_PIN));
 }
 
 void EPD_4IN2_PowerOn(void)

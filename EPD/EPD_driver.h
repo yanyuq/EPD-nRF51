@@ -53,6 +53,7 @@ extern uint32_t EPD_DC_PIN;
 extern uint32_t EPD_RST_PIN;
 extern uint32_t EPD_BUSY_PIN;
 extern uint32_t EPD_BS_PIN;
+extern uint32_t EPD_EN_PIN;
 
 /**
  * GPIO read and write
@@ -66,7 +67,7 @@ extern uint32_t EPD_BS_PIN;
 #define DEV_Delay_ms(__xms) nrf_delay_ms(__xms);
 #define DEV_Delay_us(__xus) nrf_delay_us(__xus);
 
-uint8_t DEV_Module_Init(void);
+void DEV_Module_Init(void);
 void DEV_Module_Exit(void);
 
 void DEV_SPI_WriteByte(uint8_t value);

@@ -7,35 +7,37 @@ SDK_ROOT := $(PROJ_DIR)/SDK/12.3.0_d7731ad
 SD_PATH  := $(SDK_ROOT)/components/softdevice/s130
 
 $(OUTPUT_DIRECTORY)/nrf51822_xxaa.out: \
-  LINKER_SCRIPT  := $(SD_PATH)/toolchain/armgcc/armgcc_s130_nrf51822_xxaa.ld
+  LINKER_SCRIPT  := $(SDK_ROOT)/gcc_nrf51.ld
 
 # Source files common to all targets
 SRC_FILES += \
-  $(SDK_ROOT)/external/segger_rtt/RTT_Syscalls_GCC.c \
-  $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
-  $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_printf.c \
-  $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_serial.c \
-  $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
-  $(SDK_ROOT)/components/libraries/util/app_error.c \
-  $(SDK_ROOT)/components/libraries/util/app_error_weak.c \
-  $(SDK_ROOT)/components/libraries/timer/app_timer.c \
-  $(SDK_ROOT)/components/libraries/scheduler/app_scheduler.c \
-  $(SDK_ROOT)/components/libraries/util/app_util_platform.c \
-  $(SDK_ROOT)/components/libraries/fstorage/fstorage.c \
-  $(SDK_ROOT)/components/drivers_nrf/common/nrf_drv_common.c \
-  $(SDK_ROOT)/components/drivers_nrf/clock/nrf_drv_clock.c \
-  $(SDK_ROOT)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c \
-  $(SDK_ROOT)/components/drivers_nrf/spi_master/nrf_drv_spi.c \
   $(SDK_ROOT)/components/ble/common/ble_advdata.c \
   $(SDK_ROOT)/components/ble/ble_advertising/ble_advertising.c \
   $(SDK_ROOT)/components/ble/common/ble_conn_params.c \
   $(SDK_ROOT)/components/ble/common/ble_srv_common.c \
+  $(SDK_ROOT)/components/libraries/fds/fds.c \
+  $(SDK_ROOT)/components/libraries/fstorage/fstorage.c \
+  $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_serial.c \
+  $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
+  $(SDK_ROOT)/components/libraries/scheduler/app_scheduler.c \
+  $(SDK_ROOT)/components/libraries/timer/app_timer.c \
+  $(SDK_ROOT)/components/libraries/util/app_error.c \
+  $(SDK_ROOT)/components/libraries/util/app_error_weak.c \
+  $(SDK_ROOT)/components/libraries/util/app_util_platform.c \
+  $(SDK_ROOT)/components/drivers_nrf/common/nrf_drv_common.c \
+  $(SDK_ROOT)/components/drivers_nrf/clock/nrf_drv_clock.c \
+  $(SDK_ROOT)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c \
+  $(SDK_ROOT)/components/drivers_nrf/spi_master/nrf_drv_spi.c \
   $(SDK_ROOT)/components/toolchain/gcc/gcc_startup_nrf51.s \
   $(SDK_ROOT)/components/toolchain/system_nrf51.c \
   $(SDK_ROOT)/components/softdevice/common/softdevice_handler/softdevice_handler.c \
+  $(SDK_ROOT)/external/segger_rtt/RTT_Syscalls_GCC.c \
+  $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
+  $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_printf.c \
   $(PROJ_DIR)/main.c \
+  $(PROJ_DIR)/EPD/EPD_config.c \
   $(PROJ_DIR)/EPD/EPD_driver.c \
-  $(PROJ_DIR)/EPD/EPD_ble.c \
+  $(PROJ_DIR)/EPD/EPD_service.c \
   $(PROJ_DIR)/EPD/UC8176.c \
   $(PROJ_DIR)/GUI/Calendar.c \
   $(PROJ_DIR)/GUI/Lunar.c \
@@ -45,12 +47,10 @@ SRC_FILES += \
 
 # Include folders common to all targets
 INC_FOLDERS += \
-  $(PROJ_DIR)/config \
-  $(PROJ_DIR)/EPD \
-  $(PROJ_DIR)/GUI \
-  $(SDK_ROOT) \
-  $(SDK_ROOT)/external/segger_rtt \
+  $(SDK_ROOT)/components/toolchain/cmsis/include \
+  $(SDK_ROOT)/components/toolchain/gcc \
   $(SDK_ROOT)/components/toolchain \
+  $(SDK_ROOT)/components/device \
   $(SDK_ROOT)/components/drivers_nrf/clock \
   $(SDK_ROOT)/components/drivers_nrf/hal \
   $(SDK_ROOT)/components/drivers_nrf/common \
@@ -59,20 +59,21 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/drivers_nrf/spi_master \
   $(SDK_ROOT)/components/libraries/fstorage \
   $(SDK_ROOT)/components/libraries/experimental_section_vars \
+  $(SDK_ROOT)/components/libraries/fds \
   $(SDK_ROOT)/components/libraries/log \
   $(SDK_ROOT)/components/libraries/log/src \
   $(SDK_ROOT)/components/libraries/timer \
   $(SDK_ROOT)/components/libraries/scheduler \
   $(SDK_ROOT)/components/libraries/util \
-  $(SDK_ROOT)/components/device \
-  $(SDK_ROOT)/components/toolchain \
-  $(SDK_ROOT)/components/toolchain/cmsis/include \
-  $(SDK_ROOT)/components/toolchain/gcc \
   $(SDK_ROOT)/components/ble/common \
   $(SDK_ROOT)/components/ble/ble_advertising \
   $(SDK_ROOT)/components/softdevice/common/softdevice_handler \
   $(SDK_ROOT)/components/softdevice/s130/headers \
-  $(SDK_ROOT)/components/softdevice/s130/headers/nrf51
+  $(SDK_ROOT)/components/softdevice/s130/headers/nrf51 \
+  $(SDK_ROOT)/external/segger_rtt \
+  $(SDK_ROOT) \
+  $(PROJ_DIR)/EPD \
+  $(PROJ_DIR)/GUI
 
 # Libraries common to all targets
 LIB_FILES += \

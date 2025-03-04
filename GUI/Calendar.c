@@ -3,7 +3,6 @@
 #include "EPD_driver.h"
 #include "Lunar.h"
 #include "Calendar.h"
-#define NRF_LOG_MODULE_NAME "Calendar"
 #include "nrf_log.h"
 
 #define PAGE_HEIGHT 72

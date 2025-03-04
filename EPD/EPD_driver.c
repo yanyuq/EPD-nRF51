@@ -12,6 +12,7 @@
 *
 ******************************************************************************/
 
+#include "app_error.h"
 #include "nrf_drv_spi.h"
 #include "EPD_driver.h"
 
@@ -24,8 +25,10 @@ uint32_t EPD_DC_PIN = 10;
 uint32_t EPD_RST_PIN = 11;
 uint32_t EPD_BUSY_PIN = 12;
 uint32_t EPD_BS_PIN = 13;
+uint32_t EPD_EN_PIN = 0xFF;
 
-static const nrf_drv_spi_t spi = NRF_DRV_SPI_INSTANCE(0);
+#define SPI_INSTANCE  0 /**< SPI instance index. */
+static const nrf_drv_spi_t spi = NRF_DRV_SPI_INSTANCE(SPI_INSTANCE);  /**< SPI instance. */
 
 extern epd_driver_t epd_driver_4in2;
 extern epd_driver_t epd_driver_4in2bv2;
@@ -69,86 +72,69 @@ bool epd_driver_set(uint8_t id)
     return false;
 }
 
-/******************************************************************************
-function: Initialize Arduino, Initialize Pins, and SPI
-parameter:
-Info:
-******************************************************************************/
-uint8_t DEV_Module_Init(void)
+void DEV_Module_Init(void)
 {
     nrf_gpio_cfg_output(EPD_CS_PIN);
     nrf_gpio_cfg_output(EPD_DC_PIN);
     nrf_gpio_cfg_output(EPD_RST_PIN);
     nrf_gpio_cfg_input(EPD_BUSY_PIN, NRF_GPIO_PIN_NOPULL);
-  
+
+    if (EPD_EN_PIN != 0xFF) {
+        nrf_gpio_cfg_output(EPD_EN_PIN);
+        DEV_Digital_Write(EPD_EN_PIN, 1);
+    }
+
     nrf_gpio_cfg_output(EPD_BS_PIN);
     DEV_Digital_Write(EPD_BS_PIN, 0);
 
-    nrf_drv_spi_config_t spi_config =
-    {
-        .sck_pin      = EPD_SCLK_PIN,
-        .mosi_pin     = EPD_MOSI_PIN,
-        .miso_pin     = NRF_DRV_SPI_PIN_NOT_USED,
-        .ss_pin       = NRF_DRV_SPI_PIN_NOT_USED,
-        .frequency    = NRF_DRV_SPI_FREQ_4M,
-        .mode         = NRF_DRV_SPI_MODE_0,
-    };
-    nrf_drv_spi_init(&spi, &spi_config, NULL);
+    nrf_drv_spi_config_t spi_config = NRF_DRV_SPI_DEFAULT_CONFIG;
+    spi_config.sck_pin = EPD_SCLK_PIN;
+    spi_config.mosi_pin = EPD_MOSI_PIN;
+    spi_config.ss_pin = EPD_CS_PIN;
+#if defined(S112)
+    APP_ERROR_CHECK(nrf_drv_spi_init(&spi, &spi_config, NULL, NULL));
+#else
+    APP_ERROR_CHECK(nrf_drv_spi_init(&spi, &spi_config, NULL));
+#endif
 
     DEV_Digital_Write(EPD_DC_PIN, 0);
     DEV_Digital_Write(EPD_CS_PIN, 0);
     DEV_Digital_Write(EPD_RST_PIN, 1);
-
-    return 0;
 }
 
 void DEV_Module_Exit(void)
 {
     DEV_Digital_Write(EPD_DC_PIN, 0);
     DEV_Digital_Write(EPD_CS_PIN, 0);
-
-    //close 5V
     DEV_Digital_Write(EPD_RST_PIN, 0);
 
     nrf_drv_spi_uninit(&spi);
 }
 
-/*********************************************
-function: Hardware interface
-note:
-  SPI4W_Write_Byte(value) : 
-    Register hardware SPI
-*********************************************/  
 void DEV_SPI_WriteByte(uint8_t value)
 {
-    nrf_drv_spi_transfer(&spi, &value, 1, NULL, 0);
+    APP_ERROR_CHECK(nrf_drv_spi_transfer(&spi, &value, 1, NULL, 0));
 }
 
 void DEV_SPI_WriteBytes(uint8_t *value, uint8_t len)
 {
-    nrf_drv_spi_transfer(&spi, value, len, NULL, 0);
+    APP_ERROR_CHECK(nrf_drv_spi_transfer(&spi, value, len, NULL, 0));
 }
 
 void EPD_WriteCommand(uint8_t Reg)
 {
     DEV_Digital_Write(EPD_DC_PIN, 0);
-    DEV_Digital_Write(EPD_CS_PIN, 0);
     DEV_SPI_WriteByte(Reg);
-    DEV_Digital_Write(EPD_CS_PIN, 1);
 }
 
 void EPD_WriteByte(uint8_t Data)
 {
     DEV_Digital_Write(EPD_DC_PIN, 1);
-    DEV_Digital_Write(EPD_CS_PIN, 0);
     DEV_SPI_WriteByte(Data);
-    DEV_Digital_Write(EPD_CS_PIN, 1);
 }
 
 void EPD_WriteData(uint8_t *Data, uint8_t Len)
 {
     DEV_Digital_Write(EPD_DC_PIN, 1);
-    DEV_Digital_Write(EPD_CS_PIN, 0);
     DEV_SPI_WriteBytes(Data, Len);
-    DEV_Digital_Write(EPD_CS_PIN, 1);
 }

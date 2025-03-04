@@ -17,31 +17,41 @@
 #include <stdbool.h>
 #include "ble.h"
 #include "ble_srv_common.h"
+#if defined(S112)
+#include "nrf_sdh_ble.h"
+#endif
 #include "sdk_config.h"
 #include "EPD_driver.h"
+#include "EPD_config.h"
+
+/**@brief   Macro for defining a ble_hts instance.
+ *
+ * @param   _name   Name of the instance.
+ * @hideinitializer
+ */
+#if defined(S112)
+void ble_epd_evt_handler(ble_evt_t const * p_ble_evt, void * p_context);
+
+#define BLE_EPD_BLE_OBSERVER_PRIO 2
+#define BLE_EPD_DEF(_name)                                                                              \
+    static ble_epd_t _name;                                                                             \
+    NRF_SDH_BLE_OBSERVER(_name ## _obs,                                                                 \
+                         BLE_EPD_BLE_OBSERVER_PRIO,                                                     \
+                         ble_epd_evt_handler, &_name)
+#else
+#define BLE_EPD_DEF(_name) static ble_epd_t _name;
+#endif
 
 #define BLE_UUID_EPD_SERVICE  0x0001
 #define EPD_SERVICE_UUID_TYPE BLE_UUID_TYPE_VENDOR_BEGIN
+#if defined(S112)
+#define OPCODE_LENGTH        1
+#define HANDLE_LENGTH        2
+#define BLE_EPD_MAX_DATA_LEN (NRF_SDH_BLE_GATT_MAX_MTU_SIZE - OPCODE_LENGTH - HANDLE_LENGTH)
+#else
 #define BLE_EPD_MAX_DATA_LEN  (GATT_MTU_SIZE_DEFAULT - 3) /**< Maximum length of data (in bytes) that can be transmitted to the peer. */
-
+#endif
 typedef bool (*epd_callback_t)(uint8_t cmd, uint8_t *data, uint16_t len);
-
-/**< EPD Service Configs */
-typedef struct
-{
-    uint8_t mosi_pin;
-    uint8_t sclk_pin;
-    uint8_t cs_pin;
-    uint8_t dc_pin;
-    uint8_t rst_pin;
-    uint8_t busy_pin;
-    uint8_t bs_pin;
-    uint8_t driver_id;
-    uint8_t wakeup_pin;
-    uint8_t led_pin;
-    
-    uint8_t reserved[6];
-} epd_config_t;
 
 /**< EPD Service command IDs. */
 enum EPD_CMDS

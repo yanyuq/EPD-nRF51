@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  nrf51:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,10 +19,33 @@ jobs:
         run: |
           gcc_path=${{ steps.arm-none-eabi-gcc-action.outputs.path }}
           sudo ln -s `dirname ${gcc_path}` /usr/local/gcc-arm-none-eabi-4_9-2015q3
+          cp Makefile.nRF51 Makefile
           make
       - uses: actions/upload-artifact@v4
         with:
           name: nrf51822_xxaa
           path: |
             _build/nrf51822_xxaa.hex
-            components/softdevice/s130/hex/s130_nrf51_2.0.1_softdevice.hex
+            SDK/12.3.0_d7731ad/components/softdevice/s130/hex/s130_nrf51_2.0.1_softdevice.hex
+  nrf52:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install ARM GCC
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        id: arm-none-eabi-gcc-action
+        with:
+          release: '9-2020-q2'
+      - name: Build
+        run: |
+          gcc_path=${{ steps.arm-none-eabi-gcc-action.outputs.path }}
+          sudo ln -s `dirname ${gcc_path}` /usr/local/gcc-arm-none-eabi-9-2020-q2-update
+          cp Makefile.nRF52 Makefile
+          make
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nrf52811_xxaa
+          path: |
+            _build/nrf52811_xxaa.hex
+            SDK/17.1.0_ddde560/components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex
