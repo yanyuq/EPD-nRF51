@@ -15,10 +15,9 @@
 #ifndef __EPD_DRIVER_H
 #define __EPD_DRIVER_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "nrf_delay.h"
-#include "nrf_gpio.h"
 
 /**< EPD driver IDs. */
 enum EPD_DRIVER_IDS
@@ -55,17 +54,19 @@ extern uint32_t EPD_BUSY_PIN;
 extern uint32_t EPD_BS_PIN;
 extern uint32_t EPD_EN_PIN;
 
-/**
- * GPIO read and write
-**/
-#define DEV_Digital_Write(_pin, _value) nrf_gpio_pin_write(_pin, _value)
-#define DEV_Digital_Read(_pin) nrf_gpio_pin_read(_pin)
+#define LOW             (0x0)
+#define HIGH            (0x1)
 
-/**
- * delay x ms
-**/
-#define DEV_Delay_ms(__xms) nrf_delay_ms(__xms);
-#define DEV_Delay_us(__xus) nrf_delay_us(__xus);
+#define INPUT           (0x0)
+#define OUTPUT          (0x1)
+#define INPUT_PULLUP    (0x2)
+#define INPUT_PULLDOWN  (0x3)
+
+// Arduino like function wrappers
+void pinMode(uint32_t pin, uint32_t mode);
+void digitalWrite(uint32_t pin, uint32_t value);
+uint32_t digitalRead(uint32_t pin);
+void delay(uint32_t ms);
 
 void DEV_Module_Init(void);
 void DEV_Module_Exit(void);
@@ -76,6 +77,8 @@ void DEV_SPI_WriteBytes(uint8_t *value, uint8_t len);
 void EPD_WriteCommand(uint8_t Reg);
 void EPD_WriteByte(uint8_t Data);
 void EPD_WriteData(uint8_t *Data, uint8_t Len);
+void EPD_Reset(uint32_t value, uint16_t duration);
+void EPD_WaitBusy(uint32_t value, uint16_t timeout);
 
 epd_driver_t *epd_driver_get(void);
 epd_driver_t *epd_driver_by_id(uint8_t id);

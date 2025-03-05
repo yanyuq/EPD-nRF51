@@ -34,44 +34,16 @@
 #define EPD_4IN2_WIDTH       400
 #define EPD_4IN2_HEIGHT      300
 
-/******************************************************************************
-function :	Software reset
-parameter:
-******************************************************************************/
-static void EPD_4IN2_Reset(void)
-{
-    DEV_Digital_Write(EPD_RST_PIN, 1);
-    DEV_Delay_ms(10);
-    for (uint8_t i = 0; i < 3; i++)
-    {
-        DEV_Digital_Write(EPD_RST_PIN, 0);
-        DEV_Delay_ms(10);
-        DEV_Digital_Write(EPD_RST_PIN, 1);
-        DEV_Delay_ms(10);
-    }
-}
-
-void EPD_4IN2_ReadBusy(void)
-{
-    NRF_LOG_DEBUG("e-Paper busy\r\n");
-    do{
-        EPD_WriteCommand(0x71);
-		DEV_Delay_ms(50);
-    }while(!(DEV_Digital_Read(EPD_BUSY_PIN)));
-    NRF_LOG_DEBUG("e-Paper busy release\r\n");
-    DEV_Delay_ms(50);
-}
-
-void EPD_4IN2_PowerOn(void)
+static void EPD_4IN2_PowerOn(void)
 {
     EPD_WriteCommand(0x04);
-	DEV_Delay_ms(50);
+	delay(50);
 }
 
-void EPD_4IN2_PowerOff(void)
+static void EPD_4IN2_PowerOff(void)
 {
     EPD_WriteCommand(0x02);
-	EPD_4IN2_ReadBusy();
+	EPD_WaitBusy(LOW, 50);
 }
 
 /******************************************************************************
@@ -82,8 +54,8 @@ void EPD_4IN2_Refresh(void)
 {
     EPD_4IN2_PowerOn();
     EPD_WriteCommand(0x12);
-    DEV_Delay_ms(100);
-    EPD_4IN2_ReadBusy();
+    delay(100);
+    EPD_WaitBusy(LOW, 50);
     EPD_4IN2_PowerOff();
 }
 
@@ -93,7 +65,7 @@ parameter:
 ******************************************************************************/
 void EPD_4IN2_Init(void)
 {
-	EPD_4IN2_Reset();
+	EPD_Reset(HIGH, 10);
 
 	EPD_WriteCommand(0x00);			// panel setting
 	EPD_WriteByte(0x1f);		    // 400x300 B/W mode, LUT from OTP
@@ -104,7 +76,7 @@ void EPD_4IN2_Init(void)
 
 void EPD_4IN2B_V2_Init(void)
 {
-    EPD_4IN2_Reset();
+    EPD_Reset(HIGH, 10);
 
     EPD_WriteCommand(0x00);
     EPD_WriteByte(0x0f);

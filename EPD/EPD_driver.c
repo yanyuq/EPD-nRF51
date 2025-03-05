@@ -13,8 +13,11 @@
 ******************************************************************************/
 
 #include "app_error.h"
+#include "nrf_delay.h"
+#include "nrf_gpio.h"
 #include "nrf_drv_spi.h"
 #include "EPD_driver.h"
+#include "nrf_log.h"
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
@@ -30,62 +33,69 @@ uint32_t EPD_EN_PIN = 0xFF;
 #define SPI_INSTANCE  0 /**< SPI instance index. */
 static const nrf_drv_spi_t spi = NRF_DRV_SPI_INSTANCE(SPI_INSTANCE);  /**< SPI instance. */
 
-extern epd_driver_t epd_driver_4in2;
-extern epd_driver_t epd_driver_4in2bv2;
-
-/** EPD drivers */
-static epd_driver_t *epd_drivers[] = {
-    &epd_driver_4in2,
-    &epd_driver_4in2bv2,
-};
-
-/**< current EPD driver */
-static epd_driver_t *m_driver = NULL;
-
-epd_driver_t *epd_driver_get(void)
+void pinMode(uint32_t pin, uint32_t mode)
 {
-    if (m_driver == NULL)
-        m_driver = epd_drivers[0];
-    return m_driver;
+    switch (mode)
+    {
+        case INPUT:
+            nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_NOPULL);
+            break;
+        case INPUT_PULLUP:
+            nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_PULLUP);
+            break;
+        case INPUT_PULLDOWN:
+            nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_PULLDOWN);
+            break;
+        case OUTPUT:
+            nrf_gpio_cfg_output(pin);
+            break;
+        default:
+            break;
+    }
 }
 
-epd_driver_t *epd_driver_by_id(uint8_t id)
+void digitalWrite(uint32_t pin, uint32_t value)
 {
-    for (uint8_t i = 0; i < ARRAY_SIZE(epd_drivers); i++)
-    {
-      if (epd_drivers[i]->id == id)
-      {
-          return epd_drivers[i];
-      }
-    }
-    return NULL;
+    if (value == LOW)
+        nrf_gpio_pin_clear(pin);
+    else
+        nrf_gpio_pin_set(pin);
 }
 
-bool epd_driver_set(uint8_t id)
+uint32_t digitalRead(uint32_t pin)
 {
-    epd_driver_t *driver = epd_driver_by_id(id);
-    if (driver )
-    {
-        m_driver = driver;
-        return true;
-    }
-    return false;
+#if defined(S112)
+    nrf_gpio_pin_dir_t dir = nrf_gpio_pin_dir_get(pin);
+#else
+    NRF_GPIO_Type * reg = nrf_gpio_pin_port_decode(&pin);
+    nrf_gpio_pin_dir_t dir = (nrf_gpio_pin_dir_t)((reg->PIN_CNF[pin] &
+                                                   GPIO_PIN_CNF_DIR_Msk) >> GPIO_PIN_CNF_DIR_Pos);
+#endif
+    if (dir == NRF_GPIO_PIN_DIR_INPUT)
+        return nrf_gpio_pin_read(pin);
+    else
+        return nrf_gpio_pin_out_read(pin);
+}
+
+void delay(uint32_t ms)
+{
+    nrf_delay_ms(ms);
 }
 
 void DEV_Module_Init(void)
 {
-    nrf_gpio_cfg_output(EPD_CS_PIN);
-    nrf_gpio_cfg_output(EPD_DC_PIN);
-    nrf_gpio_cfg_output(EPD_RST_PIN);
-    nrf_gpio_cfg_input(EPD_BUSY_PIN, NRF_GPIO_PIN_NOPULL);
+    pinMode(EPD_CS_PIN, OUTPUT);
+    pinMode(EPD_DC_PIN, OUTPUT);
+    pinMode(EPD_RST_PIN, OUTPUT);
+    pinMode(EPD_BUSY_PIN, INPUT);
 
     if (EPD_EN_PIN != 0xFF) {
-        nrf_gpio_cfg_output(EPD_EN_PIN);
-        DEV_Digital_Write(EPD_EN_PIN, 1);
+        pinMode(EPD_EN_PIN, OUTPUT);
+        digitalWrite(EPD_EN_PIN, HIGH);
     }
 
-    nrf_gpio_cfg_output(EPD_BS_PIN);
-    DEV_Digital_Write(EPD_BS_PIN, 0);
+    pinMode(EPD_BS_PIN, OUTPUT);
+    digitalWrite(EPD_BS_PIN, LOW);
 
     nrf_drv_spi_config_t spi_config = NRF_DRV_SPI_DEFAULT_CONFIG;
     spi_config.sck_pin = EPD_SCLK_PIN;
@@ -97,16 +107,16 @@ void DEV_Module_Init(void)
     APP_ERROR_CHECK(nrf_drv_spi_init(&spi, &spi_config, NULL));
 #endif
 
-    DEV_Digital_Write(EPD_DC_PIN, 0);
-    DEV_Digital_Write(EPD_CS_PIN, 0);
-    DEV_Digital_Write(EPD_RST_PIN, 1);
+    digitalWrite(EPD_DC_PIN, LOW);
+    digitalWrite(EPD_CS_PIN, LOW);
+    digitalWrite(EPD_RST_PIN, HIGH);
 }
 
 void DEV_Module_Exit(void)
 {
-    DEV_Digital_Write(EPD_DC_PIN, 0);
-    DEV_Digital_Write(EPD_CS_PIN, 0);
-    DEV_Digital_Write(EPD_RST_PIN, 0);
+    digitalWrite(EPD_DC_PIN, LOW);
+    digitalWrite(EPD_CS_PIN, LOW);
+    digitalWrite(EPD_RST_PIN, LOW);
 
     nrf_drv_spi_uninit(&spi);
 }
@@ -123,18 +133,81 @@ void DEV_SPI_WriteBytes(uint8_t *value, uint8_t len)
 
 void EPD_WriteCommand(uint8_t Reg)
 {
-    DEV_Digital_Write(EPD_DC_PIN, 0);
+    digitalWrite(EPD_DC_PIN, LOW);
     DEV_SPI_WriteByte(Reg);
 }
 
 void EPD_WriteByte(uint8_t Data)
 {
-    DEV_Digital_Write(EPD_DC_PIN, 1);
+    digitalWrite(EPD_DC_PIN, HIGH);
     DEV_SPI_WriteByte(Data);
 }
 
 void EPD_WriteData(uint8_t *Data, uint8_t Len)
 {
-    DEV_Digital_Write(EPD_DC_PIN, 1);
+    digitalWrite(EPD_DC_PIN, HIGH);
     DEV_SPI_WriteBytes(Data, Len);
+}
+
+void EPD_Reset(uint32_t value, uint16_t duration)
+{
+    uint32_t rvalue = (value == LOW) ? HIGH : LOW;
+    digitalWrite(EPD_RST_PIN, value);
+    delay(10);
+    digitalWrite(EPD_RST_PIN, rvalue);
+    delay(duration);
+    digitalWrite(EPD_RST_PIN, value);
+    delay(duration);
+}
+
+void EPD_WaitBusy(uint32_t value, uint16_t timeout)
+{
+    NRF_LOG_DEBUG("[EPD]: check busy");
+    while (digitalRead(EPD_BUSY_PIN) == value) {
+        delay(1);
+        timeout--;
+        if (timeout == 0) {
+            NRF_LOG_DEBUG("[EPD]: busy timeout!");
+            break;
+        }
+    }
+    NRF_LOG_DEBUG("[EPD]: busy release");
+}
+
+extern epd_driver_t epd_driver_4in2;
+extern epd_driver_t epd_driver_4in2bv2;
+
+/** EPD drivers */
+static epd_driver_t *epd_drivers[] = {
+    &epd_driver_4in2,                       // UC8176: 4.2 inch, BW
+    &epd_driver_4in2bv2,                    // UC8176: 4.2 inch, BWR
+};
+
+/**< current EPD driver */
+static epd_driver_t *m_driver = NULL;
+
+epd_driver_t *epd_driver_get(void)
+{
+    if (m_driver == NULL)
+        m_driver = epd_drivers[0];
+    return m_driver;
+}
+
+epd_driver_t *epd_driver_by_id(uint8_t id)
+{
+    for (uint8_t i = 0; i < ARRAY_SIZE(epd_drivers); i++) {
+      if (epd_drivers[i]->id == id)
+          return epd_drivers[i];
+    }
+    return NULL;
+}
+
+bool epd_driver_set(uint8_t id)
+{
+    epd_driver_t *driver = epd_driver_by_id(id);
+    if (driver ) {
+        m_driver = driver;
+        return true;
+    }
+    return false;
 }
