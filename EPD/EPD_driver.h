@@ -53,6 +53,7 @@ extern uint32_t EPD_RST_PIN;
 extern uint32_t EPD_BUSY_PIN;
 extern uint32_t EPD_BS_PIN;
 extern uint32_t EPD_EN_PIN;
+extern uint32_t EPD_LED_PIN;
 
 #define LOW             (0x0)
 #define HIGH            (0x1)
@@ -79,6 +80,10 @@ void EPD_WriteByte(uint8_t Data);
 void EPD_WriteData(uint8_t *Data, uint8_t Len);
 void EPD_Reset(uint32_t value, uint16_t duration);
 void EPD_WaitBusy(uint32_t value, uint16_t timeout);
+
+void EPD_LED_ON(void);
+void EPD_LED_OFF(void);
+void EPD_LED_TOGGLE(void);
 
 epd_driver_t *epd_driver_get(void);
 epd_driver_t *epd_driver_by_id(uint8_t id);

@@ -29,6 +29,7 @@ uint32_t EPD_RST_PIN = 11;
 uint32_t EPD_BUSY_PIN = 12;
 uint32_t EPD_BS_PIN = 13;
 uint32_t EPD_EN_PIN = 0xFF;
+uint32_t EPD_LED_PIN = 0xFF;
 
 #define SPI_INSTANCE  0 /**< SPI instance index. */
 static const nrf_drv_spi_t spi = NRF_DRV_SPI_INSTANCE(SPI_INSTANCE);  /**< SPI instance. */
@@ -110,6 +111,11 @@ void DEV_Module_Init(void)
     digitalWrite(EPD_DC_PIN, LOW);
     digitalWrite(EPD_CS_PIN, LOW);
     digitalWrite(EPD_RST_PIN, HIGH);
+
+    if (EPD_LED_PIN != 0xFF) {
+        pinMode(EPD_LED_PIN, OUTPUT);
+        EPD_LED_ON();
+    }
 }
 
 void DEV_Module_Exit(void)
@@ -119,6 +125,8 @@ void DEV_Module_Exit(void)
     digitalWrite(EPD_RST_PIN, LOW);
 
     nrf_drv_spi_uninit(&spi);
+
+    EPD_LED_OFF();
 }
 
 void DEV_SPI_WriteByte(uint8_t value)
@@ -164,6 +172,7 @@ void EPD_WaitBusy(uint32_t value, uint16_t timeout)
 {
     NRF_LOG_DEBUG("[EPD]: check busy");
     while (digitalRead(EPD_BUSY_PIN) == value) {
+        if (timeout % 100 == 0) EPD_LED_TOGGLE();
         delay(1);
         timeout--;
         if (timeout == 0) {
@@ -172,6 +181,24 @@ void EPD_WaitBusy(uint32_t value, uint16_t timeout)
         }
     }
     NRF_LOG_DEBUG("[EPD]: busy release");
+}
+
+void EPD_LED_ON(void)
+{
+    if (EPD_LED_PIN != 0xFF)
+        digitalWrite(EPD_LED_PIN, LOW);
+}
+
+void EPD_LED_OFF(void)
+{
+    if (EPD_LED_PIN != 0xFF)
+        digitalWrite(EPD_LED_PIN, HIGH);
+}
+
+void EPD_LED_TOGGLE(void)
+{
+    if (EPD_LED_PIN != 0xFF)
+        nrf_gpio_pin_toggle(EPD_LED_PIN);
 }
 
 extern epd_driver_t epd_driver_4in2;

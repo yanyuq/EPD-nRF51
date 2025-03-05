@@ -55,7 +55,7 @@ void EPD_4IN2_Refresh(void)
     EPD_4IN2_PowerOn();
     EPD_WriteCommand(0x12);
     delay(100);
-    EPD_WaitBusy(LOW, 50);
+    EPD_WaitBusy(LOW, 20000);
     EPD_4IN2_PowerOff();
 }
 
