@@ -1,8 +1,8 @@
-# EPD-nRF51
+# EPD-nRF5
 
-4.2 寸电子墨水屏固件，带有一个[网页版上位机](https://tsl0922.github.io/EPD-nRF51/)，可以通过蓝牙传输图像到墨水屏，也可以把墨水屏设置为日历模式（支持农历、节气）。
+4.2 寸电子墨水屏固件，带有一个[网页版上位机](https://tsl0922.github.io/EPD-nRF5/)，可以通过蓝牙传输图像到墨水屏，也可以把墨水屏设置为日历模式（支持农历、节气）。
 
-理论上支持所有 nRF51 系列 MCU，支持 UC8176 驱动的 4.2 寸黑白/黑白红墨水屏（可切换驱动），同时还支持自定义墨水屏到 MCU 的引脚映射，支持睡眠唤醒（NFC / 无线充电器）。
+支持 nRF51/nRF52 MCU 作为主控，驱动 IC 为 UC8176 的 4.2 寸黑白/黑白红墨水屏，同时还支持自定义墨水屏到 MCU 的引脚映射，支持睡眠唤醒（NFC / 无线充电器）。
 
 ![](html/images/3.jpg)
 
@@ -41,7 +41,7 @@
 
 本项目自带一个基于浏览器蓝牙接口实现的网页版上位机，可通过上面网址访问，或者在本地直接双击打开 `html/index.html` 来使用。
 
-- 地址：https://tsl0922.github.io/EPD-nRF51
+- 地址：https://tsl0922.github.io/EPD-nRF5
 - 演示：https://www.bilibili.com/video/BV1KWAVe1EKs
 - 交流群: [1033086563](https://qm.qq.com/q/WEBAZgyyc2) (点击链接加入群聊)
 
@@ -63,10 +63,10 @@
 
 **刷机流程:**
 
-> 如不修改代码，建议到 [Releases](https://github.com/tsl0922/EPD-nRF51/releases) 下载二进制固件，开箱即用。
+> 如不修改代码，强烈建议到 [Releases](https://github.com/tsl0922/EPD-nRF5/releases) 下载二进制固件，**不需要单独下载蓝牙协议栈**。
 
 1. 全部擦除 (Keil 擦除后刷不了的话，使用烧录器的上位机软件擦除试试)
-2. 切换到 `flash_softdevice`，**不要编译直接下载**（只需刷一次）
+2. 切换到 `flash_softdevice`，下载蓝牙协议栈，**不要编译直接下载**（只需刷一次）
 3. 切换到 `nRF51802_xxAA`，先编译再下载
 
 ## 致谢
