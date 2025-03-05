@@ -15,8 +15,6 @@
 #include "ble_srv_common.h"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
-#include "nrf_soc.h"
-#include "nrf_nvic.h"
 #include "EPD_service.h"
 #include "nrf_log.h"
 
@@ -145,20 +143,11 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
           memcpy(&p_epd->config, &p_data[1], (length - 1 > EPD_CONFIG_SIZE) ? EPD_CONFIG_SIZE : length - 1);
           epd_config_save(&p_epd->config);
           break;
-
-      case EPD_CMD_SYS_RESET:
-          sd_nvic_SystemReset();
-          break;
-
-      case EPD_CMD_SYS_SLEEP:
-          ble_epd_sleep_prepare(p_epd);
-          sd_power_system_off();
-          break;
       
       case EPD_CMD_CFG_ERASE:
           epd_config_clear(&p_epd->config);
           nrf_delay_ms(100); // required
-          sd_nvic_SystemReset();
+          NVIC_SystemReset();
           break;
 
       default:

@@ -30,13 +30,14 @@
 #include "softdevice_handler.h"
 #endif
 #include "nrf_power.h"
-#include "nrf_soc.h"
 #include "app_error.h"
 #include "app_timer.h"
 #include "app_scheduler.h"
 #include "nrf_drv_gpiote.h"
+#include "nrf_pwr_mgmt.h"
 #include "EPD_service.h"
 #include "Calendar.h"
+
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #if defined(S112)
@@ -187,6 +188,18 @@ static void application_timers_start(void)
     APP_ERROR_CHECK(app_timer_start(m_clock_timer_id, CLOCK_TIMER_INTERVAL, NULL));
 }
 
+/**@brief Function for putting the chip into sleep mode.
+ *
+ * @note This function will not return.
+ */
+static void sleep_mode_enter(void)
+{
+    NRF_LOG_DEBUG("Entering deep sleep mode\n");
+
+    ble_epd_sleep_prepare(&m_epd);
+    nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF);
+}
+
 bool epd_cmd_callback(uint8_t cmd, uint8_t *data, uint16_t len)
 {
     switch (cmd)
@@ -198,9 +211,7 @@ bool epd_cmd_callback(uint8_t cmd, uint8_t *data, uint16_t len)
             }
 
             NRF_LOG_DEBUG("time: %02x %02x %02x %02x\n", data[0], data[1], data[2], data[3]);
-            if (len > 4) {
-                NRF_LOG_DEBUG("timezone: %d\n", (int8_t)data[4]);
-            }
+            if (len > 4) NRF_LOG_DEBUG("timezone: %d\n", (int8_t)data[4]);
 
             app_timer_stop(m_clock_timer_id);
             m_timestamp = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
@@ -208,10 +219,24 @@ bool epd_cmd_callback(uint8_t cmd, uint8_t *data, uint16_t len)
             app_timer_start(m_clock_timer_id, CLOCK_TIMER_INTERVAL, NULL);
             calendar_update_schedule();
             return true;
+
         case EPD_CMD_CLEAR:
         case EPD_CMD_DISPLAY:
             m_calendar_mode = false;
             break;
+
+        case EPD_CMD_SYS_SLEEP:
+            sleep_mode_enter();
+            return true;
+
+        case EPD_CMD_SYS_RESET:
+#if defined(S112)
+            nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_RESET);
+#else
+            NVIC_SystemReset();
+#endif
+            return true;
+            
         default:
             break;
     }
@@ -325,23 +350,6 @@ static void advertising_start(void)
 #endif
 }
 
-/**@brief Function for putting the chip into sleep mode.
- *
- * @note This function will not return.
- */
-static void sleep_mode_enter(void)
-{
-    NRF_LOG_DEBUG("Entering deep sleep mode\n");
-
-    // Prepare wakeup pin
-    ble_epd_sleep_prepare(&m_epd);
-
-    // Go to system-off mode (this function will not return; wakeup will cause a reset).
-    APP_ERROR_CHECK(sd_power_system_off());
-
-    nrf_power_system_off();
-}
-
 void gpiote_evt_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
     NRF_LOG_DEBUG("pin: %d, event: %d\n", pin, action);
 
@@ -376,10 +384,13 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
             break;
         case BLE_ADV_EVT_IDLE:
             NRF_LOG_INFO("advertising timeout\n");
-            if (m_calendar_mode) {
-                setup_wakeup_pin(m_epd.config.wakeup_pin);
+            if (m_epd.config.wakeup_pin != 0xFF) {
+                if (m_calendar_mode)
+                    setup_wakeup_pin(m_epd.config.wakeup_pin);
+                else
+                    sleep_mode_enter();
             } else {
-                sleep_mode_enter();
+                advertising_start();
             }
             break;
         default:
@@ -648,6 +659,17 @@ static void log_init(void)
 #endif
 }
 
+/**@brief Function for initializing power management.
+ */
+static void power_management_init(void)
+{
+#if defined(S112)
+    APP_ERROR_CHECK(nrf_pwr_mgmt_init());
+#else
+    APP_ERROR_CHECK(nrf_pwr_mgmt_init(APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)));
+#endif
+}
+
 /**@brief Function for handling the idle state (main loop).
  *
  * @details If there is no pending log operation, then sleep until next the next event occurs.
@@ -655,9 +677,7 @@ static void log_init(void)
 static void idle_state_handle(void)
 {
     if (NRF_LOG_PROCESS() == false)
-    {
-        APP_ERROR_CHECK(sd_app_evt_wait());
-    }
+        nrf_pwr_mgmt_run();
 }
 
 /**@brief Function for application main entry.
@@ -669,6 +689,7 @@ int main(void)
     NRF_LOG_DEBUG("init..\n");
 
     timers_init();
+    power_management_init();
     ble_stack_init();
     scheduler_init();
     gap_params_init();
