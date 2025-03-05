@@ -23,7 +23,7 @@
 #if defined(S112)
 #define EPD_CFG_DEFAULT {0x14, 0x13, 0x06, 0x05, 0x04, 0x03, 0x02, 0x03, 0xFF, 0x12, 0x07}
 #else
-//#define EPD_CFG_DEFAULT {0x05, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x01, 0x07}
+#define EPD_CFG_DEFAULT {0x05, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x01, 0x07}
 #endif
 
 #ifndef EPD_CFG_DEFAULT
@@ -184,13 +184,13 @@ static void on_write(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
     {
         if (ble_srv_is_notification_enabled(p_evt_write->data))
         {
+            NRF_LOG_DEBUG("notification enabled\n");
             p_epd->is_notification_enabled = true;
             static uint16_t length = sizeof(epd_config_t);
+            NRF_LOG_DEBUG("send epd config\n");
             err_code = ble_epd_string_send(p_epd, (uint8_t *)&p_epd->config, length);
             if (err_code != NRF_ERROR_INVALID_STATE)
-            {
                 APP_ERROR_CHECK(err_code);
-            }
         }
         else
         {
@@ -247,20 +247,17 @@ void ble_epd_on_ble_evt(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 
 static uint32_t epd_service_init(ble_epd_t * p_epd)
 {
-    uint32_t              err_code;
     ble_uuid_t            ble_uuid;
     ble_uuid128_t         base_uuid = BLE_EPD_BASE_UUID;
     ble_add_char_params_t add_char_params;
  
-    err_code = sd_ble_uuid_vs_add(&base_uuid, &p_epd->uuid_type);
-    VERIFY_SUCCESS(err_code);
+    VERIFY_SUCCESS(sd_ble_uuid_vs_add(&base_uuid, &p_epd->uuid_type));
 
     ble_uuid.type = p_epd->uuid_type;
     ble_uuid.uuid = BLE_UUID_EPD_SERVICE;
-    err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY,
-                                        &ble_uuid,
-                                        &p_epd->service_handle);
-    VERIFY_SUCCESS(err_code);
+    VERIFY_SUCCESS(sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY,
+                                            &ble_uuid,
+                                            &p_epd->service_handle));
 
     memset(&add_char_params, 0, sizeof(add_char_params));
     add_char_params.uuid                     = BLE_UUID_EPD_CHARACTERISTIC;
@@ -330,6 +327,7 @@ uint32_t ble_epd_init(ble_epd_t * p_epd, epd_callback_t cmd_cb)
     p_epd->epd_cmd_cb = cmd_cb;
 
     // Initialize the service structure.
+    p_epd->max_data_len = BLE_EPD_MAX_DATA_LEN;
     p_epd->conn_handle             = BLE_CONN_HANDLE_INVALID;
     p_epd->is_notification_enabled = false;
 
@@ -364,7 +362,7 @@ uint32_t ble_epd_string_send(ble_epd_t * p_epd, uint8_t * p_string, uint16_t len
         return NRF_ERROR_INVALID_STATE;
     }
 
-    if (length > BLE_EPD_MAX_DATA_LEN)
+    if (length > p_epd->max_data_len)
     {
         return NRF_ERROR_INVALID_PARAM;
     }

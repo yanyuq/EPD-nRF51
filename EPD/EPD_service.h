@@ -45,9 +45,7 @@ void ble_epd_evt_handler(ble_evt_t const * p_ble_evt, void * p_context);
 #define BLE_UUID_EPD_SERVICE  0x0001
 #define EPD_SERVICE_UUID_TYPE BLE_UUID_TYPE_VENDOR_BEGIN
 #if defined(S112)
-#define OPCODE_LENGTH        1
-#define HANDLE_LENGTH        2
-#define BLE_EPD_MAX_DATA_LEN (NRF_SDH_BLE_GATT_MAX_MTU_SIZE - OPCODE_LENGTH - HANDLE_LENGTH)
+#define BLE_EPD_MAX_DATA_LEN (NRF_SDH_BLE_GATT_MAX_MTU_SIZE - 3)
 #else
 #define BLE_EPD_MAX_DATA_LEN  (GATT_MTU_SIZE_DEFAULT - 3) /**< Maximum length of data (in bytes) that can be transmitted to the peer. */
 #endif
@@ -80,8 +78,9 @@ typedef struct
 {
     uint8_t                  uuid_type;               /**< UUID type for EPD Service Base UUID. */
     uint16_t                 service_handle;          /**< Handle of EPD Service (as provided by the S110 SoftDevice). */
-    ble_gatts_char_handles_t char_handles;            /**< Handles related to the EPD characteristic (as provided by the S110 SoftDevice). */
-    uint16_t                 conn_handle;             /**< Handle of the current connection (as provided by the S110 SoftDevice). BLE_CONN_HANDLE_INVALID if not in a connection. */
+    ble_gatts_char_handles_t char_handles;            /**< Handles related to the EPD characteristic (as provided by the SoftDevice). */
+    uint16_t                 conn_handle;             /**< Handle of the current connection (as provided by the SoftDevice). BLE_CONN_HANDLE_INVALID if not in a connection. */
+    uint16_t                 max_data_len;            /**< Maximum length of data (in bytes) that can be transmitted to the peer */
     bool                     is_notification_enabled; /**< Variable to indicate if the peer has enabled notification of the RX characteristic.*/
     epd_driver_t             *driver;                 /**< current EPD driver */
     epd_config_t             config;                  /**< EPD config */
