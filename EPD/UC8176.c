@@ -51,23 +51,21 @@ static void EPD_4IN2_Reset(void)
     }
 }
 
-/******************************************************************************
-function :	Wait until the busy_pin goes LOW
-parameter:
-******************************************************************************/
 void EPD_4IN2_ReadBusy(void)
 {
-    do {
-        NRF_LOG_DEBUG("EPD_4IN2_ReadBusy\n");
+    NRF_LOG_DEBUG("e-Paper busy\r\n");
+    do{
         EPD_WriteCommand(0x71);
-        DEV_Delay_ms(100);
-    } while (!DEV_Digital_Read(EPD_BUSY_PIN));
+		DEV_Delay_ms(50);
+    }while(!(DEV_Digital_Read(EPD_BUSY_PIN)));
+    NRF_LOG_DEBUG("e-Paper busy release\r\n");
+    DEV_Delay_ms(50);
 }
 
 void EPD_4IN2_PowerOn(void)
 {
     EPD_WriteCommand(0x04);
-	EPD_4IN2_ReadBusy();
+	DEV_Delay_ms(50);
 }
 
 void EPD_4IN2_PowerOff(void)
