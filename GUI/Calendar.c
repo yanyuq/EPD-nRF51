@@ -8,7 +8,7 @@
 #if defined(S112)
 #define PAGE_HEIGHT 150
 #else
-#define PAGE_HEIGHT 72
+#define PAGE_HEIGHT 64
 #endif
 static void DrawDateHeader(Adafruit_GFX *gfx, int16_t x, int16_t y, tm_t *tm, struct Lunar_Date *Lunar)
 {

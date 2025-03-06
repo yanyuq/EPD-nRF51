@@ -31,8 +31,7 @@ uint32_t EPD_BS_PIN = 13;
 uint32_t EPD_EN_PIN = 0xFF;
 uint32_t EPD_LED_PIN = 0xFF;
 
-#define SPI_INSTANCE  0 /**< SPI instance index. */
-static const nrf_drv_spi_t spi = NRF_DRV_SPI_INSTANCE(SPI_INSTANCE);  /**< SPI instance. */
+// Arduino like function wrappers
 
 void pinMode(uint32_t pin, uint32_t mode)
 {
@@ -83,6 +82,7 @@ void delay(uint32_t ms)
     nrf_delay_ms(ms);
 }
 
+// GPIO
 void DEV_Module_Init(void)
 {
     pinMode(EPD_CS_PIN, OUTPUT);
@@ -97,16 +97,6 @@ void DEV_Module_Init(void)
 
     pinMode(EPD_BS_PIN, OUTPUT);
     digitalWrite(EPD_BS_PIN, LOW);
-
-    nrf_drv_spi_config_t spi_config = NRF_DRV_SPI_DEFAULT_CONFIG;
-    spi_config.sck_pin = EPD_SCLK_PIN;
-    spi_config.mosi_pin = EPD_MOSI_PIN;
-    spi_config.ss_pin = EPD_CS_PIN;
-#if defined(S112)
-    APP_ERROR_CHECK(nrf_drv_spi_init(&spi, &spi_config, NULL, NULL));
-#else
-    APP_ERROR_CHECK(nrf_drv_spi_init(&spi, &spi_config, NULL));
-#endif
 
     digitalWrite(EPD_DC_PIN, LOW);
     digitalWrite(EPD_CS_PIN, LOW);
@@ -124,21 +114,114 @@ void DEV_Module_Exit(void)
     digitalWrite(EPD_CS_PIN, LOW);
     digitalWrite(EPD_RST_PIN, LOW);
 
-    nrf_drv_spi_uninit(&spi);
+    DEV_SPI_Exit();
 
     EPD_LED_OFF();
 }
 
+// Hardware SPI (write only)
+
+#define SPI_INSTANCE  0 /**< SPI instance index. */
+static const nrf_drv_spi_t spi = NRF_DRV_SPI_INSTANCE(SPI_INSTANCE);  /**< SPI instance. */
+static bool spi_initialized = false;
+
+void DEV_SPI_Init(void)
+{
+    if (spi_initialized) return;
+    nrf_drv_spi_config_t spi_config = NRF_DRV_SPI_DEFAULT_CONFIG;
+    spi_config.sck_pin = EPD_SCLK_PIN;
+    spi_config.mosi_pin = EPD_MOSI_PIN;
+    spi_config.ss_pin = EPD_CS_PIN;
+#if defined(S112)
+    APP_ERROR_CHECK(nrf_drv_spi_init(&spi, &spi_config, NULL, NULL));
+#else
+    APP_ERROR_CHECK(nrf_drv_spi_init(&spi, &spi_config, NULL));
+#endif
+    spi_initialized = true;
+}
+
+void DEV_SPI_Exit(void)
+{
+    if (!spi_initialized) return;
+    nrf_drv_spi_uninit(&spi);
+    spi_initialized = false;
+}
+
 void DEV_SPI_WriteByte(uint8_t value)
 {
+    DEV_SPI_Init();
     APP_ERROR_CHECK(nrf_drv_spi_transfer(&spi, &value, 1, NULL, 0));
 }
 
 void DEV_SPI_WriteBytes(uint8_t *value, uint8_t len)
 {
+    DEV_SPI_Init();
     APP_ERROR_CHECK(nrf_drv_spi_transfer(&spi, value, len, NULL, 0));
 }
 
+
+// Software SPI (read / write)
+void DEV_SPI_WriteByte_SW(uint8_t data)
+{
+    DEV_SPI_Exit();
+    pinMode(EPD_MOSI_PIN, OUTPUT);
+    digitalWrite(EPD_CS_PIN, LOW);
+    for (int i = 0; i < 8; i++)
+    {
+        if ((data & 0x80) == 0) digitalWrite(EPD_MOSI_PIN, LOW); 
+        else                    digitalWrite(EPD_MOSI_PIN, HIGH);
+
+        data <<= 1;
+        digitalWrite(EPD_SCLK_PIN, HIGH);     
+        digitalWrite(EPD_SCLK_PIN, LOW);
+    }
+    digitalWrite(EPD_CS_PIN, HIGH);
+}
+
+uint8_t DEV_SPI_ReadByte_SW(void)
+{
+    DEV_SPI_Exit();
+    uint8_t j = 0xff;
+    pinMode(EPD_MOSI_PIN, INPUT);
+    digitalWrite(EPD_CS_PIN, LOW);
+    for (int i = 0; i < 8; i++)
+    {
+        j = j << 1;
+        if (digitalRead(EPD_MOSI_PIN))  j = j | 0x01;
+        else                            j = j & 0xfe;
+        
+        digitalWrite(EPD_SCLK_PIN, HIGH);     
+        digitalWrite(EPD_SCLK_PIN, LOW);
+    }
+    digitalWrite(EPD_CS_PIN, HIGH);
+    pinMode(EPD_MOSI_PIN, 1);
+    return j;
+}
+
+void EPD_WriteCommand_SW(uint8_t Reg)
+{
+    digitalWrite(EPD_DC_PIN, LOW);
+    digitalWrite(EPD_CS_PIN, LOW);
+    DEV_SPI_WriteByte_SW(Reg);
+    digitalWrite(EPD_CS_PIN, HIGH);
+}
+
+void EPD_WriteByte_SW(uint8_t Data)
+{
+    digitalWrite(EPD_DC_PIN, HIGH);
+    digitalWrite(EPD_CS_PIN, LOW);
+    DEV_SPI_WriteByte_SW(Data);
+    digitalWrite(EPD_CS_PIN, HIGH);
+}
+
+uint8_t EPD_ReadByte_SW(void)
+{
+    digitalWrite(EPD_DC_PIN, HIGH);
+    return DEV_SPI_ReadByte_SW();
+}
+
+
+// Hardware SPI
 void EPD_WriteCommand(uint8_t Reg)
 {
     digitalWrite(EPD_DC_PIN, LOW);
@@ -170,19 +253,21 @@ void EPD_Reset(uint32_t value, uint16_t duration)
 
 void EPD_WaitBusy(uint32_t value, uint16_t timeout)
 {
-    NRF_LOG_DEBUG("[EPD]: check busy");
+    NRF_LOG_DEBUG("[EPD]: check busy\n");
     while (digitalRead(EPD_BUSY_PIN) == value) {
         if (timeout % 100 == 0) EPD_LED_TOGGLE();
         delay(1);
         timeout--;
         if (timeout == 0) {
-            NRF_LOG_DEBUG("[EPD]: busy timeout!");
+            NRF_LOG_DEBUG("[EPD]: busy timeout!\n");
             break;
         }
     }
-    NRF_LOG_DEBUG("[EPD]: busy release");
+    NRF_LOG_DEBUG("[EPD]: busy release\n");
 }
 
+
+// lED
 void EPD_LED_ON(void)
 {
     if (EPD_LED_PIN != 0xFF)
@@ -200,6 +285,7 @@ void EPD_LED_TOGGLE(void)
     if (EPD_LED_PIN != 0xFF)
         nrf_gpio_pin_toggle(EPD_LED_PIN);
 }
+
 
 extern epd_driver_t epd_driver_4in2;
 extern epd_driver_t epd_driver_4in2bv2;

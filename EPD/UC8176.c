@@ -37,13 +37,29 @@
 static void EPD_4IN2_PowerOn(void)
 {
     EPD_WriteCommand(0x04);
-	delay(50);
+	EPD_WaitBusy(LOW, 100);
 }
 
 static void EPD_4IN2_PowerOff(void)
 {
     EPD_WriteCommand(0x02);
-	EPD_WaitBusy(LOW, 50);
+	EPD_WaitBusy(LOW, 100);
+}
+
+// Read temperature from driver chip
+int8_t EPD_4IN2_Read_Temp(void)
+{
+    EPD_WriteCommand_SW(0x40); // TSC
+    return (int8_t) EPD_ReadByte_SW();
+}
+
+// Force temperature (will trigger OTP LUT switch)
+void EPD_4IN2_Force_Temp(int8_t value)
+{
+    EPD_WriteCommand_SW(0xE0); // CCSET
+    EPD_WriteByte_SW(0x02);
+    EPD_WriteCommand_SW(0xE5); // TSSET
+    EPD_WriteByte_SW(value);
 }
 
 /******************************************************************************
@@ -52,11 +68,14 @@ parameter:
 ******************************************************************************/
 void EPD_4IN2_Refresh(void)
 {
+    NRF_LOG_DEBUG("[EPD]: refresh begin\n");
     EPD_4IN2_PowerOn();
+    NRF_LOG_DEBUG("[EPD]: temperature: %d\n", EPD_4IN2_Read_Temp());
     EPD_WriteCommand(0x12);
     delay(100);
     EPD_WaitBusy(LOW, 20000);
     EPD_4IN2_PowerOff();
+    NRF_LOG_DEBUG("[EPD]: refresh end\n");
 }
 
 /******************************************************************************
@@ -76,10 +95,10 @@ void EPD_4IN2_Init(void)
 
 void EPD_4IN2B_V2_Init(void)
 {
-    EPD_Reset(HIGH, 10);
+    EPD_Reset(HIGH, 200);
 
     EPD_WriteCommand(0x00);
-    EPD_WriteByte(0x0f);
+    EPD_WriteByte(0x0f);		    // 400x300 B/W/R mode, LUT from OTP
 }
 
 /******************************************************************************
@@ -191,6 +210,8 @@ const epd_driver_t epd_driver_4in2 = {
     .write_image = EPD_4IN2_Write_Image,
     .refresh = EPD_4IN2_Refresh,
     .sleep = EPD_4IN2_Sleep,
+    .read_temp = EPD_4IN2_Read_Temp,
+    .force_temp = EPD_4IN2_Force_Temp,
 };
 
 const epd_driver_t epd_driver_4in2bv2 = {
@@ -205,4 +226,6 @@ const epd_driver_t epd_driver_4in2bv2 = {
     .write_image = EPD_4IN2B_V2_Write_Image,
     .refresh = EPD_4IN2_Refresh,
     .sleep = EPD_4IN2_Sleep,
+    .read_temp = EPD_4IN2_Read_Temp,
+    .force_temp = EPD_4IN2_Force_Temp,
 };
