@@ -115,7 +115,8 @@ async function syncTime() {
     -(new Date().getTimezoneOffset() / 60)
   ]);
   if(await write(EpdCmd.SET_TIME, data)) {
-    addLog("日历模式：时间已同步！需要一定时间刷新，请耐心等待。");
+    addLog("日历模式：时间已同步！");
+    addLog("需要一定时间刷新，请耐心等待。");
   }
 }
 
