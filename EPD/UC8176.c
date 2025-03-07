@@ -1,10 +1,10 @@
 /*****************************************************************************
-* | File      	:   EPD_4in2.c
+* | File        :   EPD_4in2.c
 * | Author      :   Waveshare team
 * | Function    :   4.2inch e-paper
 * | Info        :
 *----------------
-* |	This version:   V3.0
+* | This version:   V3.0
 * | Date        :   2019-06-13
 * -----------------------------------------------------------------------------
 #
@@ -30,40 +30,58 @@
 #include "EPD_driver.h"
 #include "nrf_log.h"
 
+// commands used by this driver
+enum {
+    CMD_PSR   = 0x00,        // Panel Setting
+    CMD_POF   = 0x02,        // Power OFF
+    CMD_PON   = 0x04,        // Power ON
+    CMD_DSLP  = 0x07,        // Deep sleep
+    CMD_DTM1  = 0x10,        // Display Start Transmission 1
+    CMD_DRF   = 0x12,        // Display Refresh
+    CMD_DTM2  = 0x13,        // Display Start transmission 2 
+    CMD_TSC   = 0x40,        // Temperature Sensor Calibration
+    CMD_CDI   = 0x50,        // Vcom and data interval setting 
+    CMD_PTL   = 0x90,        // Partial Window
+    CMD_PTIN  = 0x91,        // Partial In
+    CMD_PTOUT = 0x92,        // Partial Out
+    CMD_CCSET = 0xE0,        // Cascade Setting 
+    CMD_TSSET = 0xE5,        // Force Temperauture
+} UC8176_CMD;
+
 // Display resolution
 #define EPD_4IN2_WIDTH       400
 #define EPD_4IN2_HEIGHT      300
 
 static void EPD_4IN2_PowerOn(void)
 {
-    EPD_WriteCommand(0x04);
-	EPD_WaitBusy(LOW, 100);
+    EPD_WriteCommand(CMD_PON);
+    EPD_WaitBusy(LOW, 100);
 }
 
 static void EPD_4IN2_PowerOff(void)
 {
-    EPD_WriteCommand(0x02);
-	EPD_WaitBusy(LOW, 100);
+    EPD_WriteCommand(CMD_POF);
+    EPD_WaitBusy(LOW, 100);
 }
 
 // Read temperature from driver chip
 int8_t EPD_4IN2_Read_Temp(void)
 {
-    EPD_WriteCommand_SW(0x40); // TSC
+    EPD_WriteCommand_SW(CMD_TSC);
     return (int8_t) EPD_ReadByte_SW();
 }
 
 // Force temperature (will trigger OTP LUT switch)
 void EPD_4IN2_Force_Temp(int8_t value)
 {
-    EPD_WriteCommand_SW(0xE0); // CCSET
+    EPD_WriteCommand_SW(CMD_CCSET);
     EPD_WriteByte_SW(0x02);
-    EPD_WriteCommand_SW(0xE5); // TSSET
+    EPD_WriteCommand_SW(CMD_TSSET);
     EPD_WriteByte_SW(value);
 }
 
 /******************************************************************************
-function :	Turn On Display
+function :  Turn On Display
 parameter:
 ******************************************************************************/
 void EPD_4IN2_Refresh(void)
@@ -71,7 +89,7 @@ void EPD_4IN2_Refresh(void)
     NRF_LOG_DEBUG("[EPD]: refresh begin\n");
     EPD_4IN2_PowerOn();
     NRF_LOG_DEBUG("[EPD]: temperature: %d\n", EPD_4IN2_Read_Temp());
-    EPD_WriteCommand(0x12);
+    EPD_WriteCommand(CMD_DRF);
     delay(100);
     EPD_WaitBusy(LOW, 20000);
     EPD_4IN2_PowerOff();
@@ -79,30 +97,30 @@ void EPD_4IN2_Refresh(void)
 }
 
 /******************************************************************************
-function :	Initialize the e-Paper register
+function :  Initialize the e-Paper register
 parameter:
 ******************************************************************************/
 void EPD_4IN2_Init(void)
 {
-	EPD_Reset(HIGH, 10);
+    EPD_Reset(HIGH, 10);
 
-	EPD_WriteCommand(0x00);			// panel setting
-	EPD_WriteByte(0x1f);		    // 400x300 B/W mode, LUT from OTP
+    EPD_WriteCommand(CMD_PSR);      // panel setting
+    EPD_WriteByte(0x1f);            // 400x300 B/W mode, LUT from OTP
 
-	EPD_WriteCommand(0x50);         // VCOM AND DATA INTERVAL SETTING
-	EPD_WriteByte(0x97);            // LUTB=0 LUTW=1 interval=10
+    EPD_WriteCommand(CMD_CDI);       // VCOM AND DATA INTERVAL SETTING
+    EPD_WriteByte(0x97);            // LUTB=0 LUTW=1 interval=10
 }
 
 void EPD_4IN2B_V2_Init(void)
 {
     EPD_Reset(HIGH, 200);
 
-    EPD_WriteCommand(0x00);
-    EPD_WriteByte(0x0f);		    // 400x300 B/W/R mode, LUT from OTP
+    EPD_WriteCommand(CMD_PSR);
+    EPD_WriteByte(0x0f);            // 400x300 B/W/R mode, LUT from OTP
 }
 
 /******************************************************************************
-function :	Clear screen
+function :  Clear screen
 parameter:
 ******************************************************************************/
 void EPD_4IN2_Clear(void)
@@ -111,14 +129,14 @@ void EPD_4IN2_Clear(void)
     Width = (EPD_4IN2_WIDTH % 8 == 0)? (EPD_4IN2_WIDTH / 8 ): (EPD_4IN2_WIDTH / 8 + 1);
     Height = EPD_4IN2_HEIGHT;
 
-    EPD_WriteCommand(0x10);
+    EPD_WriteCommand(CMD_DTM1);
     for (uint16_t j = 0; j < Height; j++) {
         for (uint16_t i = 0; i < Width; i++) {
             EPD_WriteByte(0xFF);
         }
     }
 
-    EPD_WriteCommand(0x13);
+    EPD_WriteCommand(CMD_DTM2);
     for (uint16_t j = 0; j < Height; j++) {
         for (uint16_t i = 0; i < Width; i++) {
             EPD_WriteByte(0xFF);
@@ -134,7 +152,7 @@ static void _setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
     uint16_t ye = y + h - 1;
     x &= 0xFFF8; // byte boundary
     xe |= 0x0007; // byte boundary
-    EPD_WriteCommand(0x90); // partial window
+    EPD_WriteCommand(CMD_PTL); // partial window
     EPD_WriteByte(x / 256);
     EPD_WriteByte(x % 256);
     EPD_WriteByte(xe / 256);
@@ -152,15 +170,15 @@ void EPD_4IN2_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y
     x -= x % 8; // byte boundary
     w = wb * 8; // byte boundary
     if (x + w > EPD_4IN2_WIDTH || y + h > EPD_4IN2_HEIGHT) return;
-    EPD_WriteCommand(0x91); // partial in
+    EPD_WriteCommand(CMD_PTIN); // partial in
     _setPartialRamArea(x, y, w, h);
-    EPD_WriteCommand(0x13);
+    EPD_WriteCommand(CMD_DTM2);
     for (uint16_t i = 0; i < h; i++) {
         for (uint16_t j = 0; j < w / 8; j++) {
             EPD_WriteByte(black[j + i * wb]);
         }
     }
-    EPD_WriteCommand(0x92); // partial out
+    EPD_WriteCommand(CMD_PTOUT); // partial out
 }
 
 void EPD_4IN2B_V2_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
@@ -169,43 +187,43 @@ void EPD_4IN2B_V2_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16
     x -= x % 8; // byte boundary
     w = wb * 8; // byte boundary
     if (x + w > EPD_4IN2_WIDTH || y + h > EPD_4IN2_HEIGHT) return;
-    EPD_WriteCommand(0x91); // partial in
+    EPD_WriteCommand(CMD_PTIN); // partial in
     _setPartialRamArea(x, y, w, h);
-    EPD_WriteCommand(0x10);
+    EPD_WriteCommand(CMD_DTM1);
     for (uint16_t i = 0; i < h; i++) {
         for (uint16_t j = 0; j < w / 8; j++) {
             EPD_WriteByte(black ? black[j + i * wb] : 0xFF);
         }
     }
-    EPD_WriteCommand(0x13);
+    EPD_WriteCommand(CMD_DTM2);
     for (uint16_t i = 0; i < h; i++) {
         for (uint16_t j = 0; j < w / 8; j++) {
             EPD_WriteByte(color ? color[j + i * wb] : 0xFF);
         }
     }
-    EPD_WriteCommand(0x92); // partial out
+    EPD_WriteCommand(CMD_PTOUT); // partial out
 }
 
 /******************************************************************************
-function :	Enter sleep mode
+function :  Enter sleep mode
 parameter:
 ******************************************************************************/
 void EPD_4IN2_Sleep(void)
 {
-	EPD_4IN2_PowerOff();
+    EPD_4IN2_PowerOff();
 
-	EPD_WriteCommand(0x07);
-	EPD_WriteByte(0XA5);
+    EPD_WriteCommand(CMD_DSLP);
+    EPD_WriteByte(0XA5);
 }
 
 const epd_driver_t epd_driver_4in2 = {
     .id = EPD_DRIVER_4IN2,
-	.width = EPD_4IN2_WIDTH,
-	.height = EPD_4IN2_HEIGHT,
+    .width = EPD_4IN2_WIDTH,
+    .height = EPD_4IN2_HEIGHT,
     .init = EPD_4IN2_Init,
     .clear = EPD_4IN2_Clear,
     .send_command = EPD_WriteCommand,
-	.send_byte = EPD_WriteByte,
+    .send_byte = EPD_WriteByte,
     .send_data = EPD_WriteData,
     .write_image = EPD_4IN2_Write_Image,
     .refresh = EPD_4IN2_Refresh,
@@ -216,12 +234,12 @@ const epd_driver_t epd_driver_4in2 = {
 
 const epd_driver_t epd_driver_4in2bv2 = {
     .id = EPD_DRIVER_4IN2B_V2,
-	.width = EPD_4IN2_WIDTH,
-	.height = EPD_4IN2_HEIGHT,
+    .width = EPD_4IN2_WIDTH,
+    .height = EPD_4IN2_HEIGHT,
     .init = EPD_4IN2B_V2_Init,
     .clear = EPD_4IN2_Clear,
     .send_command = EPD_WriteCommand,
-	.send_byte = EPD_WriteByte,
+    .send_byte = EPD_WriteByte,
     .send_data = EPD_WriteData,
     .write_image = EPD_4IN2B_V2_Write_Image,
     .refresh = EPD_4IN2_Refresh,
