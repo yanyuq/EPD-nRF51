@@ -1,6 +1,5 @@
 ﻿#include "Adafruit_GFX.h"
 #include "fonts.h"
-#include "EPD_driver.h"
 #include "Lunar.h"
 #include "Calendar.h"
 #include "nrf_log.h"
@@ -73,11 +72,10 @@ static void DrawMonthDay(Adafruit_GFX *gfx, int16_t x, int16_t y, tm_t *tm, stru
     }
 }
 
-void DrawCalendar(uint32_t timestamp)
+void DrawCalendar(epd_driver_t *driver, uint32_t timestamp)
 {
     tm_t tm = {0};
     struct Lunar_Date Lunar;
-    epd_driver_t *driver = epd_driver_get();
 
     transformTime(timestamp, &tm);
 
@@ -87,10 +85,10 @@ void DrawCalendar(uint32_t timestamp)
 
     Adafruit_GFX gfx;
 
-    if (driver->id == EPD_DRIVER_4IN2B_V2)
-      GFX_begin_3c(&gfx, driver->width, driver->height, PAGE_HEIGHT);
+    if (EPD_BWR_MODE)
+      GFX_begin_3c(&gfx, EPD_WIDTH, EPD_HEIGHT, PAGE_HEIGHT);
     else
-      GFX_begin(&gfx, driver->width, driver->height, PAGE_HEIGHT);
+      GFX_begin(&gfx, EPD_WIDTH, EPD_HEIGHT, PAGE_HEIGHT);
 
     GFX_firstPage(&gfx);
     do {

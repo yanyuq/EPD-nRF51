@@ -36,7 +36,6 @@
 #include "nrf_drv_gpiote.h"
 #include "nrf_pwr_mgmt.h"
 #include "EPD_service.h"
-#include "Calendar.h"
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -74,7 +73,7 @@
 #define NEXT_CONN_PARAMS_UPDATE_DELAY    TIMER_TICKS(30000)                             /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
 #define MAX_CONN_PARAMS_UPDATE_COUNT     3                                              /**< Number of attempts before giving up the connection parameter negotiation. */
 
-#define SCHED_MAX_EVENT_DATA_SIZE       0                                               /**< Maximum size of scheduler events. */
+#define SCHED_MAX_EVENT_DATA_SIZE       EPD_CALENDAR_SCHD_EVENT_DATA_SIZE               /**< Maximum size of scheduler events. */
 #define SCHED_QUEUE_SIZE                10                                              /**< Maximum number of events in the scheduler queue. */
 
 #define CLOCK_TIMER_INTERVAL             TIMER_TICKS(1000)                              /**< Clock timer interval (ticks). */
@@ -85,48 +84,13 @@
 NRF_BLE_GATT_DEF(m_gatt);                                                               /**< GATT module instance. */
 BLE_ADVERTISING_DEF(m_advertising);                                                     /**< Advertising module instance. */
 #endif
-static uint16_t                          m_driver_refs = 0;
 static uint16_t                          m_conn_handle = BLE_CONN_HANDLE_INVALID;       /**< Handle of the current connection. */
 static ble_uuid_t                        m_adv_uuids[] = {{BLE_UUID_EPD_SERVICE, \
                                                            EPD_SERVICE_UUID_TYPE}};     /**< Universally unique service identifier. */
 
 BLE_EPD_DEF(m_epd);                                                                     /**< Structure to identify the EPD Service. */
 static uint32_t                          m_timestamp = 1735689600;                      /**< Current timestamp. */
-static bool                              m_calendar_mode = false;                       /**< Whether we are in calendar mode */
-
 APP_TIMER_DEF(m_clock_timer_id);                                                        /**< Clock timer. */
-
-static void epd_driver_init()
-{
-    if (m_driver_refs == 0) {
-        NRF_LOG_DEBUG("[EPD]: driver init\n");
-        DEV_Module_Init();
-    }
-    m_driver_refs++;
-}
-
-static void epd_driver_exit()
-{
-    m_driver_refs--;
-    if (m_driver_refs == 0) {
-        NRF_LOG_DEBUG("[EPD]: driver exit\n");
-        DEV_Module_Exit();
-    }
-}
-
-static void calendar_update(void * p_event_data, uint16_t event_size)
-{
-    m_calendar_mode = true;
-    epd_driver_init();
-    m_epd.driver->init();
-    DrawCalendar(m_timestamp);
-    epd_driver_exit();
-}
-
-static uint32_t calendar_update_schedule(void)
-{
-    return app_sched_event_put(NULL, 0, calendar_update);
-}
 
 /**@brief Callback function for asserts in the SoftDevice.
  *
@@ -150,9 +114,7 @@ static void clock_timer_timeout_handler(void * p_context)
 
     m_timestamp++;
 
-    // Update calendar on 00:00:00
-    if (m_calendar_mode && m_timestamp % 86400 == 0)
-        calendar_update_schedule();
+    ble_epd_on_timer(&m_epd, m_timestamp, false);
 }
 
 /**@brief Function for the Event Scheduler initialization.
@@ -217,13 +179,8 @@ bool epd_cmd_callback(uint8_t cmd, uint8_t *data, uint16_t len)
             m_timestamp = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
             m_timestamp += (len > 4 ? (int8_t)data[4] : 8) * 60 * 60; // timezone
             app_timer_start(m_clock_timer_id, CLOCK_TIMER_INTERVAL, NULL);
-            calendar_update_schedule();
+            ble_epd_on_timer(&m_epd, m_timestamp, true);
             return true;
-
-        case EPD_CMD_CLEAR:
-        case EPD_CMD_DISPLAY:
-            m_calendar_mode = false;
-            break;
 
         case EPD_CMD_SYS_SLEEP:
             sleep_mode_enter();
@@ -385,7 +342,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
         case BLE_ADV_EVT_IDLE:
             NRF_LOG_INFO("advertising timeout\n");
             if (m_epd.config.wakeup_pin != 0xFF) {
-                if (m_calendar_mode)
+                if (m_epd.calendar_mode)
                     setup_wakeup_pin(m_epd.config.wakeup_pin);
                 else
                     sleep_mode_enter();
@@ -409,13 +366,11 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
         case BLE_GAP_EVT_CONNECTED:
             NRF_LOG_INFO("CONNECTED\n");
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
-            epd_driver_init();
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
             NRF_LOG_INFO("DISCONNECTED\n");
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
-            epd_driver_exit();
 #if !defined(S112)
             advertising_start();
 #endif
@@ -642,18 +597,17 @@ static void advertising_init(void)
 #endif
 }
 
-#if NRF_MODULE_ENABLED(NRF_LOG)
-static uint32_t timestamp_func(void)
+// return current timestamp
+uint32_t timestamp(void)
 {
     return m_timestamp;
 }
-#endif
 
 /**@brief Function for initializing the nrf log module.
  */
 static void log_init(void)
 {
-    APP_ERROR_CHECK(NRF_LOG_INIT(timestamp_func));
+    APP_ERROR_CHECK(NRF_LOG_INIT(timestamp));
 #if defined(S112)
     NRF_LOG_DEFAULT_BACKENDS_INIT();
 #endif

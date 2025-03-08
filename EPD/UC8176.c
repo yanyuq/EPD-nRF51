@@ -31,48 +31,52 @@
 #include "nrf_log.h"
 
 // commands used by this driver
-enum {
-    CMD_PSR   = 0x00,        // Panel Setting
-    CMD_POF   = 0x02,        // Power OFF
-    CMD_PON   = 0x04,        // Power ON
-    CMD_DSLP  = 0x07,        // Deep sleep
-    CMD_DTM1  = 0x10,        // Display Start Transmission 1
-    CMD_DRF   = 0x12,        // Display Refresh
-    CMD_DTM2  = 0x13,        // Display Start transmission 2 
-    CMD_TSC   = 0x40,        // Temperature Sensor Calibration
-    CMD_CDI   = 0x50,        // Vcom and data interval setting 
-    CMD_PTL   = 0x90,        // Partial Window
-    CMD_PTIN  = 0x91,        // Partial In
-    CMD_PTOUT = 0x92,        // Partial Out
-    CMD_CCSET = 0xE0,        // Cascade Setting 
-    CMD_TSSET = 0xE5,        // Force Temperauture
-} UC8176_CMD;
+#define CMD_PSR     0x00        // Panel Setting
+#define CMD_POF     0x02        // Power OFF
+#define CMD_PON     0x04        // Power ON
+#define CMD_DSLP    0x07        // Deep sleep
+#define CMD_DTM1    0x10        // Display Start Transmission 1
+#define CMD_DRF     0x12        // Display Refresh
+#define CMD_DTM2    0x13        // Display Start transmission 2 
+#define CMD_TSC     0x40        // Temperature Sensor Calibration
+#define CMD_CDI     0x50        // Vcom and data interval setting 
+#define CMD_PTL     0x90        // Partial Window
+#define CMD_PTIN    0x91        // Partial In
+#define CMD_PTOUT   0x92        // Partial Out
+#define CMD_CCSET   0xE0        // Cascade Setting 
+#define CMD_TSSET   0xE5        // Force Temperauture
 
-// Display resolution
-#define EPD_4IN2_WIDTH       400
-#define EPD_4IN2_HEIGHT      300
+// PSR registers
+#define PSR_RES1      BIT(7)
+#define PSR_RES0      BIT(6)
+#define PSR_REG       BIT(5)
+#define PSR_BWR       BIT(4)
+#define PSR_UD        BIT(3)
+#define PSR_SHL       BIT(2)
+#define PSR_SHD       BIT(1)
+#define PSR_RST       BIT(0)
 
-static void EPD_4IN2_PowerOn(void)
+static void UC8176_PowerOn(void)
 {
     EPD_WriteCommand(CMD_PON);
     EPD_WaitBusy(LOW, 100);
 }
 
-static void EPD_4IN2_PowerOff(void)
+static void UC8176_PowerOff(void)
 {
     EPD_WriteCommand(CMD_POF);
     EPD_WaitBusy(LOW, 100);
 }
 
 // Read temperature from driver chip
-int8_t EPD_4IN2_Read_Temp(void)
+int8_t UC8176_Read_Temp(void)
 {
     EPD_WriteCommand_SW(CMD_TSC);
     return (int8_t) EPD_ReadByte_SW();
 }
 
 // Force temperature (will trigger OTP LUT switch)
-void EPD_4IN2_Force_Temp(int8_t value)
+void UC8176_Force_Temp(int8_t value)
 {
     EPD_WriteCommand_SW(CMD_CCSET);
     EPD_WriteByte_SW(0x02);
@@ -84,15 +88,15 @@ void EPD_4IN2_Force_Temp(int8_t value)
 function :  Turn On Display
 parameter:
 ******************************************************************************/
-void EPD_4IN2_Refresh(void)
+void UC8176_Refresh(void)
 {
     NRF_LOG_DEBUG("[EPD]: refresh begin\n");
-    EPD_4IN2_PowerOn();
-    NRF_LOG_DEBUG("[EPD]: temperature: %d\n", EPD_4IN2_Read_Temp());
+    UC8176_PowerOn();
+    NRF_LOG_DEBUG("[EPD]: temperature: %d\n", UC8176_Read_Temp());
     EPD_WriteCommand(CMD_DRF);
     delay(100);
-    EPD_WaitBusy(LOW, 20000);
-    EPD_4IN2_PowerOff();
+    EPD_WaitBusy(LOW, 30000);
+    UC8176_PowerOff();
     NRF_LOG_DEBUG("[EPD]: refresh end\n");
 }
 
@@ -100,34 +104,53 @@ void EPD_4IN2_Refresh(void)
 function :  Initialize the e-Paper register
 parameter:
 ******************************************************************************/
-void EPD_4IN2_Init(void)
+void UC8176_Init(epd_res_t res, bool bwr)
 {
+    EPD_BWR_MODE = bwr;
     EPD_Reset(HIGH, 10);
 
-    EPD_WriteCommand(CMD_PSR);      // panel setting
-    EPD_WriteByte(0x1f);            // 400x300 B/W mode, LUT from OTP
-
-    EPD_WriteCommand(CMD_CDI);       // VCOM AND DATA INTERVAL SETTING
-    EPD_WriteByte(0x97);            // LUTB=0 LUTW=1 interval=10
-}
-
-void EPD_4IN2B_V2_Init(void)
-{
-    EPD_Reset(HIGH, 200);
-
+    uint8_t psr = PSR_UD | PSR_SHL | PSR_SHD | PSR_RST;
+    if (!EPD_BWR_MODE) psr |= PSR_BWR;
+    switch (res) {
+        case EPD_RES_320x300:
+            EPD_WIDTH = 320;
+            EPD_HEIGHT = 300;
+            psr |= PSR_RES0;
+            break;
+        case EPD_RES_320x240:
+            EPD_WIDTH = 320;
+            EPD_HEIGHT = 240;
+            psr |= PSR_RES1;
+            break;
+        case EPD_RES_200x300:
+            EPD_WIDTH = 200;
+            EPD_HEIGHT = 300;
+            psr |= PSR_RES1 | PSR_RES0;
+            break;
+        case EPD_RES_400x300:
+        default:
+            EPD_WIDTH = 400;
+            EPD_HEIGHT = 300;
+            break;
+    }
+    NRF_LOG_DEBUG("[EPD]: PSR=%02x\n", psr);
     EPD_WriteCommand(CMD_PSR);
-    EPD_WriteByte(0x0f);            // 400x300 B/W/R mode, LUT from OTP
+    EPD_WriteByte(psr);
+
+    if (!EPD_BWR_MODE) {
+        EPD_WriteCommand(CMD_CDI);
+        EPD_WriteByte(0x97);
+    }
 }
 
 /******************************************************************************
 function :  Clear screen
 parameter:
 ******************************************************************************/
-void EPD_4IN2_Clear(void)
+void UC8176_Clear(void)
 {
-    uint16_t Width, Height;
-    Width = (EPD_4IN2_WIDTH % 8 == 0)? (EPD_4IN2_WIDTH / 8 ): (EPD_4IN2_WIDTH / 8 + 1);
-    Height = EPD_4IN2_HEIGHT;
+    uint16_t Width = (EPD_WIDTH % 8 == 0)? (EPD_WIDTH / 8 ): (EPD_WIDTH / 8 + 1);
+    uint16_t Height = EPD_HEIGHT;
 
     EPD_WriteCommand(CMD_DTM1);
     for (uint16_t j = 0; j < Height; j++) {
@@ -143,7 +166,7 @@ void EPD_4IN2_Clear(void)
         }
     }
 
-    EPD_4IN2_Refresh();
+    UC8176_Refresh();
 }
 
 static void _setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
@@ -164,41 +187,29 @@ static void _setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
     EPD_WriteByte(0x01);
 }
 
-void EPD_4IN2_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+void UC8176_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
     uint16_t wb = (w + 7) / 8; // width bytes, bitmaps are padded
     x -= x % 8; // byte boundary
     w = wb * 8; // byte boundary
-    if (x + w > EPD_4IN2_WIDTH || y + h > EPD_4IN2_HEIGHT) return;
+    if (x + w > EPD_WIDTH || y + h > EPD_HEIGHT) return;
     EPD_WriteCommand(CMD_PTIN); // partial in
     _setPartialRamArea(x, y, w, h);
-    EPD_WriteCommand(CMD_DTM2);
-    for (uint16_t i = 0; i < h; i++) {
-        for (uint16_t j = 0; j < w / 8; j++) {
-            EPD_WriteByte(black[j + i * wb]);
-        }
-    }
-    EPD_WriteCommand(CMD_PTOUT); // partial out
-}
-
-void EPD_4IN2B_V2_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
-{
-    uint16_t wb = (w + 7) / 8; // width bytes, bitmaps are padded
-    x -= x % 8; // byte boundary
-    w = wb * 8; // byte boundary
-    if (x + w > EPD_4IN2_WIDTH || y + h > EPD_4IN2_HEIGHT) return;
-    EPD_WriteCommand(CMD_PTIN); // partial in
-    _setPartialRamArea(x, y, w, h);
-    EPD_WriteCommand(CMD_DTM1);
-    for (uint16_t i = 0; i < h; i++) {
-        for (uint16_t j = 0; j < w / 8; j++) {
-            EPD_WriteByte(black ? black[j + i * wb] : 0xFF);
+    if (EPD_BWR_MODE) {
+        EPD_WriteCommand(CMD_DTM1);
+        for (uint16_t i = 0; i < h; i++) {
+            for (uint16_t j = 0; j < w / 8; j++) {
+                EPD_WriteByte(black ? black[j + i * wb] : 0xFF);
+            }
         }
     }
     EPD_WriteCommand(CMD_DTM2);
     for (uint16_t i = 0; i < h; i++) {
         for (uint16_t j = 0; j < w / 8; j++) {
-            EPD_WriteByte(color ? color[j + i * wb] : 0xFF);
+            if (EPD_BWR_MODE)
+                EPD_WriteByte(color ? color[j + i * wb] : 0xFF);
+            else
+                EPD_WriteByte(black[j + i * wb]);
         }
     }
     EPD_WriteCommand(CMD_PTOUT); // partial out
@@ -208,42 +219,35 @@ void EPD_4IN2B_V2_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16
 function :  Enter sleep mode
 parameter:
 ******************************************************************************/
-void EPD_4IN2_Sleep(void)
+void UC8176_Sleep(void)
 {
-    EPD_4IN2_PowerOff();
+    UC8176_PowerOff();
 
     EPD_WriteCommand(CMD_DSLP);
     EPD_WriteByte(0XA5);
 }
 
-const epd_driver_t epd_driver_4in2 = {
-    .id = EPD_DRIVER_4IN2,
-    .width = EPD_4IN2_WIDTH,
-    .height = EPD_4IN2_HEIGHT,
-    .init = EPD_4IN2_Init,
-    .clear = EPD_4IN2_Clear,
-    .send_command = EPD_WriteCommand,
-    .send_byte = EPD_WriteByte,
-    .send_data = EPD_WriteData,
-    .write_image = EPD_4IN2_Write_Image,
-    .refresh = EPD_4IN2_Refresh,
-    .sleep = EPD_4IN2_Sleep,
-    .read_temp = EPD_4IN2_Read_Temp,
-    .force_temp = EPD_4IN2_Force_Temp,
+// Declare driver and models
+static epd_driver_t epd_drv_uc8176 = {
+    .init = UC8176_Init,
+    .clear = UC8176_Clear,
+    .write_image = UC8176_Write_Image,
+    .refresh = UC8176_Refresh,
+    .sleep = UC8176_Sleep,
+    .read_temp = UC8176_Read_Temp,
+    .force_temp = UC8176_Force_Temp,
 };
 
-const epd_driver_t epd_driver_4in2bv2 = {
-    .id = EPD_DRIVER_4IN2B_V2,
-    .width = EPD_4IN2_WIDTH,
-    .height = EPD_4IN2_HEIGHT,
-    .init = EPD_4IN2B_V2_Init,
-    .clear = EPD_4IN2_Clear,
-    .send_command = EPD_WriteCommand,
-    .send_byte = EPD_WriteByte,
-    .send_data = EPD_WriteData,
-    .write_image = EPD_4IN2B_V2_Write_Image,
-    .refresh = EPD_4IN2_Refresh,
-    .sleep = EPD_4IN2_Sleep,
-    .read_temp = EPD_4IN2_Read_Temp,
-    .force_temp = EPD_4IN2_Force_Temp,
+const epd_model_t epd_4in2 = {
+    .id = EPD_4IN2,
+    .drv = &epd_drv_uc8176,
+    .res = EPD_RES_400x300,
+    .bwr = false,
+};
+
+const epd_model_t epd_4in2bv2 = {
+    .id = EPD_4IN2B_V2,
+    .drv = &epd_drv_uc8176,
+    .res = EPD_RES_400x300,
+    .bwr = true,
 };

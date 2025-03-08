@@ -34,7 +34,7 @@ void epd_config_load(epd_config_t *cfg)
     fds_record_desc_t   record_desc;
     fds_find_token_t    ftok;
 
-    memset(cfg, 0xFF, sizeof(epd_config_t));
+    memset(cfg, EPD_CONFIG_EMPTY, sizeof(epd_config_t));
     memset(&ftok, 0x00, sizeof(fds_find_token_t));
 
     if (fds_record_find(CONFIG_FILE_ID, CONFIG_REC_KEY, &record_desc, &ftok) != NRF_SUCCESS) {
@@ -98,4 +98,13 @@ void epd_config_save(epd_config_t *cfg)
     if (ret != NRF_SUCCESS) {
         NRF_LOG_ERROR("epd_config_save: record write/update failed!\n");
     }
+}
+
+bool epd_config_empty(epd_config_t *cfg)
+{
+    for (uint8_t i = 0; i < EPD_CONFIG_SIZE; i++) {
+        if (((uint8_t *)cfg)[i] != EPD_CONFIG_EMPTY)
+            return false;
+    }
+    return true;
 }

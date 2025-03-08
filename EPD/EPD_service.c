@@ -15,12 +15,14 @@
 #include "ble_srv_common.h"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
+#include "app_scheduler.h"
 #include "EPD_service.h"
+#include "Calendar.h"
 #include "nrf_log.h"
 
 #if defined(S112)
-#define EPD_CFG_DEFAULT {0x14, 0x13, 0x06, 0x05, 0x04, 0x03, 0x02, 0x03, 0xFF, 0x12, 0x07} // 52811
-//#define EPD_CFG_DEFAULT {0x14, 0x13, 0x12, 0x11, 0x10, 0x0F, 0x0E, 0x03, 0xFF, 0x0D, 0x02} // 52810
+//#define EPD_CFG_DEFAULT {0x14, 0x13, 0x06, 0x05, 0x04, 0x03, 0x02, 0x03, 0xFF, 0x12, 0x07} // 52811
+#define EPD_CFG_DEFAULT {0x14, 0x13, 0x12, 0x11, 0x10, 0x0F, 0x0E, 0x03, 0xFF, 0x0D, 0x02} // 52810
 #else
 #define EPD_CFG_DEFAULT {0x05, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x01, 0x07}
 #endif
@@ -33,8 +35,40 @@
                                              0X8D, 0X91, 0X28, 0XD8, 0X22, 0X36, 0X75, 0X62}}
 #define BLE_UUID_EPD_CHARACTERISTIC        0x0002
 
-#define ARRAY_SIZE(arr)                    (sizeof(arr) / sizeof((arr)[0]))
-#define EPD_CONFIG_SIZE                    (sizeof(epd_config_t) / sizeof(uint8_t))
+extern uint32_t timestamp(void); // defined in main.c
+
+static uint16_t m_driver_refs = 0;
+
+static void epd_gpio_init()
+{
+    if (m_driver_refs == 0) {
+        NRF_LOG_DEBUG("[EPD]: driver init\n");
+        EPD_GPIO_Init();
+    }
+    m_driver_refs++;
+}
+
+static void epd_gpio_uninit()
+{
+    m_driver_refs--;
+    if (m_driver_refs == 0) {
+        NRF_LOG_DEBUG("[EPD]: driver exit\n");
+        EPD_GPIO_Uninit();
+    }
+}
+
+static void calendar_update(void * p_event_data, uint16_t event_size)
+{
+    epd_calendar_update_event_t *event = (epd_calendar_update_event_t *)p_event_data;
+    ble_epd_t *p_epd = event->p_epd;
+
+    p_epd->calendar_mode = true;
+
+    epd_gpio_init();
+    epd_driver_t *drv = epd_model_init((epd_model_id_t)p_epd->config.model_id);
+    DrawCalendar(drv, event->timestamp);
+    epd_gpio_uninit();
+}
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_CONNECTED event from the S110 SoftDevice.
  *
@@ -44,8 +78,8 @@
 static void on_connect(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 {
     p_epd->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+    epd_gpio_init();
 }
-
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_DISCONNECTED event from the S110 SoftDevice.
  *
@@ -56,6 +90,7 @@ static void on_disconnect(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 {
     UNUSED_PARAMETER(p_ble_evt);
     p_epd->conn_handle = BLE_CONN_HANDLE_INVALID;
+    epd_gpio_uninit();
 }
 
 static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t length)
@@ -73,7 +108,7 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
       case EPD_CMD_SET_PINS:
           if (length < 8) return;
 
-          DEV_Module_Exit();
+          EPD_GPIO_Uninit();
 
           EPD_MOSI_PIN = p_epd->config.mosi_pin = p_data[1];
           EPD_SCLK_PIN = p_epd->config.sclk_pin = p_data[2];
@@ -86,38 +121,34 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
             EPD_EN_PIN = p_epd->config.en_pin = p_data[8];
           epd_config_save(&p_epd->config);
 
-          DEV_Module_Init();
+          EPD_GPIO_Init();
           break;
 
-      case EPD_CMD_INIT:
-          if (length > 1)
-          {
-              if (epd_driver_set(p_data[1]))
-              {
-                  p_epd->driver = epd_driver_get();
-                  p_epd->config.driver_id = p_epd->driver->id;
-                  epd_config_save(&p_epd->config);
-              }
+      case EPD_CMD_INIT: {
+          uint8_t id = length > 1 ? p_data[1] : p_epd->config.model_id;
+          if (id != p_epd->config.model_id) {
+              p_epd->config.model_id = id;
+              epd_config_save(&p_epd->config);
           }
-
-          NRF_LOG_INFO("[EPD]: DRIVER=%d\n", p_epd->driver->id);
-          p_epd->driver->init();
-          break;
+          p_epd->driver = epd_model_init((epd_model_id_t)id);
+        } break;
 
       case EPD_CMD_CLEAR:
+          p_epd->calendar_mode = false;
           p_epd->driver->clear();
           break;
 
       case EPD_CMD_SEND_COMMAND:
           if (length < 2) return;
-          p_epd->driver->send_command(p_data[1]);
+          EPD_WriteCommand(p_data[1]);
           break;
 
       case EPD_CMD_SEND_DATA:
-          p_epd->driver->send_data(&p_data[1], length - 1);
+          EPD_WriteData(&p_data[1], length - 1);
           break;
 
       case EPD_CMD_DISPLAY:
+          p_epd->calendar_mode = false;
           p_epd->driver->refresh();
           break;
 
@@ -253,21 +284,11 @@ static uint32_t epd_service_init(ble_epd_t * p_epd)
 
 static void ble_epd_config_load(ble_epd_t * p_epd)
 {
-    bool is_empty_config = true;
-
-    for (uint8_t i = 0; i < EPD_CONFIG_SIZE; i++)
-    {
-        if (((uint8_t *)&p_epd->config)[i] != 0xFF)
-        {
-            is_empty_config = false;
-        }
-    }
-    NRF_LOG_DEBUG("is_empty_config: %d\n", is_empty_config);
     // write default config
-    if (is_empty_config)
+    if (epd_config_empty(&p_epd->config))
     {
         uint8_t cfg[] = EPD_CFG_DEFAULT;
-        memcpy(&p_epd->config, cfg, ARRAY_SIZE(cfg));
+        memcpy(&p_epd->config, cfg, sizeof(cfg));
         epd_config_save(&p_epd->config);
     }
 
@@ -282,11 +303,8 @@ static void ble_epd_config_load(ble_epd_t * p_epd)
     EPD_EN_PIN = p_epd->config.en_pin;
     EPD_LED_PIN = p_epd->config.led_pin;
 
-    epd_driver_set(p_epd->config.driver_id);
-	p_epd->driver = epd_driver_get();
-
     // blink LED on start
-    if (EPD_LED_PIN != 0xFF)
+    if (EPD_LED_PIN != EPD_CONFIG_EMPTY)
     {
         pinMode(EPD_LED_PIN, OUTPUT);
         EPD_LED_ON();
@@ -351,4 +369,13 @@ uint32_t ble_epd_string_send(ble_epd_t * p_epd, uint8_t * p_string, uint16_t len
     hvx_params.type   = BLE_GATT_HVX_NOTIFICATION;
 
     return sd_ble_gatts_hvx(p_epd->conn_handle, &hvx_params);
+}
+
+void ble_epd_on_timer(ble_epd_t * p_epd, uint32_t timestamp, bool force_update)
+{
+    // Update calendar on 00:00:00
+    if (force_update || (p_epd->calendar_mode && timestamp % 86400 == 0)) {
+        epd_calendar_update_event_t event = { p_epd, timestamp };
+        app_sched_event_put(&event, sizeof(epd_calendar_update_event_t), calendar_update);
+    }
 }

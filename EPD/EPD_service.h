@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef EPD_BLE_H__
-#define EPD_BLE_H__
+#ifndef EPD_SERVICE_H__
+#define EPD_SERVICE_H__
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -85,7 +85,16 @@ typedef struct
     epd_driver_t             *driver;                 /**< current EPD driver */
     epd_config_t             config;                  /**< EPD config */
     epd_callback_t           epd_cmd_cb;              /**< EPD callback */
+    bool                     calendar_mode;           /**< Calendar mode flag */
 } ble_epd_t;
+
+typedef struct
+{
+    ble_epd_t *p_epd;
+    uint32_t timestamp;
+} epd_calendar_update_event_t;
+
+#define EPD_CALENDAR_SCHD_EVENT_DATA_SIZE sizeof(epd_calendar_update_event_t)
 
 /**@brief Function for preparing sleep mode.
  *
@@ -129,6 +138,8 @@ void ble_epd_on_ble_evt(ble_epd_t * p_epd, ble_evt_t * p_ble_evt);
  * @retval NRF_SUCCESS If the string was sent successfully. Otherwise, an error code is returned.
  */
 uint32_t ble_epd_string_send(ble_epd_t * p_epd, uint8_t * p_string, uint16_t length);
+
+void ble_epd_on_timer(ble_epd_t * p_epd, uint32_t timestamp, bool force_update);
 
 #endif // EPD_BLE_H__
 
