@@ -224,7 +224,7 @@ void UC8176_Sleep(void)
     UC8176_PowerOff();
 
     EPD_WriteCommand(CMD_DSLP);
-    EPD_WriteByte(0XA5);
+    EPD_WriteByte(0xA5);
 }
 
 // Declare driver and models
