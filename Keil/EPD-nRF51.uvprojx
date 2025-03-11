@@ -419,6 +419,11 @@
               <FileType>1</FileType>
               <FilePath>..\EPD\UC8176.c</FilePath>
             </File>
+            <File>
+              <FileName>SSD1619.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\EPD\SSD1619.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1020,6 +1025,11 @@
               <FileName>UC8176.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\EPD\UC8176.c</FilePath>
+            </File>
+            <File>
+              <FileName>SSD1619.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\EPD\SSD1619.c</FilePath>
             </File>
           </Files>
         </Group>

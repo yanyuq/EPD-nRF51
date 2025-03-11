@@ -296,12 +296,14 @@ void EPD_LED_TOGGLE(void)
 }
 
 // EPD models
-extern epd_model_t epd_4in2;
-extern epd_model_t epd_4in2bv2;
+extern epd_model_t epd_uc8176_420_bw;
+extern epd_model_t epd_uc8176_420_bwr;
+extern epd_model_t epd_ssd1619_420_bwr;
 
 static epd_model_t *epd_models[] = {
-    &epd_4in2,
-    &epd_4in2bv2,
+    &epd_uc8176_420_bw,
+    &epd_uc8176_420_bwr,
+    &epd_ssd1619_420_bwr,
 };
 
 static epd_model_t *epd_model_get(epd_model_id_t id)

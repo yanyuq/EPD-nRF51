@@ -147,8 +147,8 @@ function getImageData(canvas, driver, mode) {
     return canvas2gray(canvas);
   } else {
     let data = canvas2bytes(canvas, 'bw');
-    if (driver === '03' && mode.startsWith('bwr')) {
-      data.push(...canvas2bytes(canvas, 'red'));
+    if (mode.startsWith('bwr')) {
+      data.push(...canvas2bytes(canvas, 'red', driver === '02'));
     }
     return data;
   }
@@ -167,9 +167,9 @@ async function sendimg() {
     return;
   }
 
-  if (imgArray.length == ramSize * 2) {
-    await epdWrite(0x10, imgArray.slice(0, ramSize));
-    await epdWrite(0x13, imgArray.slice(ramSize));
+  if (imgArray.length === ramSize * 2) {
+    await epdWrite(driver === "02" ? 0x24 : 0x10, imgArray.slice(0, ramSize));
+    await epdWrite(driver === "02" ? 0x26 : 0x13, imgArray.slice(ramSize));
   } else {
     await epdWrite(driver === "03" ? 0x10 : 0x13, imgArray);
   }

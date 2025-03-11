@@ -78,10 +78,10 @@ int8_t UC8176_Read_Temp(void)
 // Force temperature (will trigger OTP LUT switch)
 void UC8176_Force_Temp(int8_t value)
 {
-    EPD_WriteCommand_SW(CMD_CCSET);
-    EPD_WriteByte_SW(0x02);
-    EPD_WriteCommand_SW(CMD_TSSET);
-    EPD_WriteByte_SW(value);
+    EPD_WriteCommand(CMD_CCSET);
+    EPD_WriteByte(0x02);
+    EPD_WriteCommand(CMD_TSSET);
+    EPD_WriteByte(value);
 }
 
 /******************************************************************************
@@ -238,15 +238,15 @@ static epd_driver_t epd_drv_uc8176 = {
     .force_temp = UC8176_Force_Temp,
 };
 
-const epd_model_t epd_4in2 = {
-    .id = EPD_4IN2,
+const epd_model_t epd_uc8176_420_bw = {
+    .id = EPD_UC8176_420_BW,
     .drv = &epd_drv_uc8176,
     .res = EPD_RES_400x300,
     .bwr = false,
 };
 
-const epd_model_t epd_4in2bv2 = {
-    .id = EPD_4IN2B_V2,
+const epd_model_t epd_uc8176_420_bwr = {
+    .id = EPD_UC8176_420_BWR,
     .drv = &epd_drv_uc8176,
     .res = EPD_RES_400x300,
     .bwr = true,

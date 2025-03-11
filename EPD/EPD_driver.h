@@ -47,9 +47,9 @@ typedef struct
 
 typedef enum
 {
-    EPD_4IN2 = 1,
-    EPD_4IN2_V2 = 2,
-    EPD_4IN2B_V2 = 3,
+    EPD_UC8176_420_BW = 1,
+    EPD_UC8176_420_BWR = 3,
+    EPD_SSD1619_420_BWR = 2,
 } epd_model_id_t;
 
 typedef struct
