@@ -134,7 +134,7 @@ static void SSD1619_Refresh(void)
 
 void SSD1619_Clear(void)
 {
-    uint16_t Width = (EPD_WIDTH % 8 == 0)? (EPD_WIDTH / 8 ): (EPD_WIDTH / 8 + 1);
+    uint16_t Width = (EPD_WIDTH + 7) / 8;
     uint16_t Height = EPD_HEIGHT;
 
     EPD_WriteCommand(CMD_WRITE_RAM1);

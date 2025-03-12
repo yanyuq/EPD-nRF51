@@ -143,29 +143,34 @@ void UC8176_Init(epd_res_t res, bool bwr)
     }
 }
 
+static void UC8176_Write_RAM(uint8_t cmd, uint8_t value)
+{
+    uint16_t Width = (EPD_WIDTH + 7) / 8;
+    uint16_t Height = EPD_HEIGHT;
+
+    EPD_WriteCommand(cmd);
+    for (uint16_t j = 0; j < Height; j++) {
+        for (uint16_t i = 0; i < Width; i++) {
+            EPD_WriteByte(value);
+        }
+    }
+}
+
 /******************************************************************************
 function :  Clear screen
 parameter:
 ******************************************************************************/
 void UC8176_Clear(void)
 {
-    uint16_t Width = (EPD_WIDTH % 8 == 0)? (EPD_WIDTH / 8 ): (EPD_WIDTH / 8 + 1);
-    uint16_t Height = EPD_HEIGHT;
+    UC8176_Write_RAM(CMD_DTM1, 0xFF);
+    UC8176_Write_RAM(CMD_DTM2, 0xFF);
+    UC8176_Refresh();
+}
 
-    EPD_WriteCommand(CMD_DTM1);
-    for (uint16_t j = 0; j < Height; j++) {
-        for (uint16_t i = 0; i < Width; i++) {
-            EPD_WriteByte(0xFF);
-        }
-    }
-
-    EPD_WriteCommand(CMD_DTM2);
-    for (uint16_t j = 0; j < Height; j++) {
-        for (uint16_t i = 0; i < Width; i++) {
-            EPD_WriteByte(0xFF);
-        }
-    }
-
+void UC8276_Clear(void)
+{
+    UC8176_Write_RAM(CMD_DTM1, 0xFF);
+    UC8176_Write_RAM(CMD_DTM2, 0x00);
     UC8176_Refresh();
 }
 
@@ -187,7 +192,7 @@ static void _setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
     EPD_WriteByte(0x01);
 }
 
-void UC8176_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+void UC8176_Write_Paritial(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool invertColor)
 {
     uint16_t wb = (w + 7) / 8; // width bytes, bitmaps are padded
     x -= x % 8; // byte boundary
@@ -206,13 +211,25 @@ void UC8176_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, 
     EPD_WriteCommand(CMD_DTM2);
     for (uint16_t i = 0; i < h; i++) {
         for (uint16_t j = 0; j < w / 8; j++) {
-            if (EPD_BWR_MODE)
-                EPD_WriteByte(color ? color[j + i * wb] : 0xFF);
-            else
+            if (EPD_BWR_MODE) {
+                uint8_t data = color ? color[j + i * wb] : 0xFF;
+                EPD_WriteByte(invertColor ? ~data : data);
+            } else {
                 EPD_WriteByte(black[j + i * wb]);
+            }
         }
     }
     EPD_WriteCommand(CMD_PTOUT); // partial out
+}
+
+void UC8176_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+{
+    UC8176_Write_Paritial(black, color, x, y, w, h, false);
+}
+
+void UC8276_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+{
+    UC8176_Write_Paritial(black, color, x, y, w, h, true);
 }
 
 /******************************************************************************
@@ -238,6 +255,16 @@ static epd_driver_t epd_drv_uc8176 = {
     .force_temp = UC8176_Force_Temp,
 };
 
+static epd_driver_t epd_drv_uc8276 = {
+    .init = UC8176_Init,
+    .clear = UC8276_Clear,
+    .write_image = UC8276_Write_Image,
+    .refresh = UC8176_Refresh,
+    .sleep = UC8176_Sleep,
+    .read_temp = UC8176_Read_Temp,
+    .force_temp = UC8176_Force_Temp,
+};
+
 const epd_model_t epd_uc8176_420_bw = {
     .id = EPD_UC8176_420_BW,
     .drv = &epd_drv_uc8176,
@@ -248,6 +275,13 @@ const epd_model_t epd_uc8176_420_bw = {
 const epd_model_t epd_uc8176_420_bwr = {
     .id = EPD_UC8176_420_BWR,
     .drv = &epd_drv_uc8176,
+    .res = EPD_RES_400x300,
+    .bwr = true,
+};
+
+const epd_model_t epd_uc8276_420_bwr = {
+    .id = EPD_UC8276_420_BWR,
+    .drv = &epd_drv_uc8276,
     .res = EPD_RES_400x300,
     .bwr = true,
 };
