@@ -46,10 +46,7 @@ static void DrawWeekHeader(Adafruit_GFX *gfx, int16_t x, int16_t y)
     GFX_fillRect(gfx, x + 50, y, 280, 24, GFX_BLACK);
     GFX_setFont(gfx, u8g2_font_wqy9_t_lunar);
     for (int i = 0; i < 7; i++) {
-        if (i > 0 && i < 6)
-            GFX_setTextColor(gfx, GFX_WHITE, GFX_BLACK);
-        else
-            GFX_setTextColor(gfx, GFX_WHITE, GFX_RED);
+        GFX_setTextColor(gfx, GFX_WHITE, (i > 0 && i < 6) ? GFX_BLACK : GFX_RED);
         GFX_setCursor(gfx, x + 15 + i * 55, y + 16);
         GFX_printf(gfx, "%s", Lunar_DayString[i]);
     }
@@ -68,7 +65,7 @@ static void DrawMonthDays(Adafruit_GFX *gfx, tm_t *tm, struct Lunar_Date *Lunar)
         bool weekend = (w  == 0) || (w == 6);
 
         int16_t x = 22 + w * 55;
-        int16_t y = (monthDayRows > 5 ? 65 : 68) + (firstDayWeek + i) / 7 * (monthDayRows > 5 ? 39 : 48);
+        int16_t y = (monthDayRows > 5 ? 69 : 72) + (firstDayWeek + i) / 7 * (monthDayRows > 5 ? 39 : 48);
 
         if (day == tm->tm_mday) {
             GFX_fillCircle(gfx, x + 10, y + (monthDayRows > 5 ? 10 : 12), 20, GFX_RED);
@@ -78,10 +75,7 @@ static void DrawMonthDays(Adafruit_GFX *gfx, tm_t *tm, struct Lunar_Date *Lunar)
         }
 
         GFX_setFont(gfx, u8g2_font_helvB14_tn);
-        if (day < 10)
-            GFX_setCursor(gfx, x + 6, y + 10);
-        else
-            GFX_setCursor(gfx, x + 2, y + 10);
+        GFX_setCursor(gfx, x + (day < 10 ? 6 : 2), y + 10);
         GFX_printf(gfx, "%d", day);
 
         GFX_setFont(gfx, u8g2_font_wqy9_t_lunar);
@@ -121,8 +115,8 @@ void DrawCalendar(epd_driver_t *driver, uint32_t timestamp)
         NRF_LOG_DEBUG("page %d\n", gfx.current_page);
         GFX_fillScreen(&gfx, GFX_WHITE);
 
-        DrawDateHeader(&gfx, 10, 26, &tm, &Lunar);
-        DrawWeekHeader(&gfx, 10, 30);
+        DrawDateHeader(&gfx, 10, 28, &tm, &Lunar);
+        DrawWeekHeader(&gfx, 10, 32);
         DrawMonthDays(&gfx, &tm, &Lunar);
     } while(GFX_nextPage(&gfx, driver->write_image));
 
