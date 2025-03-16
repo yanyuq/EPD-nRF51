@@ -28,7 +28,7 @@ void epd_config_init(epd_config_t *cfg)
     }
 }
 
-void epd_config_load(epd_config_t *cfg)
+void epd_config_read(epd_config_t *cfg)
 {
     fds_flash_record_t  flash_record;
     fds_record_desc_t   record_desc;
@@ -54,21 +54,7 @@ void epd_config_load(epd_config_t *cfg)
     fds_record_close(&record_desc);
 }
 
-void epd_config_clear(epd_config_t *cfg)
-{
-    fds_record_desc_t   record_desc;
-    fds_find_token_t    ftok;
-
-    memset(&ftok, 0x00, sizeof(fds_find_token_t));
-    if (fds_record_find(CONFIG_FILE_ID, CONFIG_REC_KEY, &record_desc, &ftok) != NRF_SUCCESS) {
-        NRF_LOG_DEBUG("epd_config_clear: record not found\n");
-        return;
-    }
-
-    fds_record_delete(&record_desc);
-}
-
-void epd_config_save(epd_config_t *cfg)
+void epd_config_write(epd_config_t *cfg)
 {
     ret_code_t          ret;
     fds_record_t        record;
@@ -98,6 +84,20 @@ void epd_config_save(epd_config_t *cfg)
     if (ret != NRF_SUCCESS) {
         NRF_LOG_ERROR("epd_config_save: record write/update failed!\n");
     }
+}
+
+void epd_config_clear(epd_config_t *cfg)
+{
+    fds_record_desc_t   record_desc;
+    fds_find_token_t    ftok;
+
+    memset(&ftok, 0x00, sizeof(fds_find_token_t));
+    if (fds_record_find(CONFIG_FILE_ID, CONFIG_REC_KEY, &record_desc, &ftok) != NRF_SUCCESS) {
+        NRF_LOG_DEBUG("epd_config_clear: record not found\n");
+        return;
+    }
+
+    fds_record_delete(&record_desc);
 }
 
 bool epd_config_empty(epd_config_t *cfg)

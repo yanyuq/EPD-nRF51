@@ -68,7 +68,7 @@ static void DrawMonthDays(Adafruit_GFX *gfx, tm_t *tm, struct Lunar_Date *Lunar)
         int16_t y = (monthDayRows > 5 ? 69 : 72) + (firstDayWeek + i) / 7 * (monthDayRows > 5 ? 39 : 48);
 
         if (day == tm->tm_mday) {
-            GFX_fillCircle(gfx, x + 10, y + (monthDayRows > 5 ? 10 : 12), 20, GFX_RED);
+            GFX_fillCircle(gfx, x + 11, y + (monthDayRows > 5 ? 10 : 12), 20, GFX_RED);
             GFX_setTextColor(gfx, GFX_WHITE, GFX_RED);
         } else {
             GFX_setTextColor(gfx, weekend ? GFX_RED : GFX_BLACK, GFX_WHITE);
@@ -96,7 +96,7 @@ static void DrawMonthDays(Adafruit_GFX *gfx, tm_t *tm, struct Lunar_Date *Lunar)
     }
 }
 
-void DrawCalendar(epd_driver_t *driver, uint32_t timestamp)
+void DrawCalendar(epd_model_t *epd, uint32_t timestamp)
 {
     tm_t tm = {0};
     struct Lunar_Date Lunar;
@@ -105,10 +105,10 @@ void DrawCalendar(epd_driver_t *driver, uint32_t timestamp)
 
     Adafruit_GFX gfx;
 
-    if (EPD_BWR_MODE)
-      GFX_begin_3c(&gfx, EPD_WIDTH, EPD_HEIGHT, PAGE_HEIGHT);
+    if (epd->bwr)
+      GFX_begin_3c(&gfx, epd->width, epd->height, PAGE_HEIGHT);
     else
-      GFX_begin(&gfx, EPD_WIDTH, EPD_HEIGHT, PAGE_HEIGHT);
+      GFX_begin(&gfx, epd->width, epd->height, PAGE_HEIGHT);
 
     GFX_firstPage(&gfx);
     do {
@@ -118,11 +118,11 @@ void DrawCalendar(epd_driver_t *driver, uint32_t timestamp)
         DrawDateHeader(&gfx, 10, 28, &tm, &Lunar);
         DrawWeekHeader(&gfx, 10, 32);
         DrawMonthDays(&gfx, &tm, &Lunar);
-    } while(GFX_nextPage(&gfx, driver->write_image));
+    } while(GFX_nextPage(&gfx, epd->drv->write_image));
 
     GFX_end(&gfx);
 
     NRF_LOG_DEBUG("display start\n");
-    driver->refresh();
+    epd->drv->refresh();
     NRF_LOG_DEBUG("display end\n");
 }

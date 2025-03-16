@@ -22,22 +22,18 @@
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 // GPIO Pins
-uint32_t EPD_MOSI_PIN = 5;
-uint32_t EPD_SCLK_PIN = 8;
-uint32_t EPD_CS_PIN = 9;
-uint32_t EPD_DC_PIN = 10;
-uint32_t EPD_RST_PIN = 11;
-uint32_t EPD_BUSY_PIN = 12;
-uint32_t EPD_BS_PIN = 13;
-uint32_t EPD_EN_PIN = 0xFF;
-uint32_t EPD_LED_PIN = 0xFF;
+static uint32_t EPD_MOSI_PIN = 5;
+static uint32_t EPD_SCLK_PIN = 8;
+static uint32_t EPD_CS_PIN = 9;
+static uint32_t EPD_DC_PIN = 10;
+static uint32_t EPD_RST_PIN = 11;
+static uint32_t EPD_BUSY_PIN = 12;
+static uint32_t EPD_BS_PIN = 13;
+static uint32_t EPD_EN_PIN = 0xFF;
+static uint32_t EPD_LED_PIN = 0xFF;
 
-// Display resolution
-uint16_t EPD_WIDTH = 400;
-uint16_t EPD_HEIGHT = 300;
-
-// BWR mode
-bool EPD_BWR_MODE = true;
+// EPD model
+static epd_model_t *EPD = NULL;
 
 // Arduino like function wrappers
 
@@ -224,9 +220,11 @@ void EPD_Reset(uint32_t value, uint16_t duration)
 
 void EPD_WaitBusy(uint32_t value, uint16_t timeout)
 {
+    uint32_t led_status = digitalRead(EPD_LED_PIN);
+
     NRF_LOG_DEBUG("[EPD]: check busy\n");
     while (digitalRead(EPD_BUSY_PIN) == value) {
-        if (timeout % 100 == 0) EPD_LED_TOGGLE();
+        if (timeout % 100 == 0) EPD_LED_Toggle();
         delay(1);
         timeout--;
         if (timeout == 0) {
@@ -235,9 +233,29 @@ void EPD_WaitBusy(uint32_t value, uint16_t timeout)
         }
     }
     NRF_LOG_DEBUG("[EPD]: busy release\n");
+
+    // restore led status
+    if (led_status == LOW)
+        EPD_LED_ON();
+    else
+        EPD_LED_OFF();
 }
 
 // GPIO
+void EPD_GPIO_Load(epd_config_t *cfg)
+{
+    if (cfg == NULL) return;
+    EPD_MOSI_PIN = cfg->mosi_pin;
+    EPD_SCLK_PIN = cfg->sclk_pin;
+    EPD_CS_PIN = cfg->cs_pin;
+    EPD_DC_PIN = cfg->dc_pin;
+    EPD_RST_PIN = cfg->rst_pin;
+    EPD_BUSY_PIN = cfg->busy_pin;
+    EPD_BS_PIN = cfg->bs_pin;
+    EPD_EN_PIN = cfg->en_pin;
+    EPD_LED_PIN = cfg->led_pin;
+}
+
 void EPD_GPIO_Init(void)
 {
     pinMode(EPD_CS_PIN, OUTPUT);
@@ -253,16 +271,12 @@ void EPD_GPIO_Init(void)
     pinMode(EPD_BS_PIN, OUTPUT);
     digitalWrite(EPD_BS_PIN, LOW);
 
-    EPD_SPI_Init();
-
     digitalWrite(EPD_DC_PIN, LOW);
     digitalWrite(EPD_CS_PIN, LOW);
     digitalWrite(EPD_RST_PIN, HIGH);
 
-    if (EPD_LED_PIN != 0xFF) {
+    if (EPD_LED_PIN != 0xFF)
         pinMode(EPD_LED_PIN, OUTPUT);
-        EPD_LED_ON();
-    }
 }
 
 void EPD_GPIO_Uninit(void)
@@ -289,7 +303,7 @@ void EPD_LED_OFF(void)
         digitalWrite(EPD_LED_PIN, HIGH);
 }
 
-void EPD_LED_TOGGLE(void)
+void EPD_LED_Toggle(void)
 {
     if (EPD_LED_PIN != 0xFF)
         nrf_gpio_pin_toggle(EPD_LED_PIN);
@@ -310,19 +324,19 @@ static epd_model_t *epd_models[] = {
     &epd_uc8276_420_bwr,
 };
 
-static epd_model_t *epd_model_get(epd_model_id_t id)
+epd_model_t *epd_get(void)
+{
+    return EPD == NULL ? epd_models[0] : EPD;
+}
+
+epd_model_t *epd_init(epd_model_id_t id)
 {
     for (uint8_t i = 0; i < ARRAY_SIZE(epd_models); i++) {
         if (epd_models[i]->id == id) {
-            return epd_models[i];
+            EPD = epd_models[i];
         }
     }
-    return epd_models[0];
-}
-
-epd_driver_t *epd_model_init(epd_model_id_t id)
-{
-    epd_model_t *model = epd_model_get(id);
-    model->drv->init(model->res, model->bwr);
-    return model->drv;
+    if (EPD == NULL) EPD = epd_models[0];
+    EPD->drv->init();
+    return EPD;
 }

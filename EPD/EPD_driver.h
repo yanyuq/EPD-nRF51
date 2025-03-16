@@ -18,17 +18,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include "EPD_config.h"
 
 #define BIT(n)  (1UL << (n))
-
-// Display resolution
-typedef enum
-{
-    EPD_RES_400x300,
-    EPD_RES_320x300,
-    EPD_RES_320x240,
-    EPD_RES_200x300,
-} epd_res_t;
 
 /**@brief EPD driver structure.
  *
@@ -36,7 +28,7 @@ typedef enum
  */
 typedef struct
 {
-    void (*init)(epd_res_t res, bool bwr);            /**< Initialize the e-Paper register */
+    void (*init)();                                   /**< Initialize the e-Paper register */
     void (*clear)(void);                              /**< Clear screen */
     void (*write_image)(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t w, uint16_t h); /**< write image */
     void (*refresh)(void);                            /**< Sends the image buffer in RAM to e-Paper and displays */
@@ -58,24 +50,11 @@ typedef struct
 {
     epd_model_id_t id;
     epd_driver_t *drv;
-    epd_res_t res;
+    uint16_t width;
+    uint16_t height;
     bool bwr;
+    bool invert_color;
 } epd_model_t;
-
-extern uint32_t EPD_MOSI_PIN;
-extern uint32_t EPD_SCLK_PIN;
-extern uint32_t EPD_CS_PIN;
-extern uint32_t EPD_DC_PIN;
-extern uint32_t EPD_RST_PIN;
-extern uint32_t EPD_BUSY_PIN;
-extern uint32_t EPD_BS_PIN;
-extern uint32_t EPD_EN_PIN;
-extern uint32_t EPD_LED_PIN;
-
-extern uint16_t EPD_WIDTH;
-extern uint16_t EPD_HEIGHT;
-
-extern bool EPD_BWR_MODE;
 
 #define LOW             (0x0)
 #define HIGH            (0x1)
@@ -92,6 +71,7 @@ uint32_t digitalRead(uint32_t pin);
 void delay(uint32_t ms);
 
 // GPIO
+void EPD_GPIO_Load(epd_config_t *cfg);
 void EPD_GPIO_Init(void);
 void EPD_GPIO_Uninit(void);
 
@@ -115,8 +95,9 @@ void EPD_WaitBusy(uint32_t value, uint16_t timeout);
 // lED
 void EPD_LED_ON(void);
 void EPD_LED_OFF(void);
-void EPD_LED_TOGGLE(void);
+void EPD_LED_Toggle(void);
 
-epd_driver_t *epd_model_init(epd_model_id_t id);
+epd_model_t *epd_get(void);
+epd_model_t *epd_init(epd_model_id_t id);
 
 #endif

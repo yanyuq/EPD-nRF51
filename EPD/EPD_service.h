@@ -82,7 +82,7 @@ typedef struct
     uint16_t                 conn_handle;             /**< Handle of the current connection (as provided by the SoftDevice). BLE_CONN_HANDLE_INVALID if not in a connection. */
     uint16_t                 max_data_len;            /**< Maximum length of data (in bytes) that can be transmitted to the peer */
     bool                     is_notification_enabled; /**< Variable to indicate if the peer has enabled notification of the RX characteristic.*/
-    epd_driver_t             *driver;                 /**< current EPD driver */
+    epd_model_t              *epd;                    /**< current EPD model */
     epd_config_t             config;                  /**< EPD config */
     epd_callback_t           epd_cmd_cb;              /**< EPD callback */
     bool                     calendar_mode;           /**< Calendar mode flag */

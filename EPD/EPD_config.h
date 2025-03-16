@@ -22,9 +22,9 @@ typedef struct
 #define EPD_CONFIG_EMPTY 0xFF
     
 void epd_config_init(epd_config_t *cfg);
-void epd_config_load(epd_config_t *cfg);
+void epd_config_read(epd_config_t *cfg);
+void epd_config_write(epd_config_t *cfg);
 void epd_config_clear(epd_config_t *cfg);
-void epd_config_save(epd_config_t *cfg);
 bool epd_config_empty(epd_config_t *cfg);
 
 #endif

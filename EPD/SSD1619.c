@@ -42,47 +42,28 @@ void SSD1619_Force_Temp(int8_t value)
 
 static void _setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
-  EPD_WriteCommand(CMD_DATA_MODE); // set ram entry mode
-  EPD_WriteByte(0x03);    // x increase, y increase
-  EPD_WriteCommand(CMD_RAM_XPOS);
-  EPD_WriteByte(x / 8);
-  EPD_WriteByte((x + w - 1) / 8);
-  EPD_WriteCommand(CMD_RAM_YPOS);
-  EPD_WriteByte(y % 256);
-  EPD_WriteByte(y / 256);
-  EPD_WriteByte((y + h - 1) % 256);
-  EPD_WriteByte((y + h - 1) / 256);
-  EPD_WriteCommand(CMD_RAM_XCOUNT);
-  EPD_WriteByte(x / 8);
-  EPD_WriteCommand(CMD_RAM_YCOUNT);
-  EPD_WriteByte(y % 256);
-  EPD_WriteByte(y / 256);
+    EPD_WriteCommand(CMD_DATA_MODE); // set ram entry mode
+    EPD_WriteByte(0x03);    // x increase, y increase
+    EPD_WriteCommand(CMD_RAM_XPOS);
+    EPD_WriteByte(x / 8);
+    EPD_WriteByte((x + w - 1) / 8);
+    EPD_WriteCommand(CMD_RAM_YPOS);
+    EPD_WriteByte(y % 256);
+    EPD_WriteByte(y / 256);
+    EPD_WriteByte((y + h - 1) % 256);
+    EPD_WriteByte((y + h - 1) / 256);
+    EPD_WriteCommand(CMD_RAM_XCOUNT);
+    EPD_WriteByte(x / 8);
+    EPD_WriteCommand(CMD_RAM_YCOUNT);
+    EPD_WriteByte(y % 256);
+    EPD_WriteByte(y / 256);
 }
 
-void SSD1619_Init(epd_res_t res, bool bwr)
+void SSD1619_Init()
 {
-    EPD_BWR_MODE = bwr;
-    EPD_Reset(HIGH, 10);
+    epd_model_t *EPD = epd_get();
 
-    switch (res) {
-        case EPD_RES_320x300:
-            EPD_WIDTH = 320;
-            EPD_HEIGHT = 300;
-            break;
-        case EPD_RES_320x240:
-            EPD_WIDTH = 320;
-            EPD_HEIGHT = 240;
-            break;
-        case EPD_RES_200x300:
-            EPD_WIDTH = 200;
-            EPD_HEIGHT = 300;
-            break;
-        case EPD_RES_400x300:
-        default:
-            EPD_WIDTH = 400;
-            EPD_HEIGHT = 300;
-            break;
-    }
+    EPD_Reset(HIGH, 10);
 
     EPD_WriteCommand(CMD_SW_RESET);
     EPD_WaitBusy(HIGH, 200);
@@ -91,22 +72,13 @@ void SSD1619_Init(epd_res_t res, bool bwr)
     EPD_WriteByte(0x54);
     EPD_WriteCommand(CMD_DIGITAL_BLOCK_CTRL);
     EPD_WriteByte(0x3B);
-    EPD_WriteCommand(CMD_VCOM_CTRL);  // Reduce glitch under ACVCOM	
-    EPD_WriteByte(0x04);
-    EPD_WriteByte(0x63);
-
-    EPD_WriteCommand(CMD_BOOSTER_CTRL);
-    EPD_WriteByte(0x8B);
-    EPD_WriteByte(0x9C);
-    EPD_WriteByte(0x96);
-    EPD_WriteByte(0x0F);
 
     EPD_WriteCommand(CMD_DRIVER_CTRL);
-    EPD_WriteByte((EPD_HEIGHT - 1) % 256);
-    EPD_WriteByte((EPD_HEIGHT - 1) / 256);
+    EPD_WriteByte((EPD->height - 1) % 256);
+    EPD_WriteByte((EPD->height - 1) / 256);
     EPD_WriteByte(0x00);
 
-    _setPartialRamArea(0, 0, EPD_WIDTH, EPD_HEIGHT);
+    _setPartialRamArea(0, 0, EPD->width, EPD->height);
 
     EPD_WriteCommand(CMD_BORDER_CTRL);
     EPD_WriteByte(0x01);
@@ -121,6 +93,8 @@ void SSD1619_Init(epd_res_t res, bool bwr)
 
 static void SSD1619_Refresh(void)
 {
+    epd_model_t *EPD = epd_get();
+
     NRF_LOG_DEBUG("[EPD]: refresh begin\n");
     NRF_LOG_DEBUG("[EPD]: temperature: %d\n", SSD1619_Read_Temp());
     EPD_WriteCommand(CMD_DISP_CTRL2);
@@ -129,14 +103,16 @@ static void SSD1619_Refresh(void)
     EPD_WaitBusy(HIGH, 30000);
     NRF_LOG_DEBUG("[EPD]: refresh end\n");
 
-    _setPartialRamArea(0, 0, EPD_WIDTH, EPD_HEIGHT);
+    _setPartialRamArea(0, 0, EPD->width, EPD->height); // DO NOT REMOVE!
 }
 
 void SSD1619_Clear(void)
 {
-    uint16_t Width = (EPD_WIDTH + 7) / 8;
-    uint16_t Height = EPD_HEIGHT;
+    epd_model_t *EPD = epd_get();
+    uint16_t Width = (EPD->width + 7) / 8;
+    uint16_t Height = EPD->height;
 
+    _setPartialRamArea(0, 0, EPD->width, EPD->height);
     EPD_WriteCommand(CMD_WRITE_RAM1);
     for (uint16_t j = 0; j < Height; j++) {
         for (uint16_t i = 0; i < Width; i++) {
@@ -146,7 +122,7 @@ void SSD1619_Clear(void)
     EPD_WriteCommand(CMD_WRITE_RAM2);
     for (uint16_t j = 0; j < Height; j++) {
         for (uint16_t i = 0; i < Width; i++) {
-            EPD_WriteByte(EPD_BWR_MODE ? 0x00 : 0xFF);
+            EPD_WriteByte(EPD->invert_color ? 0x00 : 0xFF);
         }
     }
 
@@ -155,10 +131,11 @@ void SSD1619_Clear(void)
 
 void SSD1619_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
+    epd_model_t *EPD = epd_get();
     uint16_t wb = (w + 7) / 8; // width bytes, bitmaps are padded
     x -= x % 8; // byte boundary
     w = wb * 8; // byte boundary
-    if (x + w > EPD_WIDTH || y + h > EPD_HEIGHT) return;
+    if (x + w > EPD->width || y + h > EPD->height) return;
     _setPartialRamArea(x, y, w, h);
     EPD_WriteCommand(CMD_WRITE_RAM1);
     for (uint16_t i = 0; i < h; i++) {
@@ -169,10 +146,12 @@ void SSD1619_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y,
     EPD_WriteCommand(CMD_WRITE_RAM2);
     for (uint16_t i = 0; i < h; i++) {
         for (uint16_t j = 0; j < w / 8; j++) {
-            if (EPD_BWR_MODE)
-                EPD_WriteByte(color ? ~color[j + i * wb] : 0x00);
-            else
+            if (EPD->bwr) {
+                uint8_t data = color ? color[j + i * wb] : 0xFF;
+                EPD_WriteByte(EPD->invert_color ? ~data : data);
+            } else {
                 EPD_WriteByte(black[j + i * wb]);
+            }
         }
     }
 }
@@ -194,16 +173,22 @@ static epd_driver_t epd_drv_ssd1619 = {
     .force_temp = SSD1619_Force_Temp,
 };
 
+// SSD1619 400x300 Black/White/Red
 const epd_model_t epd_ssd1619_420_bwr = {
     .id = EPD_SSD1619_420_BWR,
     .drv = &epd_drv_ssd1619,
-    .res = EPD_RES_400x300,
+    .width = 400,
+    .height = 300,
     .bwr = true,
+    .invert_color = true,
 };
 
+// SSD1619 400x300 Black/White
 const epd_model_t epd_ssd1619_420_bw = {
     .id = EPD_SSD1619_420_BW,
     .drv = &epd_drv_ssd1619,
-    .res = EPD_RES_400x300,
+    .width = 400,
+    .height = 300,
     .bwr = false,
+    .invert_color = false,
 };

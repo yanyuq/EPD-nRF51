@@ -148,7 +148,8 @@ function getImageData(canvas, driver, mode) {
   } else {
     let data = canvas2bytes(canvas, 'bw');
     if (mode.startsWith('bwr')) {
-      data.push(...canvas2bytes(canvas, 'red', driver === '02'));
+      const invert = (driver === '02') || (driver === '05');
+      data.push(...canvas2bytes(canvas, 'red', invert));
     }
     return data;
   }

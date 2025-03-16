@@ -65,8 +65,8 @@ static void calendar_update(void * p_event_data, uint16_t event_size)
     p_epd->calendar_mode = true;
 
     epd_gpio_init();
-    epd_driver_t *drv = epd_model_init((epd_model_id_t)p_epd->config.model_id);
-    DrawCalendar(drv, event->timestamp);
+    epd_model_t *epd = epd_init((epd_model_id_t)p_epd->config.model_id);
+    DrawCalendar(epd, event->timestamp);
     epd_gpio_uninit();
 }
 
@@ -79,6 +79,7 @@ static void on_connect(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 {
     p_epd->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
     epd_gpio_init();
+    EPD_LED_ON();
 }
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_DISCONNECTED event from the S110 SoftDevice.
@@ -90,6 +91,7 @@ static void on_disconnect(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 {
     UNUSED_PARAMETER(p_ble_evt);
     p_epd->conn_handle = BLE_CONN_HANDLE_INVALID;
+    EPD_LED_OFF();
     epd_gpio_uninit();
 }
 
@@ -108,19 +110,19 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
       case EPD_CMD_SET_PINS:
           if (length < 8) return;
 
-          EPD_GPIO_Uninit();
-
-          EPD_MOSI_PIN = p_epd->config.mosi_pin = p_data[1];
-          EPD_SCLK_PIN = p_epd->config.sclk_pin = p_data[2];
-          EPD_CS_PIN = p_epd->config.cs_pin = p_data[3];
-          EPD_DC_PIN = p_epd->config.dc_pin = p_data[4];
-          EPD_RST_PIN = p_epd->config.rst_pin = p_data[5];
-          EPD_BUSY_PIN = p_epd->config.busy_pin = p_data[6];
-          EPD_BS_PIN = p_epd->config.bs_pin = p_data[7];
+          p_epd->config.mosi_pin = p_data[1];
+          p_epd->config.sclk_pin = p_data[2];
+          p_epd->config.cs_pin = p_data[3];
+          p_epd->config.dc_pin = p_data[4];
+          p_epd->config.rst_pin = p_data[5];
+          p_epd->config.busy_pin = p_data[6];
+          p_epd->config.bs_pin = p_data[7];
           if (length > 8)
-            EPD_EN_PIN = p_epd->config.en_pin = p_data[8];
-          epd_config_save(&p_epd->config);
+              p_epd->config.en_pin = p_data[8];
+          epd_config_write(&p_epd->config);
 
+          EPD_GPIO_Uninit();
+          EPD_GPIO_Load(&p_epd->config);
           EPD_GPIO_Init();
           break;
 
@@ -128,14 +130,14 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
           uint8_t id = length > 1 ? p_data[1] : p_epd->config.model_id;
           if (id != p_epd->config.model_id) {
               p_epd->config.model_id = id;
-              epd_config_save(&p_epd->config);
+              epd_config_write(&p_epd->config);
           }
-          p_epd->driver = epd_model_init((epd_model_id_t)id);
+          p_epd->epd = epd_init((epd_model_id_t)id);
         } break;
 
       case EPD_CMD_CLEAR:
           p_epd->calendar_mode = false;
-          p_epd->driver->clear();
+          p_epd->epd->drv->clear();
           break;
 
       case EPD_CMD_SEND_COMMAND:
@@ -149,17 +151,17 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
 
       case EPD_CMD_DISPLAY:
           p_epd->calendar_mode = false;
-          p_epd->driver->refresh();
+          p_epd->epd->drv->refresh();
           break;
 
       case EPD_CMD_SLEEP:
-          p_epd->driver->sleep();
+          p_epd->epd->drv->sleep();
           break;
 
       case EPD_CMD_SET_CONFIG:
           if (length < 2) return;
           memcpy(&p_epd->config, &p_data[1], (length - 1 > EPD_CONFIG_SIZE) ? EPD_CONFIG_SIZE : length - 1);
-          epd_config_save(&p_epd->config);
+          epd_config_write(&p_epd->config);
           break;
       
       case EPD_CMD_CFG_ERASE:
@@ -282,37 +284,6 @@ static uint32_t epd_service_init(ble_epd_t * p_epd)
     return characteristic_add(p_epd->service_handle, &add_char_params, &p_epd->char_handles);
 }
 
-static void ble_epd_config_load(ble_epd_t * p_epd)
-{
-    // write default config
-    if (epd_config_empty(&p_epd->config))
-    {
-        uint8_t cfg[] = EPD_CFG_DEFAULT;
-        memcpy(&p_epd->config, cfg, sizeof(cfg));
-        epd_config_save(&p_epd->config);
-    }
-
-    // load config
-    EPD_MOSI_PIN = p_epd->config.mosi_pin;
-    EPD_SCLK_PIN = p_epd->config.sclk_pin;
-    EPD_CS_PIN = p_epd->config.cs_pin;
-    EPD_DC_PIN = p_epd->config.dc_pin;
-    EPD_RST_PIN = p_epd->config.rst_pin;
-    EPD_BUSY_PIN = p_epd->config.busy_pin;
-    EPD_BS_PIN = p_epd->config.bs_pin;
-    EPD_EN_PIN = p_epd->config.en_pin;
-    EPD_LED_PIN = p_epd->config.led_pin;
-
-    // blink LED on start
-    if (EPD_LED_PIN != EPD_CONFIG_EMPTY)
-    {
-        pinMode(EPD_LED_PIN, OUTPUT);
-        EPD_LED_ON();
-        delay(100);
-        EPD_LED_OFF();
-    }
-}
-
 void ble_epd_sleep_prepare(ble_epd_t * p_epd)
 {
     // Turn off led
@@ -335,8 +306,24 @@ uint32_t ble_epd_init(ble_epd_t * p_epd, epd_callback_t cmd_cb)
     p_epd->is_notification_enabled = false;
 
     epd_config_init(&p_epd->config);
-    epd_config_load(&p_epd->config);
-    ble_epd_config_load(p_epd);
+    epd_config_read(&p_epd->config);
+    
+    // write default config
+    if (epd_config_empty(&p_epd->config))
+    {
+        uint8_t cfg[] = EPD_CFG_DEFAULT;
+        memcpy(&p_epd->config, cfg, sizeof(cfg));
+        epd_config_write(&p_epd->config);
+    }
+
+    // load config
+    EPD_GPIO_Load(&p_epd->config);
+    epd_gpio_init();
+
+    // blink LED on start
+    EPD_LED_ON();
+    delay(100);
+    EPD_LED_OFF();
 
     // Add the service.
     return epd_service_init(p_epd);
