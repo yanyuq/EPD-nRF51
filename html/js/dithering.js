@@ -132,17 +132,15 @@ function canvas2bytes(canvas, type='bw', invert = false) {
   for (let y = 0; y < canvas.height; y++) {
     for (let x = 0; x < canvas.width; x++) {
       const i = (canvas.width * y + x) * 4;
-      let data;
       if (type !== 'red') {
-        data = imageData.data[i] === 0 && imageData.data[i+1] === 0 && imageData.data[i+2] === 0 ? 0 : 1;
+        buffer.push(imageData.data[i] === 0 && imageData.data[i+1] === 0 && imageData.data[i+2] === 0 ? 0 : 1);
       } else {
-        data = imageData.data[i] > 0 && imageData.data[i+1] === 0 && imageData.data[i+2] === 0 ? 0 : 1;
+        buffer.push(imageData.data[i] > 0 && imageData.data[i+1] === 0 && imageData.data[i+2] === 0 ? 0 : 1);
       }
-      if (invert) data = ~data;
-      buffer.push(data);
 
       if (buffer.length === 8) {
-        arr.push(parseInt(buffer.join(''), 2));
+        const data = parseInt(buffer.join(''), 2);
+        arr.push(invert ? ~data : data);
         buffer = [];
       }
     }
