@@ -66,7 +66,7 @@ SRC_FILES += \
   $(PROJ_DIR)/EPD/EPD_service.c \
   $(PROJ_DIR)/EPD/UC8176.c \
   $(PROJ_DIR)/EPD/SSD1619.c \
-  $(PROJ_DIR)/GUI/Calendar.c \
+  $(PROJ_DIR)/GUI/GUI.c \
   $(PROJ_DIR)/GUI/Lunar.c \
   $(PROJ_DIR)/GUI/fonts.c \
   $(PROJ_DIR)/GUI/Adafruit_GFX.c \

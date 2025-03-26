@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef EPD_SERVICE_H__
-#define EPD_SERVICE_H__
+#ifndef __EPD_SERVICE_H
+#define __EPD_SERVICE_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -23,6 +23,7 @@
 #include "sdk_config.h"
 #include "EPD_driver.h"
 #include "EPD_config.h"
+#include "GUI.h"
 
 /**@brief   Macro for defining a ble_hts instance.
  *
@@ -85,16 +86,16 @@ typedef struct
     epd_model_t              *epd;                    /**< current EPD model */
     epd_config_t             config;                  /**< EPD config */
     epd_callback_t           epd_cmd_cb;              /**< EPD callback */
-    bool                     calendar_mode;           /**< Calendar mode flag */
+    display_mode_t           display_mode;            /**< gui display mode */
 } ble_epd_t;
 
 typedef struct
 {
     ble_epd_t *p_epd;
     uint32_t timestamp;
-} epd_calendar_update_event_t;
+} epd_gui_update_event_t;
 
-#define EPD_CALENDAR_SCHD_EVENT_DATA_SIZE sizeof(epd_calendar_update_event_t)
+#define EPD_GUI_SCHD_EVENT_DATA_SIZE sizeof(epd_gui_update_event_t)
 
 /**@brief Function for preparing sleep mode.
  *

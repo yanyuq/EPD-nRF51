@@ -17,14 +17,13 @@
 #include "nrf_gpio.h"
 #include "app_scheduler.h"
 #include "EPD_service.h"
-#include "Calendar.h"
 #include "nrf_log.h"
 
 #if defined(S112)
 //#define EPD_CFG_DEFAULT {0x14, 0x13, 0x06, 0x05, 0x04, 0x03, 0x02, 0x03, 0xFF, 0x12, 0x07} // 52811
 #define EPD_CFG_DEFAULT {0x14, 0x13, 0x12, 0x11, 0x10, 0x0F, 0x0E, 0x03, 0xFF, 0x0D, 0x02} // 52810
 #else
-#define EPD_CFG_DEFAULT {0x05, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x01, 0x07}
+//#define EPD_CFG_DEFAULT {0x05, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x01, 0x07}
 #endif
 
 #ifndef EPD_CFG_DEFAULT
@@ -59,16 +58,14 @@ static void epd_gpio_uninit()
     }
 }
 
-static void calendar_update(void * p_event_data, uint16_t event_size)
+static void epd_gui_update(void * p_event_data, uint16_t event_size)
 {
-    epd_calendar_update_event_t *event = (epd_calendar_update_event_t *)p_event_data;
+    epd_gui_update_event_t *event = (epd_gui_update_event_t *)p_event_data;
     ble_epd_t *p_epd = event->p_epd;
-
-    p_epd->calendar_mode = true;
 
     epd_gpio_init();
     epd_model_t *epd = epd_init((epd_model_id_t)p_epd->config.model_id);
-    DrawCalendar(epd, event->timestamp);
+    DrawGUI(epd, event->timestamp, p_epd->display_mode);
     epd_gpio_uninit();
 }
 
@@ -138,7 +135,7 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
         } break;
 
       case EPD_CMD_CLEAR:
-          p_epd->calendar_mode = false;
+          p_epd->display_mode = MODE_NONE;
           p_epd->epd->drv->clear();
           break;
 
@@ -152,7 +149,7 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
           break;
 
       case EPD_CMD_DISPLAY:
-          p_epd->calendar_mode = false;
+          p_epd->display_mode = MODE_NONE;
           p_epd->epd->drv->refresh();
           break;
 
@@ -359,9 +356,11 @@ uint32_t ble_epd_string_send(ble_epd_t * p_epd, uint8_t * p_string, uint16_t len
 
 void ble_epd_on_timer(ble_epd_t * p_epd, uint32_t timestamp, bool force_update)
 {
-    // Update calendar on 00:00:00
-    if (force_update || (p_epd->calendar_mode && timestamp % 86400 == 0)) {
-        epd_calendar_update_event_t event = { p_epd, timestamp };
-        app_sched_event_put(&event, sizeof(epd_calendar_update_event_t), calendar_update);
+    // Update calendar on 00:00:00, clock on every minute
+    if (force_update || 
+        (p_epd->display_mode == MODE_CALENDAR && timestamp % 86400 == 0) ||
+        (p_epd->display_mode == MODE_CLOCK && timestamp % 60 == 0)) {
+        epd_gui_update_event_t event = { p_epd, timestamp };
+        app_sched_event_put(&event, sizeof(epd_gui_update_event_t), epd_gui_update);
     }
 }

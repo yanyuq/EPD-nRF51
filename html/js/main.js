@@ -105,18 +105,18 @@ async function setDriver() {
   await write(EpdCmd.INIT, document.getElementById("epddriver").value);
 }
 
-async function syncTime() {
+async function syncTime(mode) {
   const timestamp = new Date().getTime() / 1000;
   const data = new Uint8Array([
     (timestamp >> 24) & 0xFF,
     (timestamp >> 16) & 0xFF,
     (timestamp >> 8) & 0xFF,
     timestamp & 0xFF,
-    -(new Date().getTimezoneOffset() / 60)
+    -(new Date().getTimezoneOffset() / 60),
+    mode
   ]);
   if(await write(EpdCmd.SET_TIME, data)) {
-    addLog("日历模式：时间已同步！");
-    addLog("需要一定时间刷新，请耐心等待。");
+    addLog("时间已同步！");
   }
 }
 
@@ -194,7 +194,8 @@ function updateButtonStatus() {
   const status = connected ? null : 'disabled';
   document.getElementById("reconnectbutton").disabled = (gattServer == null || gattServer.connected) ? 'disabled' : null;
   document.getElementById("sendcmdbutton").disabled = status;
-  document.getElementById("synctimebutton").disabled = status;
+  document.getElementById("calendarmodebutton").disabled = status;
+  document.getElementById("clockmodebutton").disabled = status;
   document.getElementById("clearscreenbutton").disabled = status;
   document.getElementById("sendimgbutton").disabled = status;
   document.getElementById("setDriverbutton").disabled = status;

@@ -336,6 +336,50 @@ void EPD_LED_BLINK(void)
     }
 }
 
+float EPD_ReadVoltage(void)
+{
+    #if defined(S112)
+    volatile int16_t value = 0;
+    NRF_SAADC->RESOLUTION = SAADC_RESOLUTION_VAL_10bit;
+    NRF_SAADC->ENABLE = (SAADC_ENABLE_ENABLE_Enabled << SAADC_ENABLE_ENABLE_Pos);
+    NRF_SAADC->CH[0].CONFIG = ((SAADC_CH_CONFIG_RESP_Bypass     << SAADC_CH_CONFIG_RESP_Pos)   & SAADC_CH_CONFIG_RESP_Msk)
+                            | ((SAADC_CH_CONFIG_RESP_Bypass     << SAADC_CH_CONFIG_RESN_Pos)   & SAADC_CH_CONFIG_RESN_Msk)
+                            | ((SAADC_CH_CONFIG_GAIN_Gain1_6    << SAADC_CH_CONFIG_GAIN_Pos)   & SAADC_CH_CONFIG_GAIN_Msk)
+                            | ((SAADC_CH_CONFIG_REFSEL_Internal << SAADC_CH_CONFIG_REFSEL_Pos) & SAADC_CH_CONFIG_REFSEL_Msk)
+                            | ((SAADC_CH_CONFIG_TACQ_3us        << SAADC_CH_CONFIG_TACQ_Pos)   & SAADC_CH_CONFIG_TACQ_Msk)
+                            | ((SAADC_CH_CONFIG_MODE_SE         << SAADC_CH_CONFIG_MODE_Pos)   & SAADC_CH_CONFIG_MODE_Msk);
+    NRF_SAADC->CH[0].PSELN = SAADC_CH_PSELN_PSELN_NC;
+    NRF_SAADC->CH[0].PSELP = SAADC_CH_PSELP_PSELP_VDD;
+    NRF_SAADC->RESULT.PTR = (uint32_t)&value;
+    NRF_SAADC->RESULT.MAXCNT = 1;
+    NRF_SAADC->TASKS_START = 0x01UL;
+    while (!NRF_SAADC->EVENTS_STARTED);
+    NRF_SAADC->EVENTS_STARTED = 0x00UL;
+    NRF_SAADC->TASKS_SAMPLE = 0x01UL;
+    while (!NRF_SAADC->EVENTS_END);
+    NRF_SAADC->EVENTS_END = 0x00UL;
+    NRF_SAADC->TASKS_STOP = 0x01UL;
+    while (!NRF_SAADC->EVENTS_STOPPED);
+    NRF_SAADC->EVENTS_STOPPED = 0x00UL;
+    if (value < 0) value = 0;
+    NRF_SAADC->ENABLE = (SAADC_ENABLE_ENABLE_Disabled << SAADC_ENABLE_ENABLE_Pos);
+#else
+    NRF_ADC->ENABLE = 1;
+    NRF_ADC->CONFIG = (ADC_CONFIG_RES_10bit << ADC_CONFIG_RES_Pos) |
+                      (ADC_CONFIG_INPSEL_SupplyOneThirdPrescaling << ADC_CONFIG_INPSEL_Pos) |
+                      (ADC_CONFIG_REFSEL_VBG << ADC_CONFIG_REFSEL_Pos) |
+                      (ADC_CONFIG_PSEL_Disabled << ADC_CONFIG_PSEL_Pos) |
+                      (ADC_CONFIG_EXTREFSEL_None << ADC_CONFIG_EXTREFSEL_Pos);
+    NRF_ADC->TASKS_START = 1;
+    while(!NRF_ADC->EVENTS_END);
+    uint16_t value = NRF_ADC->RESULT;
+    NRF_ADC->TASKS_STOP = 1;
+    NRF_ADC->ENABLE = 0;
+#endif
+    NRF_LOG_DEBUG("ADC value: %d\n", value);
+    return (value * 3.6) / (1 << 10);
+}
+
 // EPD models
 extern epd_model_t epd_uc8176_420_bw;
 extern epd_model_t epd_uc8176_420_bwr;

@@ -1,5 +1,5 @@
-﻿#ifndef _LUNAR_H_
-#define _LUNAR_H_
+﻿#ifndef __LUNAR_H
+#define __LUNAR_H
 #include <stdint.h>
 #include <string.h>
 

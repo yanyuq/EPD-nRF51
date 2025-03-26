@@ -430,9 +430,9 @@
           <GroupName>GUI</GroupName>
           <Files>
             <File>
-              <FileName>Calendar.c</FileName>
+              <FileName>GUI.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\GUI\Calendar.c</FilePath>
+              <FilePath>..\GUI\GUI.c</FilePath>
             </File>
             <File>
               <FileName>Lunar.c</FileName>
@@ -1162,9 +1162,9 @@
           <GroupName>GUI</GroupName>
           <Files>
             <File>
-              <FileName>Calendar.c</FileName>
+              <FileName>GUI.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\GUI\Calendar.c</FilePath>
+              <FilePath>..\GUI\GUI.c</FilePath>
             </File>
             <File>
               <FileName>Lunar.c</FileName>

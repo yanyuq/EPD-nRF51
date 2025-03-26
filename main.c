@@ -73,7 +73,7 @@
 #define NEXT_CONN_PARAMS_UPDATE_DELAY    TIMER_TICKS(30000)                             /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
 #define MAX_CONN_PARAMS_UPDATE_COUNT     3                                              /**< Number of attempts before giving up the connection parameter negotiation. */
 
-#define SCHED_MAX_EVENT_DATA_SIZE       EPD_CALENDAR_SCHD_EVENT_DATA_SIZE               /**< Maximum size of scheduler events. */
+#define SCHED_MAX_EVENT_DATA_SIZE       EPD_GUI_SCHD_EVENT_DATA_SIZE                    /**< Maximum size of scheduler events. */
 #define SCHED_QUEUE_SIZE                10                                              /**< Maximum number of events in the scheduler queue. */
 
 #define CLOCK_TIMER_INTERVAL             TIMER_TICKS(1000)                              /**< Clock timer interval (ticks). */
@@ -179,6 +179,7 @@ bool epd_cmd_callback(uint8_t cmd, uint8_t *data, uint16_t len)
             m_timestamp = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
             m_timestamp += (len > 4 ? (int8_t)data[4] : 8) * 60 * 60; // timezone
             app_timer_start(m_clock_timer_id, CLOCK_TIMER_INTERVAL, NULL);
+            m_epd.display_mode = len > 5 ? (display_mode_t)data[5] : MODE_CALENDAR;
             ble_epd_on_timer(&m_epd, m_timestamp, true);
             return true;
 
@@ -342,7 +343,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
         case BLE_ADV_EVT_IDLE:
             NRF_LOG_INFO("advertising timeout\n");
             if (m_epd.config.wakeup_pin != 0xFF) {
-                if (m_epd.calendar_mode)
+                if (m_epd.display_mode != MODE_NONE)
                     setup_wakeup_pin(m_epd.config.wakeup_pin);
                 else
                     sleep_mode_enter();
