@@ -53,7 +53,9 @@ void pinMode(uint32_t pin, uint32_t mode)
         case OUTPUT:
             nrf_gpio_cfg_output(pin);
             break;
+        case DEFAULT:
         default:
+            nrf_gpio_cfg_default(pin);
             break;
     }
 }
@@ -209,10 +211,9 @@ void EPD_WriteData(uint8_t *Data, uint8_t Len)
 
 void EPD_Reset(uint32_t value, uint16_t duration)
 {
-    uint32_t rvalue = (value == LOW) ? HIGH : LOW;
     digitalWrite(EPD_RST_PIN, value);
     delay(10);
-    digitalWrite(EPD_RST_PIN, rvalue);
+    digitalWrite(EPD_RST_PIN, (value == LOW) ? HIGH : LOW);
     delay(duration);
     digitalWrite(EPD_RST_PIN, value);
     delay(duration);
@@ -281,13 +282,27 @@ void EPD_GPIO_Init(void)
 
 void EPD_GPIO_Uninit(void)
 {
+    EPD_LED_OFF();
+
     digitalWrite(EPD_DC_PIN, LOW);
     digitalWrite(EPD_CS_PIN, LOW);
     digitalWrite(EPD_RST_PIN, LOW);
+    if (EPD_EN_PIN != 0xFF) {
+        digitalWrite(EPD_EN_PIN, LOW);
+    }
 
     EPD_SPI_Uninit();
 
-    EPD_LED_OFF();
+    // reset pin state
+    pinMode(EPD_MOSI_PIN, DEFAULT);
+    pinMode(EPD_SCLK_PIN, DEFAULT);
+    pinMode(EPD_CS_PIN, DEFAULT);
+    pinMode(EPD_DC_PIN, DEFAULT);
+    pinMode(EPD_RST_PIN, DEFAULT);
+    pinMode(EPD_BUSY_PIN, DEFAULT);
+    pinMode(EPD_BS_PIN, DEFAULT);
+    pinMode(EPD_EN_PIN, DEFAULT);
+    pinMode(EPD_LED_PIN, DEFAULT);
 }
 
 // lED
@@ -307,6 +322,18 @@ void EPD_LED_Toggle(void)
 {
     if (EPD_LED_PIN != 0xFF)
         nrf_gpio_pin_toggle(EPD_LED_PIN);
+}
+
+void EPD_LED_BLINK(void)
+{
+    if (EPD_LED_PIN != 0xFF) {
+        pinMode(EPD_LED_PIN, OUTPUT);
+        digitalWrite(EPD_LED_PIN, LOW);
+        delay(100);
+        digitalWrite(EPD_LED_PIN, HIGH);
+        delay(100);
+        pinMode(EPD_LED_PIN, DEFAULT);
+    }
 }
 
 // EPD models

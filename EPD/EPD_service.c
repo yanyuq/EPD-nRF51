@@ -46,11 +46,13 @@ static void epd_gpio_init()
         EPD_GPIO_Init();
     }
     m_driver_refs++;
+    NRF_LOG_DEBUG("[EPD]: m_driver_refs=%d\n", m_driver_refs);
 }
 
 static void epd_gpio_uninit()
 {
     m_driver_refs--;
+    NRF_LOG_DEBUG("[EPD]: m_driver_refs=%d\n", m_driver_refs);
     if (m_driver_refs == 0) {
         NRF_LOG_DEBUG("[EPD]: driver exit\n");
         EPD_GPIO_Uninit();
@@ -318,12 +320,9 @@ uint32_t ble_epd_init(ble_epd_t * p_epd, epd_callback_t cmd_cb)
 
     // load config
     EPD_GPIO_Load(&p_epd->config);
-    epd_gpio_init();
 
     // blink LED on start
-    EPD_LED_ON();
-    delay(100);
-    EPD_LED_OFF();
+    EPD_LED_BLINK();
 
     // Add the service.
     return epd_service_init(p_epd);
