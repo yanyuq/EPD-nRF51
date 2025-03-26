@@ -4,11 +4,7 @@
 #include "Calendar.h"
 #include "nrf_log.h"
 
-#if defined(S112)
-#define PAGE_HEIGHT 150
-#else
-#define PAGE_HEIGHT 64
-#endif
+#define PAGE_HEIGHT ((__HEAP_SIZE / 50) - 4)
 
 #define GFX_printf_styled(gfx, fg, bg, font, ...) \
             GFX_setTextColor(gfx, fg, bg);        \

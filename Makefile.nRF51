@@ -118,6 +118,11 @@ LDFLAGS += -Wl,--gc-sections
 # use newlib in nano version
 LDFLAGS += --specs=nano.specs -lc -lnosys
 
+nrf51822_xxaa: CFLAGS += -D__HEAP_SIZE=4096
+nrf51822_xxaa: CFLAGS += -D__STACK_SIZE=2048
+nrf51822_xxaa: ASMFLAGS += -D__HEAP_SIZE=4096
+nrf51822_xxaa: ASMFLAGS += -D__STACK_SIZE=2048
+
 
 .PHONY: $(TARGETS) default all clean help flash flash_softdevice
 
