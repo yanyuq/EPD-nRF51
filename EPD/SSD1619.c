@@ -14,7 +14,7 @@
 #define CMD_TSENSOR_CTRL          0x18        // Temperature Sensor Control
 #define CMD_TSENSOR_WRITE         0x1A        // Temperature Sensor Control (Write to temperature register)
 #define CMD_TSENSOR_READ          0x1B        // Temperature Sensor Control (Read from temperature register)
-#define CMD_MASTER_ACTIVATE       0x20        // Master Activation 
+#define CMD_MASTER_ACTIVATE       0x20        // Master Activation
 #define CMD_DISP_CTRL1            0x21        // Display Update Control 1
 #define CMD_DISP_CTRL2            0x22        // Display Update Control 2
 #define CMD_WRITE_RAM1            0x24        // Write RAM (BW)
@@ -27,6 +27,13 @@
 #define CMD_RAM_YCOUNT            0x4F        // Set RAM Y address counter
 #define CMD_ANALOG_BLOCK_CTRL     0x74        // Set Analog Block Control
 #define CMD_DIGITAL_BLOCK_CTRL    0x7E        // Set Digital Block Control
+
+static void SSD1619_Update(uint8_t seq)
+{
+    EPD_WriteCommand(CMD_DISP_CTRL2);
+    EPD_WriteByte(seq);
+    EPD_WriteCommand(CMD_MASTER_ACTIVATE);
+}
 
 int8_t SSD1619_Read_Temp(void)
 {
@@ -78,17 +85,12 @@ void SSD1619_Init()
     EPD_WriteByte((EPD->height - 1) / 256);
     EPD_WriteByte(0x00);
 
-    _setPartialRamArea(0, 0, EPD->width, EPD->height);
-
     EPD_WriteCommand(CMD_BORDER_CTRL);
     EPD_WriteByte(0x01);
-
     EPD_WriteCommand(CMD_TSENSOR_CTRL);
     EPD_WriteByte(0x80);
-    EPD_WriteCommand(CMD_DISP_CTRL2);
-    EPD_WriteByte(0xB1);
-    EPD_WriteCommand(CMD_MASTER_ACTIVATE);
-    EPD_WaitBusy(HIGH, 200);
+
+    _setPartialRamArea(0, 0, EPD->width, EPD->height);
 }
 
 static void SSD1619_Refresh(void)
@@ -97,13 +99,12 @@ static void SSD1619_Refresh(void)
 
     NRF_LOG_DEBUG("[EPD]: refresh begin\n");
     NRF_LOG_DEBUG("[EPD]: temperature: %d\n", SSD1619_Read_Temp());
-    EPD_WriteCommand(CMD_DISP_CTRL2);
-    EPD_WriteByte(0xC7);
-    EPD_WriteCommand(CMD_MASTER_ACTIVATE);
+    SSD1619_Update(0xF7);
     EPD_WaitBusy(HIGH, 30000);
     NRF_LOG_DEBUG("[EPD]: refresh end\n");
 
     _setPartialRamArea(0, 0, EPD->width, EPD->height); // DO NOT REMOVE!
+    SSD1619_Update(0x83); // power off
 }
 
 void SSD1619_Clear(void)
