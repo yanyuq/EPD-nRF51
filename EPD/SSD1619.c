@@ -37,6 +37,8 @@ static void SSD1619_Update(uint8_t seq)
 
 int8_t SSD1619_Read_Temp(void)
 {
+    SSD1619_Update(0xB1);
+    EPD_WaitBusy(HIGH, 500);
     EPD_WriteCommand_SW(CMD_TSENSOR_READ);
     return (int8_t) EPD_ReadByte_SW();
 }
