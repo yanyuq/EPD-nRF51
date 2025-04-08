@@ -1,4 +1,4 @@
-﻿#include "Adafruit_GFX.h"
+#include "Adafruit_GFX.h"
 #include "fonts.h"
 #include "Lunar.h"
 #include "GUI.h"
@@ -129,9 +129,9 @@ static void Draw7Number(Adafruit_GFX *gfx, int n, unsigned int xLoc, unsigned in
         if (seg[j][2])for(w=S2,t=seg[j][1]+S3,h=seg[j][1]+cS,a=xLoc+seg[j][0]+cS,b=seg[j][1];b<h;b++,a--,w+=2)GFX_drawFastHLine(gfx,a,b,w,col);
         else for(w=S4,t=xLoc+seg[j][0]+S3,h=xLoc+seg[j][0]+cS,b=xLoc+seg[j][0],a=seg[j][1]+cS;b<h;b++,a--,w+=2)GFX_drawFastVLine(gfx,b,a,w,col);
         for (;b<t;b++,a++,w-=2)seg[j][2]?GFX_drawFastHLine(gfx,a,b,w,col):GFX_drawFastVLine(gfx,b,a,w,col);
-      }
+        }
     }
-  }
+}
 
 static void DrawTime(Adafruit_GFX *gfx, tm_t *tm, int16_t x, int16_t y, uint16_t cS, uint16_t nD)
 {

@@ -337,7 +337,7 @@
             <v6WtE>0</v6WtE>
             <v6Rtti>0</v6Rtti>
             <VariousControls>
-              <MiscControls></MiscControls>
+              <MiscControls>--locale=english</MiscControls>
               <Define>BLE_STACK_SUPPORT_REQD NRF51822 NRF_SD_BLE_API_VERSION=2 S130 NRF51 SOFTDEVICE_PRESENT SWI_DISABLE0 __HEAP_SIZE=4096 __STACK_SIZE=2048</Define>
               <Undefine></Undefine>
               <IncludePath>..\config;..\EPD;..\GUI;..\SDK\12.3.0_d7731ad;..\SDK\12.3.0_d7731ad\components\toolchain;..\SDK\12.3.0_d7731ad\components\toolchain\cmsis\include;..\SDK\12.3.0_d7731ad\components\drivers_nrf\clock;..\SDK\12.3.0_d7731ad\components\drivers_nrf\common;..\SDK\12.3.0_d7731ad\components\drivers_nrf\delay;..\SDK\12.3.0_d7731ad\components\drivers_nrf\gpiote;..\SDK\12.3.0_d7731ad\components\drivers_nrf\hal;..\SDK\12.3.0_d7731ad\components\drivers_nrf\spi_master;..\SDK\12.3.0_d7731ad\components\drivers_nrf\twi_master;..\SDK\12.3.0_d7731ad\external\segger_rtt;..\SDK\12.3.0_d7731ad\components\libraries\fds;..\SDK\12.3.0_d7731ad\components\libraries\fstorage;..\SDK\12.3.0_d7731ad\components\libraries\experimental_section_vars;..\SDK\12.3.0_d7731ad\components\libraries\log;..\SDK\12.3.0_d7731ad\components\libraries\log\src;..\SDK\12.3.0_d7731ad\components\libraries\pwr_mgmt;..\SDK\12.3.0_d7731ad\components\libraries\scheduler;..\SDK\12.3.0_d7731ad\components\libraries\trace;..\SDK\12.3.0_d7731ad\components\libraries\timer;..\SDK\12.3.0_d7731ad\components\libraries\util;..\SDK\12.3.0_d7731ad\components\ble\common;..\SDK\12.3.0_d7731ad\components\ble\ble_advertising;..\SDK\12.3.0_d7731ad\components\softdevice\common\softdevice_handler;..\SDK\12.3.0_d7731ad\components\softdevice\s130\headers;..\SDK\12.3.0_d7731ad\components\softdevice\s130\headers\nrf51</IncludePath>
@@ -374,7 +374,7 @@
             <ScatterFile></ScatterFile>
             <IncludeLibs></IncludeLibs>
             <IncludeLibsPath></IncludeLibsPath>
-            <Misc></Misc>
+            <Misc>--diag_suppress 6330</Misc>
             <LinkerInputFile></LinkerInputFile>
             <DisabledWarnings></DisabledWarnings>
           </LDads>
