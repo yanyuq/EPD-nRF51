@@ -7,7 +7,6 @@ let reconnectTrys = 0;
 let canvas;
 let startTime;
 
-const MAX_PACKET_SIZE = 20;
 const EpdCmd = {
   SET_PINS:  0x00,
   INIT:      0x01,
@@ -58,10 +57,6 @@ async function write(cmd, data, withResponse=true) {
     if (data instanceof Uint8Array) data = Array.from(data);
     payload.push(...data)
   }
-  if (payload.length > MAX_PACKET_SIZE) {
-    addLog("BLE packet too large!");
-    return false;
-  }
   addLog(`<span class="action">⇑</span> ${bytes2hex(payload)}`);
   try {
     if (withResponse)
@@ -77,9 +72,9 @@ async function write(cmd, data, withResponse=true) {
 }
 
 async function epdWrite(cmd, data) {
-  const chunkSize = MAX_PACKET_SIZE - 1;
-  const count = Math.round(data.length / chunkSize);
+  const chunkSize = document.getElementById('mtusize').value - 1;
   const interleavedCount = document.getElementById('interleavedcount').value;
+  const count = Math.round(data.length / chunkSize);
   let chunkIdx = 0;
   let noReplyCount = interleavedCount;
 
