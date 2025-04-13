@@ -2,7 +2,6 @@
 #include "fonts.h"
 #include "Lunar.h"
 #include "GUI.h"
-#include "nrf.h"
 #include "nrf_log.h"
 #include <stdio.h>
 

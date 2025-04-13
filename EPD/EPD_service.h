@@ -60,7 +60,7 @@ enum EPD_CMDS
     EPD_CMD_CLEAR,                                    /**< clear EPD screen */
     EPD_CMD_SEND_COMMAND,                             /**< send command to EPD */
     EPD_CMD_SEND_DATA,                                /**< send data to EPD */
-    EPD_CMD_DISPLAY,                                  /**< diaplay EPD ram on screen */
+    EPD_CMD_REFRESH,                                  /**< diaplay EPD ram on screen */
     EPD_CMD_SLEEP,                                    /**< EPD enter sleep mode */
 	
 	EPD_CMD_SET_TIME = 0x20,                          /** < set time with unix timestamp */

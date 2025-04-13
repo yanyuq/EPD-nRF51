@@ -81,46 +81,6 @@ function dithering(ctx, width, height, threshold, type) {
   ctx.putImageData(imageData, 0, 0);
 }
 
-/****Color display description****
-      white  gray1  gray2  black
-0x10|  01     01     00     00
-0x13|  01     00     01     00
-*********************************/
-function canvas2gray(canvas) {
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-  const arr10 = [];
-  const arr13 = [];
-  let buffer10 = [];
-  let buffer13 = [];
-
-  for (let y = 0; y < canvas.height; y++) {
-    for (let x = 0; x < canvas.width; x++) {
-      const i = (canvas.width * y + x) * 4;
-      const level = imageData.data[i] / 85;
-      const bin = level.toString(2).split('').map(bit => parseInt(bit, 2));
-      if (bin.length > 1) {
-        buffer10.push(bin[0]);
-        buffer13.push(bin[1]);
-      } else {
-        buffer10.push(0);
-        buffer13.push(bin[0]);
-      }
-
-      if (buffer10.length === 8) {
-        arr10.push(parseInt(buffer10.join(''), 2));
-        buffer10 = [];
-      }
-      if (buffer13.length === 8) {
-        arr13.push(parseInt(buffer13.join(''), 2));
-        buffer13 = [];
-      }
-    }
-  }
-  return arr10.concat(arr13);
-}
-
 // white: 1, black/red: 0
 function canvas2bytes(canvas, type='bw', invert = false) {
   const ctx = canvas.getContext("2d");

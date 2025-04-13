@@ -148,7 +148,7 @@ static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t le
           EPD_WriteData(&p_data[1], length - 1);
           break;
 
-      case EPD_CMD_DISPLAY:
+      case EPD_CMD_REFRESH:
           p_epd->display_mode = MODE_NONE;
           p_epd->epd->drv->refresh();
           break;
