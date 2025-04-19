@@ -18,6 +18,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include "nrf_delay.h"
+#include "nrf_gpio.h"
 #include "EPD_config.h"
 
 #define BIT(n)  (1UL << (n))
@@ -67,9 +69,9 @@ typedef struct
 
 // Arduino like function wrappers
 void pinMode(uint32_t pin, uint32_t mode);
-void digitalWrite(uint32_t pin, uint32_t value);
-uint32_t digitalRead(uint32_t pin);
-void delay(uint32_t ms);
+#define digitalWrite(pin, value) nrf_gpio_pin_write(pin, value)
+#define digitalRead(pin) nrf_gpio_pin_read(pin)
+#define delay(ms) nrf_delay_ms(ms)
 
 // GPIO
 void EPD_GPIO_Load(epd_config_t *cfg);

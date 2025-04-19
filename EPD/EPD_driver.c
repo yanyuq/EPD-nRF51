@@ -13,8 +13,6 @@
 ******************************************************************************/
 
 #include "app_error.h"
-#include "nrf_delay.h"
-#include "nrf_gpio.h"
 #include "nrf_drv_spi.h"
 #include "EPD_driver.h"
 #include "nrf_log.h"
@@ -71,33 +69,8 @@ void pinMode(uint32_t pin, uint32_t mode)
     }
 }
 
-void digitalWrite(uint32_t pin, uint32_t value)
-{
-    if (value == LOW)
-        nrf_gpio_pin_clear(pin);
-    else
-        nrf_gpio_pin_set(pin);
-}
-
-uint32_t digitalRead(uint32_t pin)
-{
-    nrf_gpio_pin_dir_t dir = nrf_gpio_pin_dir_get(pin);
-    if (dir == NRF_GPIO_PIN_DIR_INPUT)
-        return nrf_gpio_pin_read(pin);
-    else
-        return nrf_gpio_pin_out_read(pin);
-}
-
-void delay(uint32_t ms)
-{
-    nrf_delay_ms(ms);
-}
-
 void EPD_GPIO_Init(void)
 {
-    pinMode(EPD_MOSI_PIN, OUTPUT);
-    pinMode(EPD_SCLK_PIN, OUTPUT);
-    pinMode(EPD_CS_PIN, OUTPUT);
     pinMode(EPD_DC_PIN, OUTPUT);
     pinMode(EPD_RST_PIN, OUTPUT);
     pinMode(EPD_BUSY_PIN, INPUT);
@@ -112,16 +85,16 @@ void EPD_GPIO_Init(void)
     APP_ERROR_CHECK(nrf_drv_spi_init(&spi, &spi_config, NULL));
 #endif
 
+    if (EPD_BS_PIN != 0xFF) {
+        pinMode(EPD_BS_PIN, OUTPUT);
+        digitalWrite(EPD_BS_PIN, LOW);
+    }
     if (EPD_EN_PIN != 0xFF) {
         pinMode(EPD_EN_PIN, OUTPUT);
         digitalWrite(EPD_EN_PIN, HIGH);
     }
 
-    pinMode(EPD_BS_PIN, OUTPUT);
-    digitalWrite(EPD_BS_PIN, LOW);
-
     digitalWrite(EPD_DC_PIN, LOW);
-    digitalWrite(EPD_CS_PIN, LOW);
     digitalWrite(EPD_RST_PIN, HIGH);
 
     if (EPD_LED_PIN != 0xFF)
@@ -137,9 +110,8 @@ void EPD_GPIO_Uninit(void)
     digitalWrite(EPD_DC_PIN, LOW);
     digitalWrite(EPD_CS_PIN, LOW);
     digitalWrite(EPD_RST_PIN, LOW);
-    if (EPD_EN_PIN != 0xFF) {
+    if (EPD_EN_PIN != 0xFF)
         digitalWrite(EPD_EN_PIN, LOW);
-    }
 
     // reset pin state
     pinMode(EPD_MOSI_PIN, DEFAULT);
