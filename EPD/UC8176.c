@@ -56,23 +56,28 @@
 #define PSR_SHD       BIT(1)
 #define PSR_RST       BIT(0)
 
+static void UC8176_WaitBusy(uint16_t timeout)
+{
+    EPD_WaitBusy(LOW, timeout);
+}
+
 static void UC8176_PowerOn(void)
 {
     EPD_WriteCommand(CMD_PON);
-    EPD_WaitBusy(LOW, 100);
+    UC8176_WaitBusy(100);
 }
 
 static void UC8176_PowerOff(void)
 {
     EPD_WriteCommand(CMD_POF);
-    EPD_WaitBusy(LOW, 100);
+    UC8176_WaitBusy(100);
 }
 
 // Read temperature from driver chip
 int8_t UC8176_Read_Temp(void)
 {
-    EPD_WriteCommand_SW(CMD_TSC);
-    return (int8_t) EPD_ReadByte_SW();
+    EPD_WriteCommand(CMD_TSC);
+    return (int8_t) EPD_ReadByte();
 }
 
 // Force temperature (will trigger OTP LUT switch)
@@ -95,7 +100,7 @@ void UC8176_Refresh(void)
     NRF_LOG_DEBUG("[EPD]: temperature: %d\n", UC8176_Read_Temp());
     EPD_WriteCommand(CMD_DRF);
     delay(100);
-    EPD_WaitBusy(LOW, 30000);
+    UC8176_WaitBusy(30000);
     UC8176_PowerOff();
     NRF_LOG_DEBUG("[EPD]: refresh end\n");
 }
@@ -182,6 +187,7 @@ void UC8176_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, 
     x -= x % 8; // byte boundary
     w = wb * 8; // byte boundary
     if (x + w > EPD->width || y + h > EPD->height) return;
+
     EPD_WriteCommand(CMD_PTIN); // partial in
     _setPartialRamArea(x, y, w, h);
     if (EPD->bwr) {

@@ -28,6 +28,11 @@
 #define CMD_ANALOG_BLOCK_CTRL     0x74        // Set Analog Block Control
 #define CMD_DIGITAL_BLOCK_CTRL    0x7E        // Set Digital Block Control
 
+static void SSD1619_WaitBusy(uint16_t timeout)
+{
+    EPD_WaitBusy(HIGH, timeout);
+}
+
 static void SSD1619_Update(uint8_t seq)
 {
     EPD_WriteCommand(CMD_DISP_CTRL2);
@@ -38,9 +43,9 @@ static void SSD1619_Update(uint8_t seq)
 int8_t SSD1619_Read_Temp(void)
 {
     SSD1619_Update(0xB1);
-    EPD_WaitBusy(HIGH, 500);
-    EPD_WriteCommand_SW(CMD_TSENSOR_READ);
-    return (int8_t) EPD_ReadByte_SW();
+    SSD1619_WaitBusy(500);
+    EPD_WriteCommand(CMD_TSENSOR_READ);
+    return (int8_t) EPD_ReadByte();
 }
 
 void SSD1619_Force_Temp(int8_t value)
@@ -75,7 +80,7 @@ void SSD1619_Init()
     EPD_Reset(HIGH, 10);
 
     EPD_WriteCommand(CMD_SW_RESET);
-    EPD_WaitBusy(HIGH, 200);
+    SSD1619_WaitBusy(200);
 
     EPD_WriteCommand(CMD_ANALOG_BLOCK_CTRL);
     EPD_WriteByte(0x54);
@@ -102,7 +107,7 @@ static void SSD1619_Refresh(void)
     NRF_LOG_DEBUG("[EPD]: refresh begin\n");
     NRF_LOG_DEBUG("[EPD]: temperature: %d\n", SSD1619_Read_Temp());
     SSD1619_Update(0xF7);
-    EPD_WaitBusy(HIGH, 30000);
+    SSD1619_WaitBusy(30000);
     NRF_LOG_DEBUG("[EPD]: refresh end\n");
 
     _setPartialRamArea(0, 0, EPD->width, EPD->height); // DO NOT REMOVE!
@@ -139,6 +144,7 @@ void SSD1619_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y,
     x -= x % 8; // byte boundary
     w = wb * 8; // byte boundary
     if (x + w > EPD->width || y + h > EPD->height) return;
+
     _setPartialRamArea(x, y, w, h);
     EPD_WriteCommand(CMD_WRITE_RAM1);
     for (uint16_t i = 0; i < h; i++) {

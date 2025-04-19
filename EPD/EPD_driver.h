@@ -76,20 +76,17 @@ void EPD_GPIO_Load(epd_config_t *cfg);
 void EPD_GPIO_Init(void);
 void EPD_GPIO_Uninit(void);
 
-// Software SPI (read / write)
-void EPD_SPI_WriteByte_SW(uint8_t data);
-uint8_t EPD_SPI_ReadByte_SW(void);
-void EPD_WriteCommand_SW(uint8_t Reg);
-void EPD_WriteByte_SW(uint8_t Data);
-uint8_t EPD_ReadByte_SW(void);
-
-// Hardware SPI (write only)
-void EPD_SPI_WriteByte(uint8_t value);
+// SPI
 void EPD_SPI_WriteBytes(uint8_t *value, uint8_t len);
+void EPD_SPI_ReadBytes(uint8_t *value, uint8_t len);
+void EPD_SPI_WriteByte(uint8_t value);
+uint8_t EPD_SPI_ReadByte(void);
+
+// EPD
 void EPD_WriteCommand(uint8_t Reg);
 void EPD_WriteByte(uint8_t Data);
 void EPD_WriteData(uint8_t *Data, uint8_t Len);
-
+uint8_t EPD_ReadByte(void);
 void EPD_Reset(uint32_t value, uint16_t duration);
 void EPD_WaitBusy(uint32_t value, uint16_t timeout);
 
