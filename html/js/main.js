@@ -1,9 +1,7 @@
 let bleDevice, gattServer;
 let epdService, epdCharacteristic;
-let reconnectTrys = 0;
-
-let canvas, ctx;
-let startTime;
+let startTime, msgIndex;
+let canvas, ctx, textDecoder;
 
 const EpdCmd = {
   SET_PINS:  0x00,
@@ -26,22 +24,8 @@ function resetVariables() {
   gattServer = null;
   epdService = null;
   epdCharacteristic = null;
+  msgIndex = 0;
   document.getElementById("log").value = '';
-}
-
-async function handleError(error) {
-  console.error(error);
-  resetVariables();
-  if (bleDevice == null)
-    return;
-  if (reconnectTrys <= 5) {
-    reconnectTrys++;
-    await connect();
-  }
-  else {
-    addLog("连接失败！");
-    reconnectTrys = 0;
-  }
 }
 
 async function write(cmd, data, withResponse=true) {
@@ -63,7 +47,7 @@ async function write(cmd, data, withResponse=true) {
       await epdCharacteristic.writeValueWithoutResponse(Uint8Array.from(payload));
   } catch (e) {
     console.error(e);
-    if (e.message) addLog(e.message);
+    if (e.message) addLog("write: " + e.message);
     return false;
   }
   return true;
@@ -183,7 +167,7 @@ async function preConnect() {
     }
   }
   else {
-    reconnectTrys = 0;
+    resetVariables();
     try {
       bleDevice = await navigator.bluetooth.requestDevice({
         optionalServices: ['62750001-d828-918d-fb46-b6c11c675aec'],
@@ -191,7 +175,7 @@ async function preConnect() {
       });
     } catch (e) {
       console.error(e);
-      if (e.message) addLog(e.message);
+      if (e.message) addLog("requestDevice: " + e.message);
       addLog("请检查蓝牙是否已开启，且使用的浏览器支持蓝牙！建议使用以下浏览器：");
       addLog("• 电脑: Chrome/Edge");
       addLog("• Android: Chrome/Edge");
@@ -200,16 +184,11 @@ async function preConnect() {
     }
 
     await bleDevice.addEventListener('gattserverdisconnected', disconnect);
-    try {
-      await connect();
-    } catch (e) {
-      await handleError(e);
-    }
+    setTimeout(async function () { await connect(); }, 300);
   }
 }
 
 async function reConnect() {
-  reconnectTrys = 0;
   if (bleDevice != null && bleDevice.gatt.connected)
     bleDevice.gatt.disconnect();
   resetVariables();
@@ -217,32 +196,55 @@ async function reConnect() {
   setTimeout(async function () { await connect(); }, 300);
 }
 
-async function connect() {
-  if (epdCharacteristic == null && bleDevice != null) {
-    addLog("正在连接: " + bleDevice.name);
+function handleNotify(value, idx) {
+  const data = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+  if (idx == 0) {
+    addLog(`收到配置：${bytes2hex(data)}`);
+    const epdpins = document.getElementById("epdpins");
+    const epddriver = document.getElementById("epddriver");
+    epdpins.value = bytes2hex(data.slice(0, 7));
+    if (data.length > 10) epdpins.value += bytes2hex(data.slice(10, 11));
+    epddriver.value = bytes2hex(data.slice(7, 8));
+    filterDitheringOptions();
+  } else {
+    if (textDecoder == null) textDecoder = new TextDecoder();
+    const msg = textDecoder.decode(data);
+    addLog(`<span class="action">⇓</span> ${msg}`);
+  }
+}
 
+async function connect() {
+  if (bleDevice == null || epdCharacteristic != null) return;
+
+  try {
+    addLog("正在连接: " + bleDevice.name);
     gattServer = await bleDevice.gatt.connect();
     addLog('  找到 GATT Server');
-
     epdService = await gattServer.getPrimaryService('62750001-d828-918d-fb46-b6c11c675aec');
     addLog('  找到 EPD Service');
-
     epdCharacteristic = await epdService.getCharacteristic('62750002-d828-918d-fb46-b6c11c675aec');
     addLog('  找到 Characteristic');
+  } catch (e) {
+    console.error(e);
+    if (e.message) addLog("connect: " + e.message);
+    disconnect();
+    return;
+  }
 
+  try {
     await epdCharacteristic.startNotifications();
     epdCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
-      addLog(`<span class="action">⇓</span> ${bytes2hex(event.target.value.buffer)}`);
-      document.getElementById("epdpins").value = bytes2hex(event.target.value.buffer.slice(0, 7));
-      document.getElementById("epddriver").value = bytes2hex(event.target.value.buffer.slice(7, 8));
-      filterDitheringOptions();
+      handleNotify(event.target.value, msgIndex++);
     });
-
-    await write(EpdCmd.INIT);
-
-    document.getElementById("connectbutton").innerHTML = '断开';
-    updateButtonStatus();
+  } catch (e) {
+    console.error(e);
+    if (e.message) addLog("startNotifications: " + e.message);
   }
+
+  await write(EpdCmd.INIT);
+
+  document.getElementById("connectbutton").innerHTML = '断开';
+  updateButtonStatus();
 }
 
 function setStatus(statusText) {
@@ -355,6 +357,7 @@ function checkDebugMode() {
 }
 
 document.body.onload = () => {
+  textDecoder = null;
   canvas = document.getElementById('canvas');
   ctx = canvas.getContext("2d");
 
