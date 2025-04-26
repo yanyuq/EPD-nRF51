@@ -69,8 +69,27 @@ void pinMode(uint32_t pin, uint32_t mode)
     }
 }
 
+// GPIO
+static uint16_t m_driver_refs = 0;
+
+void EPD_GPIO_Load(epd_config_t *cfg)
+{
+    if (cfg == NULL) return;
+    EPD_MOSI_PIN = cfg->mosi_pin;
+    EPD_SCLK_PIN = cfg->sclk_pin;
+    EPD_CS_PIN = cfg->cs_pin;
+    EPD_DC_PIN = cfg->dc_pin;
+    EPD_RST_PIN = cfg->rst_pin;
+    EPD_BUSY_PIN = cfg->busy_pin;
+    EPD_BS_PIN = cfg->bs_pin;
+    EPD_EN_PIN = cfg->en_pin;
+    EPD_LED_PIN = cfg->led_pin;
+}
+
 void EPD_GPIO_Init(void)
 {
+    if (m_driver_refs++ > 0) return;
+
     pinMode(EPD_DC_PIN, OUTPUT);
     pinMode(EPD_RST_PIN, OUTPUT);
     pinMode(EPD_BUSY_PIN, INPUT);
@@ -99,10 +118,14 @@ void EPD_GPIO_Init(void)
 
     if (EPD_LED_PIN != 0xFF)
         pinMode(EPD_LED_PIN, OUTPUT);
+
+    EPD_LED_ON();
 }
 
 void EPD_GPIO_Uninit(void)
 {
+    if (--m_driver_refs > 0) return;
+
     EPD_LED_OFF();
 
     nrf_drv_spi_uninit(&spi);
@@ -214,21 +237,6 @@ void EPD_WaitBusy(uint32_t value, uint16_t timeout)
         EPD_LED_ON();
     else
         EPD_LED_OFF();
-}
-
-// GPIO
-void EPD_GPIO_Load(epd_config_t *cfg)
-{
-    if (cfg == NULL) return;
-    EPD_MOSI_PIN = cfg->mosi_pin;
-    EPD_SCLK_PIN = cfg->sclk_pin;
-    EPD_CS_PIN = cfg->cs_pin;
-    EPD_DC_PIN = cfg->dc_pin;
-    EPD_RST_PIN = cfg->rst_pin;
-    EPD_BUSY_PIN = cfg->busy_pin;
-    EPD_BS_PIN = cfg->bs_pin;
-    EPD_EN_PIN = cfg->en_pin;
-    EPD_LED_PIN = cfg->led_pin;
 }
 
 // lED

@@ -36,37 +36,15 @@
 
 extern uint32_t timestamp(void); // defined in main.c
 
-static uint16_t m_driver_refs = 0;
-
-static void epd_gpio_init()
-{
-    if (m_driver_refs == 0) {
-        NRF_LOG_DEBUG("[EPD]: driver init\n");
-        EPD_GPIO_Init();
-    }
-    m_driver_refs++;
-    NRF_LOG_DEBUG("[EPD]: m_driver_refs=%d\n", m_driver_refs);
-}
-
-static void epd_gpio_uninit()
-{
-    m_driver_refs--;
-    NRF_LOG_DEBUG("[EPD]: m_driver_refs=%d\n", m_driver_refs);
-    if (m_driver_refs == 0) {
-        NRF_LOG_DEBUG("[EPD]: driver exit\n");
-        EPD_GPIO_Uninit();
-    }
-}
-
 static void epd_gui_update(void * p_event_data, uint16_t event_size)
 {
     epd_gui_update_event_t *event = (epd_gui_update_event_t *)p_event_data;
     ble_epd_t *p_epd = event->p_epd;
 
-    epd_gpio_init();
+    EPD_GPIO_Init();
     epd_model_t *epd = epd_init((epd_model_id_t)p_epd->config.model_id);
     DrawGUI(epd, event->timestamp, p_epd->display_mode);
-    epd_gpio_uninit();
+    EPD_GPIO_Uninit();
 }
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_CONNECTED event from the S110 SoftDevice.
@@ -77,8 +55,7 @@ static void epd_gui_update(void * p_event_data, uint16_t event_size)
 static void on_connect(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 {
     p_epd->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
-    epd_gpio_init();
-    EPD_LED_ON();
+    EPD_GPIO_Init();
 }
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_DISCONNECTED event from the S110 SoftDevice.
@@ -90,8 +67,7 @@ static void on_disconnect(ble_epd_t * p_epd, ble_evt_t * p_ble_evt)
 {
     UNUSED_PARAMETER(p_ble_evt);
     p_epd->conn_handle = BLE_CONN_HANDLE_INVALID;
-    EPD_LED_OFF();
-    epd_gpio_uninit();
+    EPD_GPIO_Uninit();
 }
 
 static void epd_service_process(ble_epd_t * p_epd, uint8_t * p_data, uint16_t length)
@@ -327,22 +303,12 @@ uint32_t ble_epd_init(ble_epd_t * p_epd, epd_callback_t cmd_cb)
 
 uint32_t ble_epd_string_send(ble_epd_t * p_epd, uint8_t * p_string, uint16_t length)
 {
-    ble_gatts_hvx_params_t hvx_params;
-
-    if (p_epd == NULL)
-    {
-        return NRF_ERROR_NULL;
-    }
-
     if ((p_epd->conn_handle == BLE_CONN_HANDLE_INVALID) || (!p_epd->is_notification_enabled))
-    {
         return NRF_ERROR_INVALID_STATE;
-    }
-
     if (length > p_epd->max_data_len)
-    {
         return NRF_ERROR_INVALID_PARAM;
-    }
+
+    ble_gatts_hvx_params_t hvx_params;
 
     memset(&hvx_params, 0, sizeof(hvx_params));
 
