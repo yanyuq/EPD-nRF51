@@ -935,6 +935,10 @@ size_t GFX_printf(Adafruit_GFX *gfx, const char* format, ...) {
     vsnprintf(buf, len + 1, format, va);
     va_end(va);
   }
+
+  len = GFX_write(gfx, buf, len);
+  if (buf != tmp)
+      free(buf);
  
-  return GFX_write(gfx, buf, len);
+  return len;
 }
