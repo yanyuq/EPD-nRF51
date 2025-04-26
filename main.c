@@ -85,8 +85,8 @@ NRF_BLE_GATT_DEF(m_gatt);                                                       
 BLE_ADVERTISING_DEF(m_advertising);                                                     /**< Advertising module instance. */
 #endif
 static uint16_t                          m_conn_handle = BLE_CONN_HANDLE_INVALID;       /**< Handle of the current connection. */
-static ble_uuid_t                        m_adv_uuids[] = {{BLE_UUID_EPD_SERVICE, \
-                                                           EPD_SERVICE_UUID_TYPE}};     /**< Universally unique service identifier. */
+static ble_uuid_t                        m_adv_uuids[] = {{BLE_UUID_EPD_SVC, \
+                                                           EPD_SVC_UUID_TYPE}};         /**< Universally unique service identifier. */
 
 BLE_EPD_DEF(m_epd);                                                                     /**< Structure to identify the EPD Service. */
 static uint32_t                          m_timestamp = 1735689600;                      /**< Current timestamp. */
@@ -154,7 +154,7 @@ static void application_timers_start(void)
  *
  * @note This function will not return.
  */
-static void sleep_mode_enter(void)
+void sleep_mode_enter(void)
 {
     NRF_LOG_DEBUG("Entering deep sleep mode\n");
 
@@ -162,51 +162,12 @@ static void sleep_mode_enter(void)
     nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF);
 }
 
-bool epd_cmd_callback(uint8_t cmd, uint8_t *data, uint16_t len)
-{
-    switch (cmd)
-    {
-        case EPD_CMD_SET_TIME:
-            if (len < 4) {
-                NRF_LOG_DEBUG("invalid time data!\n");
-                return false;
-            }
-
-            NRF_LOG_DEBUG("time: %02x %02x %02x %02x\n", data[0], data[1], data[2], data[3]);
-            if (len > 4) NRF_LOG_DEBUG("timezone: %d\n", (int8_t)data[4]);
-
-            app_timer_stop(m_clock_timer_id);
-            m_timestamp = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
-            m_timestamp += (len > 4 ? (int8_t)data[4] : 8) * 60 * 60; // timezone
-            app_timer_start(m_clock_timer_id, CLOCK_TIMER_INTERVAL, NULL);
-            m_epd.display_mode = len > 5 ? (display_mode_t)data[5] : MODE_CALENDAR;
-            ble_epd_on_timer(&m_epd, m_timestamp, true);
-            return true;
-
-        case EPD_CMD_SYS_SLEEP:
-            sleep_mode_enter();
-            return true;
-
-        case EPD_CMD_SYS_RESET:
-#if defined(S112)
-            nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_RESET);
-#else
-            NVIC_SystemReset();
-#endif
-            return true;
-            
-        default:
-            break;
-    }
-    return false;
-}
-
 /**@brief Function for initializing services that will be used by the application.
  */
 static void services_init(void)
 {
     memset(&m_epd, 0, sizeof(ble_epd_t));
-    APP_ERROR_CHECK(ble_epd_init(&m_epd, epd_cmd_callback));
+    APP_ERROR_CHECK(ble_epd_init(&m_epd));
 }
 
 /**@brief Function for the GAP initialization.
@@ -602,6 +563,13 @@ static void advertising_init(void)
 uint32_t timestamp(void)
 {
     return m_timestamp;
+}
+
+void set_timestamp(uint32_t timestamp)
+{
+    app_timer_stop(m_clock_timer_id);
+    m_timestamp = timestamp;
+    app_timer_start(m_clock_timer_id, CLOCK_TIMER_INTERVAL, NULL);
 }
 
 /**@brief Function for initializing the nrf log module.

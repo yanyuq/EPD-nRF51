@@ -43,14 +43,18 @@ void ble_epd_evt_handler(ble_evt_t const * p_ble_evt, void * p_context);
 #define BLE_EPD_DEF(_name) static ble_epd_t _name;
 #endif
 
-#define BLE_UUID_EPD_SERVICE  0x0001
-#define EPD_SERVICE_UUID_TYPE BLE_UUID_TYPE_VENDOR_BEGIN
+#define BLE_UUID_EPD_SVC_BASE              {{0XEC, 0X5A, 0X67, 0X1C, 0XC1, 0XB6, 0X46, 0XFB, \
+                                             0X8D, 0X91, 0X28, 0XD8, 0X22, 0X36, 0X75, 0X62}}
+#define BLE_UUID_EPD_SVC                   0x0001
+#define BLE_UUID_EPD_CHAR                  0x0002
+
+#define EPD_SVC_UUID_TYPE BLE_UUID_TYPE_VENDOR_BEGIN
+
 #if defined(S112)
 #define BLE_EPD_MAX_DATA_LEN (NRF_SDH_BLE_GATT_MAX_MTU_SIZE - 3)
 #else
 #define BLE_EPD_MAX_DATA_LEN  (GATT_MTU_SIZE_DEFAULT - 3) /**< Maximum length of data (in bytes) that can be transmitted to the peer. */
 #endif
-typedef bool (*epd_callback_t)(uint8_t cmd, uint8_t *data, uint16_t len);
 
 /**< EPD Service command IDs. */
 enum EPD_CMDS
@@ -77,7 +81,6 @@ enum EPD_CMDS
  */
 typedef struct
 {
-    uint8_t                  uuid_type;               /**< UUID type for EPD Service Base UUID. */
     uint16_t                 service_handle;          /**< Handle of EPD Service (as provided by the S110 SoftDevice). */
     ble_gatts_char_handles_t char_handles;            /**< Handles related to the EPD characteristic (as provided by the SoftDevice). */
     uint16_t                 conn_handle;             /**< Handle of the current connection (as provided by the SoftDevice). BLE_CONN_HANDLE_INVALID if not in a connection. */
@@ -85,8 +88,7 @@ typedef struct
     bool                     is_notification_enabled; /**< Variable to indicate if the peer has enabled notification of the RX characteristic.*/
     epd_model_t              *epd;                    /**< current EPD model */
     epd_config_t             config;                  /**< EPD config */
-    epd_callback_t           epd_cmd_cb;              /**< EPD callback */
-    display_mode_t           display_mode;            /**< gui display mode */
+    display_mode_t           display_mode;            /**< GUI display mode */
 } ble_epd_t;
 
 typedef struct
@@ -108,12 +110,11 @@ void ble_epd_sleep_prepare(ble_epd_t * p_epd);
  * @param[out] p_epd      EPD Service structure. This structure must be supplied
  *                        by the application. It is initialized by this function and will
  *                        later be used to identify this particular service instance.
- * @param[in] cmd_cb      Time update callback
  *
  * @retval NRF_SUCCESS If the service was successfully initialized. Otherwise, an error code is returned.
  * @retval NRF_ERROR_NULL If either of the pointers p_epd or p_epd_init is NULL.
  */
-uint32_t ble_epd_init(ble_epd_t * p_epd, epd_callback_t cmd_cb);
+uint32_t ble_epd_init(ble_epd_t * p_epd);
 
 /**@brief Function for handling the EPD Service's BLE events.
  *
