@@ -1,11 +1,7 @@
-#include "Adafruit_GFX.h"
 #include "fonts.h"
 #include "Lunar.h"
 #include "GUI.h"
-#include "nrf_log.h"
 #include <stdio.h>
-
-#define PAGE_HEIGHT ((__HEAP_SIZE / 50) - 4)
 
 #define GFX_printf_styled(gfx, fg, bg, font, ...) \
             GFX_setTextColor(gfx, fg, bg);        \
@@ -142,13 +138,12 @@ static void DrawTime(Adafruit_GFX *gfx, tm_t *tm, int16_t x, int16_t y, uint16_t
     Draw7Number(gfx, tm->tm_min, x, y, cS, GFX_BLACK, GFX_WHITE, nD);
 }
 
-static void DrawBattery(Adafruit_GFX *gfx, int16_t x, int16_t y)
+static void DrawBattery(Adafruit_GFX *gfx, int16_t x, int16_t y, float voltage)
 {
-    float vol = EPD_ReadVoltage();
-    uint8_t level = (uint8_t)(vol * 100 / 4.2);
+    uint8_t level = (uint8_t)(voltage * 100 / 4.2);
     GFX_setCursor(gfx, x - 26, y + 9);
     GFX_setFont(gfx, u8g2_font_wqy9_t_lunar);
-    GFX_printf(gfx, "%.1fV", vol);
+    GFX_printf(gfx, "%.1fV", voltage);
     GFX_fillRect(gfx, x, y, 20, 10, GFX_WHITE);
     GFX_drawRect(gfx, x, y, 20, 10, GFX_BLACK);
     GFX_fillRect(gfx, x + 20, y + 4, 2, 2, GFX_BLACK);
@@ -162,7 +157,7 @@ static void DrawTemperature(Adafruit_GFX *gfx, int16_t x, int16_t y, int8_t temp
     GFX_printf(gfx, "%d℃", temp);
 }
 
-static void DrawClock(Adafruit_GFX *gfx, tm_t *tm, struct Lunar_Date *Lunar, int8_t temp)
+static void DrawClock(Adafruit_GFX *gfx, tm_t *tm, struct Lunar_Date *Lunar, gui_data_t *data)
 {
     DrawDate(gfx, 40, 36, tm);
     GFX_setCursor(gfx, 40, 58);
@@ -172,8 +167,8 @@ static void DrawClock(Adafruit_GFX *gfx, tm_t *tm, struct Lunar_Date *Lunar, int
     GFX_printf(gfx, "%s%s%s", Lunar_MonthLeapString[Lunar->IsLeap], Lunar_MonthString[Lunar->Month],
         Lunar_DateString[Lunar->Date]);
 
-    DrawBattery(gfx, 330, 25);
-    DrawTemperature(gfx, 330, 58, temp);
+    DrawBattery(gfx, 330, 25, data->voltage);
+    DrawTemperature(gfx, 330, 58, data->temperature);
 
     GFX_drawFastHLine(gfx, 30, 68, 330, GFX_BLACK);
     DrawTime(gfx, tm, 70, 98, 5, 2);
@@ -197,24 +192,23 @@ static void DrawClock(Adafruit_GFX *gfx, tm_t *tm, struct Lunar_Date *Lunar, int
     }
 }
 
-void DrawGUI(epd_model_t *epd, uint32_t timestamp, display_mode_t mode)
+void DrawGUI(gui_data_t *data, buffer_callback draw, display_mode_t mode)
 {
     tm_t tm = {0};
     struct Lunar_Date Lunar;
 
-    transformTime(timestamp, &tm);
+    transformTime(data->timestamp, &tm);
     LUNAR_SolarToLunar(&Lunar, tm.tm_year + YEAR0, tm.tm_mon + 1, tm.tm_mday);
 
     Adafruit_GFX gfx;
 
-    if (epd->bwr)
-      GFX_begin_3c(&gfx, epd->width, epd->height, PAGE_HEIGHT);
+    if (data->bwr)
+      GFX_begin_3c(&gfx, data->width, data->height, PAGE_HEIGHT);
     else
-      GFX_begin(&gfx, epd->width, epd->height, PAGE_HEIGHT);
+      GFX_begin(&gfx, data->width, data->height, PAGE_HEIGHT);
 
     GFX_firstPage(&gfx);
     do {
-        NRF_LOG_DEBUG("page %d\n", gfx.current_page);
         GFX_fillScreen(&gfx, GFX_WHITE);
 
         switch (mode) {
@@ -222,16 +216,12 @@ void DrawGUI(epd_model_t *epd, uint32_t timestamp, display_mode_t mode)
                 DrawCalendar(&gfx, &tm, &Lunar);
                 break;
             case MODE_CLOCK:
-                DrawClock(&gfx, &tm, &Lunar, epd->drv->read_temp());
+                DrawClock(&gfx, &tm, &Lunar, data);
                 break;
             default:
                 break;
         }
-    } while(GFX_nextPage(&gfx, epd->drv->write_image));
+    } while(GFX_nextPage(&gfx, draw));
 
     GFX_end(&gfx);
-
-    NRF_LOG_DEBUG("display start\n");
-    epd->drv->refresh();
-    NRF_LOG_DEBUG("display end\n");
 }

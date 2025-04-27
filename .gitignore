@@ -33,6 +33,7 @@
 *.obj
 *.o
 *.sbr
+*.exe
 
 # Build files
 # define exception below if needed

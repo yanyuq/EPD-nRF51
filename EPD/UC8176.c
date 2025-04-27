@@ -77,6 +77,7 @@ static void UC8176_PowerOff(void)
 int8_t UC8176_Read_Temp(void)
 {
     EPD_WriteCommand(CMD_TSC);
+    UC8176_WaitBusy(100);
     return (int8_t) EPD_ReadByte();
 }
 

@@ -43,7 +43,16 @@ static void epd_gui_update(void * p_event_data, uint16_t event_size)
 
     EPD_GPIO_Init();
     epd_model_t *epd = epd_init((epd_model_id_t)p_epd->config.model_id);
-    DrawGUI(epd, event->timestamp, p_epd->display_mode);
+    gui_data_t data = {
+        .bwr             = epd->bwr,
+        .width           = epd->width,
+        .height          = epd->height,
+        .timestamp       = event->timestamp,
+        .temperature     = epd->drv->read_temp(),
+        .voltage         = EPD_ReadVoltage(),
+    };
+    DrawGUI(&data, epd->drv->write_image, p_epd->display_mode);
+    epd->drv->refresh();
     EPD_GPIO_Uninit();
 }
 

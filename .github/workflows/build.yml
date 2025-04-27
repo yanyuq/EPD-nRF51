@@ -49,3 +49,22 @@ jobs:
           path: |
             _build/nrf52811_xxaa.hex
             SDK/17.1.0_ddde560/components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex
+  
+  win32:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            make
+            mingw-w64-x86_64-gcc
+      - name: Build
+        run: make -f Makefile.win32
+      - uses: actions/upload-artifact@v4
+        with:
+          name: emulator
+          path: emulator.exe
