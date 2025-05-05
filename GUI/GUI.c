@@ -119,7 +119,7 @@ static void Draw7Number(Adafruit_GFX *gfx, int n, unsigned int xLoc, unsigned in
     unsigned int seg[7][3]={{x1,yLoc,1},{x2,y1,0},{x2,y3+x1,0},{x1,(2*y3)-yLoc,1},{0,y3+x1,0},{0,y1,0},{x1,y3,1}};
     unsigned char nums[12]={0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F,0x00,0x40},c=(c=abs(cS))>10?10:(c<1)?1:c,cnt=(cnt=abs(nD))>10?10:(cnt<1)?1:cnt;
     for (xLoc+=cnt*(d=S2+(3*S3)+2);cnt>0;cnt--){
-      for (i=(num>9)?num%10:((!cnt)&&(n<0))?11:((nD<0)&&(!num))?10:num,xLoc-=d,num/=10,j=0;j<7;++j){
+        for (i=(num>9)?num%10:((!cnt)&&(n<0))?11:((nD<0)&&(!num))?10:num,xLoc-=d,num/=10,j=0;j<7;++j){
         col=(nums[i]&(1<<j))?fC:bC;
         if (seg[j][2])for(w=S2,t=seg[j][1]+S3,h=seg[j][1]+cS,a=xLoc+seg[j][0]+cS,b=seg[j][1];b<h;b++,a--,w+=2)GFX_drawFastHLine(gfx,a,b,w,col);
         else for(w=S4,t=xLoc+seg[j][0]+S3,h=xLoc+seg[j][0]+cS,b=xLoc+seg[j][0],a=seg[j][1]+cS;b<h;b++,a--,w+=2)GFX_drawFastVLine(gfx,b,a,w,col);
@@ -198,7 +198,6 @@ void DrawGUI(gui_data_t *data, buffer_callback draw, display_mode_t mode)
     struct Lunar_Date Lunar;
 
     transformTime(data->timestamp, &tm);
-    LUNAR_SolarToLunar(&Lunar, tm.tm_year + YEAR0, tm.tm_mon + 1, tm.tm_mday);
 
     Adafruit_GFX gfx;
 
@@ -210,6 +209,8 @@ void DrawGUI(gui_data_t *data, buffer_callback draw, display_mode_t mode)
     GFX_firstPage(&gfx);
     do {
         GFX_fillScreen(&gfx, GFX_WHITE);
+
+        LUNAR_SolarToLunar(&Lunar, tm.tm_year + YEAR0, tm.tm_mon + 1, tm.tm_mday);
 
         switch (mode) {
             case MODE_CALENDAR:
