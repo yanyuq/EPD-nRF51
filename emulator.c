@@ -16,6 +16,8 @@ HINSTANCE g_hInstance;
 HWND g_hwnd;
 display_mode_t g_display_mode = MODE_CALENDAR; // Default to calendar mode
 BOOL g_bwr_mode = TRUE;  // Default to BWR mode
+time_t g_display_time;
+struct tm g_tm_time;
 
 // Convert bitmap data from e-paper format to Windows DIB format
 static uint8_t *convertBitmap(uint8_t *bitmap, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
@@ -148,15 +150,21 @@ void DrawBitmap(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, uint16_t
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
         case WM_CREATE:
-            // Set a timer to update the display periodically (every second)
+            // Initialize the display time
+            g_display_time = time(NULL) + 8*3600;
+            // Set a timer to update the CLOCK periodically (every second)
             SetTimer(hwnd, 1, 1000, NULL);
             return 0;
-            
+
         case WM_TIMER:
-            // Force a redraw of the window without erasing the background
-            InvalidateRect(hwnd, NULL, FALSE);
+            if (g_display_mode == MODE_CLOCK) {
+                g_display_time = time(NULL) + 8*3600;
+                if (g_display_time % 60 == 0) {
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            }
             return 0;
-            
+
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
@@ -170,12 +178,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
             FillRect(hdc, &clientRect, bgBrush);
             DeleteObject(bgBrush);
             
-            // Get current timestamp
+            // Use the stored timestamp
             gui_data_t data = {
                 .bwr             = g_bwr_mode,
                 .width           = BITMAP_WIDTH,
                 .height          = BITMAP_HEIGHT,
-                .timestamp       = time(NULL) + 8*3600,
+                .timestamp       = g_display_time,
                 .temperature     = 25,
                 .voltage         = 3.2f,
             };
@@ -200,6 +208,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
             // Toggle BWR mode with R key
             else if (wParam == 'R') {
                 g_bwr_mode = !g_bwr_mode;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            // Handle arrow keys for month/day adjustment
+            else if (wParam == VK_UP || wParam == VK_DOWN || wParam == VK_LEFT || wParam == VK_RIGHT) {
+                // Get the current time structure
+                g_tm_time = *localtime(&g_display_time);
+                
+                // Up/Down adjusts month
+                if (wParam == VK_UP) {
+                    g_tm_time.tm_mon++;
+                    if (g_tm_time.tm_mon > 11) {
+                        g_tm_time.tm_mon = 0;
+                        g_tm_time.tm_year++;
+                    }
+                }
+                else if (wParam == VK_DOWN) {
+                    g_tm_time.tm_mon--;
+                    if (g_tm_time.tm_mon < 0) {
+                        g_tm_time.tm_mon = 11;
+                        g_tm_time.tm_year--;
+                    }
+                }
+                // Left/Right adjusts day
+                else if (wParam == VK_RIGHT) {
+                    g_tm_time.tm_mday++;
+                }
+                else if (wParam == VK_LEFT) {
+                    g_tm_time.tm_mday--;
+                }
+                
+                // Convert back to time_t
+                g_display_time = mktime(&g_tm_time);
+                
+                // Force redraw
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             return 0;
@@ -235,7 +277,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // Create the window - explicit use of CreateWindowA for ANSI version
     g_hwnd = CreateWindowA(
         "BitmapDemo",
-        "Emurator (Press Space/R Key)", // Using simple title
+        "Emurator", // Using simple title
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT,
         WINDOW_WIDTH, WINDOW_HEIGHT,
