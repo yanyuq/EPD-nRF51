@@ -8,6 +8,25 @@
             GFX_setFont(gfx, font);               \
             GFX_printf(gfx, __VA_ARGS__);
 
+static void DrawBattery(Adafruit_GFX *gfx, int16_t x, int16_t y, float voltage)
+{
+    uint8_t level = (uint8_t)(voltage * 100 / 4.2);
+    GFX_setCursor(gfx, x - 26, y + 9);
+    GFX_setFont(gfx, u8g2_font_wqy9_t_lunar);
+    GFX_printf(gfx, "%.1fV", voltage);
+    GFX_fillRect(gfx, x, y, 20, 10, GFX_WHITE);
+    GFX_drawRect(gfx, x, y, 20, 10, GFX_BLACK);
+    GFX_fillRect(gfx, x + 20, y + 4, 2, 2, GFX_BLACK);
+    GFX_fillRect(gfx, x + 2, y + 2, 16 * level / 100, 6, GFX_BLACK);
+}
+
+static void DrawTemperature(Adafruit_GFX *gfx, int16_t x, int16_t y, int8_t temp)
+{
+    GFX_setCursor(gfx, x, y);
+    GFX_setFont(gfx, u8g2_font_wqy9_t_lunar);
+    GFX_printf(gfx, "%d℃", temp);
+}
+
 static void DrawDate(Adafruit_GFX *gfx, int16_t x, int16_t y, tm_t *tm)
 {
     GFX_setCursor(gfx, x, y);
@@ -19,11 +38,13 @@ static void DrawDate(Adafruit_GFX *gfx, int16_t x, int16_t y, tm_t *tm)
     GFX_printf_styled(gfx, GFX_BLACK, GFX_WHITE, u8g2_font_wqy12_t_lunar, "日 ");
 }
 
-static void DrawDateHeader(Adafruit_GFX *gfx, int16_t x, int16_t y, tm_t *tm, struct Lunar_Date *Lunar)
+static void DrawDateHeader(Adafruit_GFX *gfx, int16_t x, int16_t y, tm_t *tm, struct Lunar_Date *Lunar, gui_data_t *data)
 {
     DrawDate(gfx, x, y, tm);
     GFX_setFont(gfx, u8g2_font_wqy9_t_lunar);
     GFX_printf(gfx, "星期%s", Lunar_DayString[tm->tm_wday]);
+
+    DrawBattery(gfx, 365, 4, data->voltage);
 
     GFX_setCursor(gfx, x + 270, y);
     GFX_printf(gfx, "%s%s%s %s%s", Lunar_MonthLeapString[Lunar->IsLeap], Lunar_MonthString[Lunar->Month],
@@ -91,9 +112,9 @@ static void DrawMonthDays(Adafruit_GFX *gfx, tm_t *tm, struct Lunar_Date *Lunar)
     }
 }
 
-static void DrawCalendar(Adafruit_GFX *gfx, tm_t *tm, struct Lunar_Date *Lunar)
+static void DrawCalendar(Adafruit_GFX *gfx, tm_t *tm, struct Lunar_Date *Lunar, gui_data_t *data)
 {
-    DrawDateHeader(gfx, 10, 28, tm, Lunar);
+    DrawDateHeader(gfx, 10, 28, tm, Lunar, data);
     DrawWeekHeader(gfx, 10, 32);
     DrawMonthDays(gfx, tm, Lunar);
 }
@@ -136,25 +157,6 @@ static void DrawTime(Adafruit_GFX *gfx, tm_t *tm, int16_t x, int16_t y, uint16_t
     GFX_fillRect(gfx, x, y + 13.5*cS+3, 2*cS, 2*cS, GFX_BLACK);
     x += 4*cS;
     Draw7Number(gfx, tm->tm_min, x, y, cS, GFX_BLACK, GFX_WHITE, nD);
-}
-
-static void DrawBattery(Adafruit_GFX *gfx, int16_t x, int16_t y, float voltage)
-{
-    uint8_t level = (uint8_t)(voltage * 100 / 4.2);
-    GFX_setCursor(gfx, x - 26, y + 9);
-    GFX_setFont(gfx, u8g2_font_wqy9_t_lunar);
-    GFX_printf(gfx, "%.1fV", voltage);
-    GFX_fillRect(gfx, x, y, 20, 10, GFX_WHITE);
-    GFX_drawRect(gfx, x, y, 20, 10, GFX_BLACK);
-    GFX_fillRect(gfx, x + 20, y + 4, 2, 2, GFX_BLACK);
-    GFX_fillRect(gfx, x + 2, y + 2, 16 * level / 100, 6, GFX_BLACK);
-}
-
-static void DrawTemperature(Adafruit_GFX *gfx, int16_t x, int16_t y, int8_t temp)
-{
-    GFX_setCursor(gfx, x, y);
-    GFX_setFont(gfx, u8g2_font_wqy9_t_lunar);
-    GFX_printf(gfx, "%d℃", temp);
 }
 
 static void DrawClock(Adafruit_GFX *gfx, tm_t *tm, struct Lunar_Date *Lunar, gui_data_t *data)
@@ -214,7 +216,7 @@ void DrawGUI(gui_data_t *data, buffer_callback draw, display_mode_t mode)
 
         switch (mode) {
             case MODE_CALENDAR:
-                DrawCalendar(&gfx, &tm, &Lunar);
+                DrawCalendar(&gfx, &tm, &Lunar, data);
                 break;
             case MODE_CLOCK:
                 DrawClock(&gfx, &tm, &Lunar, data);
