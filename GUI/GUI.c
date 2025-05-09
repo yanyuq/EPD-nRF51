@@ -198,7 +198,6 @@ void DrawGUI(gui_data_t *data, buffer_callback draw, display_mode_t mode)
     struct Lunar_Date Lunar;
 
     transformTime(data->timestamp, &tm);
-    LUNAR_SolarToLunar(&Lunar, tm.tm_year + YEAR0, tm.tm_mon + 1, tm.tm_mday);
 
     Adafruit_GFX gfx;
 
@@ -210,6 +209,8 @@ void DrawGUI(gui_data_t *data, buffer_callback draw, display_mode_t mode)
     GFX_firstPage(&gfx);
     do {
         GFX_fillScreen(&gfx, GFX_WHITE);
+
+        LUNAR_SolarToLunar(&Lunar, tm.tm_year + YEAR0, tm.tm_mon + 1, tm.tm_mday);
 
         switch (mode) {
             case MODE_CALENDAR:
