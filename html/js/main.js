@@ -41,7 +41,7 @@ async function write(cmd, data, withResponse=true) {
     if (data instanceof Uint8Array) data = Array.from(data);
     payload.push(...data)
   }
-  addLog(`<span class="action">⇑</span> ${bytes2hex(payload)}`);
+  addLog(bytes2hex(payload), '⇑');
   try {
     if (withResponse)
       await epdCharacteristic.writeValueWithResponse(Uint8Array.from(payload));
@@ -240,8 +240,7 @@ function handleNotify(value, idx) {
     filterDitheringOptions();
   } else {
     if (textDecoder == null) textDecoder = new TextDecoder();
-    const msg = textDecoder.decode(data);
-    addLog(`<span class="action">⇓</span> ${msg}`);
+    addLog(textDecoder.decode(data), '⇓');
   }
 }
 
@@ -251,11 +250,11 @@ async function connect() {
   try {
     addLog("正在连接: " + bleDevice.name);
     gattServer = await bleDevice.gatt.connect();
-    addLog('&nbsp;&nbsp;找到 GATT Server');
+    addLog('  找到 GATT Server');
     epdService = await gattServer.getPrimaryService('62750001-d828-918d-fb46-b6c11c675aec');
-    addLog('&nbsp;&nbsp;找到 EPD Service');
+    addLog('  找到 EPD Service');
     epdCharacteristic = await epdService.getCharacteristic('62750002-d828-918d-fb46-b6c11c675aec');
-    addLog('&nbsp;&nbsp;找到 Characteristic');
+    addLog('  找到 Characteristic');
   } catch (e) {
     console.error(e);
     if (e.message) addLog("connect: " + e.message);
@@ -293,18 +292,32 @@ function setStatus(statusText) {
   document.getElementById("status").innerHTML = statusText;
 }
 
-function addLog(logTXT) {
+function addLog(logTXT, action = '') {
   const log = document.getElementById("log");
   const now = new Date();
   const time = String(now.getHours()).padStart(2, '0') + ":" +
          String(now.getMinutes()).padStart(2, '0') + ":" +
          String(now.getSeconds()).padStart(2, '0') + " ";
-  log.innerHTML += '<span class="time">' + time + '</span>' + logTXT + '<br>';
+
+  const logEntry = document.createElement('div');
+  const timeSpan = document.createElement('span');
+  timeSpan.className = 'time';
+  timeSpan.textContent = time;
+  logEntry.appendChild(timeSpan);
+  
+  if (action !== '') {
+    const actionSpan = document.createElement('span');
+    actionSpan.className = 'action';
+    actionSpan.innerHTML = action;
+    logEntry.appendChild(actionSpan);
+  }
+  logEntry.appendChild(document.createTextNode(logTXT));
+
+  log.appendChild(logEntry);
   log.scrollTop = log.scrollHeight;
-  while ((log.innerHTML.match(/<br>/g) || []).length > 20) {
-    var logs_br_position = log.innerHTML.search("<br>");
-    log.innerHTML = log.innerHTML.substring(logs_br_position + 4);
-    log.scrollTop = log.scrollHeight;
+  
+  while (log.childNodes.length > 20) {
+    log.removeChild(log.firstChild);
   }
 }
 
@@ -368,17 +381,21 @@ function convert_dithering() {
 function filterDitheringOptions() {
   const driver = document.getElementById('epddriver').value;
   const dithering = document.getElementById('dithering');
+  let currentOptionStillValid = false;
+
   for (let optgroup of dithering.getElementsByTagName('optgroup')) {
     const drivers = optgroup.getAttribute('data-driver').split('|');
     const show = drivers.includes(driver);
     for (option of optgroup.getElementsByTagName('option')) {
-      if (show)
+      if (show) {
         option.removeAttribute('disabled');
-      else
+        if (option.value == dithering.value) currentOptionStillValid = true;
+      } else {
         option.setAttribute('disabled', 'disabled');
+      }
     }
   }
-  dithering.value = '';
+  if (!currentOptionStillValid) dithering.value = '';
 }
 
 function checkDebugMode() {
