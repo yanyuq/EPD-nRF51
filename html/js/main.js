@@ -1,6 +1,6 @@
 let bleDevice, gattServer;
 let epdService, epdCharacteristic;
-let startTime, msgIndex;
+let startTime, msgIndex, appVersion;
 let canvas, ctx, textDecoder;
 
 const EpdCmd = {
@@ -229,6 +229,16 @@ async function connect() {
     if (e.message) addLog("connect: " + e.message);
     disconnect();
     return;
+  }
+
+  try {
+    const versionCharacteristic = await epdService.getCharacteristic('62750003-d828-918d-fb46-b6c11c675aec');
+    const versionData = await versionCharacteristic.readValue();
+    appVersion = versionData.getUint8(0);
+    addLog(`固件版本: 0x${appVersion.toString(16)}`);
+  } catch (e) {
+    console.error(e);
+    appVersion = 0x15;
   }
 
   try {

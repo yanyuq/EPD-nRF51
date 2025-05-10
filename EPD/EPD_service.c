@@ -263,6 +263,7 @@ static uint32_t epd_service_init(ble_epd_t * p_epd)
     ble_uuid_t            ble_uuid = {0};
     ble_uuid128_t         base_uuid = BLE_UUID_EPD_SVC_BASE;
     ble_add_char_params_t add_char_params;
+    uint8_t               app_version = APP_VERSION;
  
     VERIFY_SUCCESS(sd_ble_uuid_vs_add(&base_uuid, &ble_uuid.type));
 
@@ -285,7 +286,18 @@ static uint32_t epd_service_init(ble_epd_t * p_epd)
     add_char_params.write_access             = SEC_OPEN;
     add_char_params.cccd_write_access        = SEC_OPEN;
 
-    return characteristic_add(p_epd->service_handle, &add_char_params, &p_epd->char_handles);
+    VERIFY_SUCCESS(characteristic_add(p_epd->service_handle, &add_char_params, &p_epd->char_handles));
+
+    memset(&add_char_params, 0, sizeof(add_char_params));
+    add_char_params.uuid                     = BLE_UUID_APP_VER;
+    add_char_params.uuid_type                = ble_uuid.type;
+    add_char_params.max_len                  = sizeof(uint8_t);
+    add_char_params.init_len                 = sizeof(uint8_t);
+    add_char_params.p_init_value             = &app_version;
+    add_char_params.char_props.read          = 1;
+    add_char_params.read_access              = SEC_OPEN;
+
+    return characteristic_add(p_epd->service_handle, &add_char_params, &p_epd->app_ver_handles);
 }
 
 void ble_epd_sleep_prepare(ble_epd_t * p_epd)
