@@ -37,6 +37,8 @@ typedef struct
     void (*sleep)(void);                              /**< Enter sleep mode */
     int8_t (*read_temp)(void);                        /**< Read temperature from driver chip */
     void (*force_temp)(int8_t value);                 /**< Force temperature (will trigger OTP LUT switch) */
+    uint8_t cmd_write_ram1;                           /**< Command to write black ram */
+    uint8_t cmd_write_ram2;                           /**< Command to write red ram */
 } epd_driver_t;
 
 typedef enum

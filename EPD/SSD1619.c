@@ -183,6 +183,8 @@ static epd_driver_t epd_drv_ssd1619 = {
     .sleep = SSD1619_Sleep,
     .read_temp = SSD1619_Read_Temp,
     .force_temp = SSD1619_Force_Temp,
+    .cmd_write_ram1 = CMD_WRITE_RAM1,
+    .cmd_write_ram2 = CMD_WRITE_RAM2,
 };
 
 // SSD1619 400x300 Black/White/Red

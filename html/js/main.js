@@ -14,6 +14,8 @@ const EpdCmd = {
 
   SET_TIME:  0x20,
 
+  WRITE_IMG: 0x30, // v1.6
+
   SET_CONFIG: 0x90,
   SYS_RESET:  0x91,
   SYS_SLEEP:  0x92,
@@ -77,6 +79,32 @@ async function epdWrite(cmd, data) {
   }
 }
 
+async function epdWriteImage(step = 'bw') {
+  const data = canvas2bytes(canvas, step);
+  const chunkSize = document.getElementById('mtusize').value - 2;
+  const interleavedCount = document.getElementById('interleavedcount').value;
+  const count = Math.round(data.length / chunkSize);
+  let chunkIdx = 0;
+  let noReplyCount = interleavedCount;
+
+  for (let i = 0; i < data.length; i += chunkSize) {
+    let currentTime = (new Date().getTime() - startTime) / 1000.0;
+    setStatus(`${step == 'bw' ? '黑白' : '红色'}块: ${chunkIdx+1}/${count+1}, 总用时: ${currentTime}s`);
+    const payload = [
+      (step == 'bw' ? 0x0F : 0x00) | ( i == 0 ? 0x00 : 0xF0),
+      ...data.slice(i, i + chunkSize),
+    ];
+    if (noReplyCount > 0) {
+      await write(EpdCmd.WRITE_IMG, payload, false);
+      noReplyCount--;
+    } else {
+      await write(EpdCmd.WRITE_IMG, payload, true);
+      noReplyCount = interleavedCount;
+    }
+    chunkIdx++;
+  }
+}
+
 async function setDriver() {
   await write(EpdCmd.SET_PINS, document.getElementById("epdpins").value);
   await write(EpdCmd.INIT, document.getElementById("epddriver").value);
@@ -123,12 +151,16 @@ async function sendimg() {
   startTime = new Date().getTime();
   status.parentElement.style.display = "block";
 
-  if (mode.startsWith('bwr')) {
-    const invert = (appVersion < 0x16) ? (driver === '02') : false;
-    await epdWrite(driver === "02" ? 0x24 : 0x10, canvas2bytes(canvas, 'bw'));
-    await epdWrite(driver === "02" ? 0x26 : 0x13, canvas2bytes(canvas, 'red', invert));
+  if (appVersion < 0x16) {
+    if (mode.startsWith('bwr')) {
+      await epdWrite(driver === "02" ? 0x24 : 0x10, canvas2bytes(canvas, 'bw'));
+      await epdWrite(driver === "02" ? 0x26 : 0x13, canvas2bytes(canvas, 'red', driver === '02'));
+    } else {
+      await epdWrite(driver === "04" ? 0x24 : 0x13, canvas2bytes(canvas, 'bw'));
+    }
   } else {
-    await epdWrite(driver === "04" ? 0x24 : 0x13, canvas2bytes(canvas, 'bw'));
+    await epdWriteImage('bw');
+    if (mode.startsWith('bwr')) await epdWriteImage('red');
   }
 
   await write(EpdCmd.REFRESH);

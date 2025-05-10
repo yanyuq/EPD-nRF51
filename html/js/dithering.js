@@ -82,7 +82,7 @@ function dithering(ctx, width, height, threshold, type) {
 }
 
 // white: 1, black/red: 0
-function canvas2bytes(canvas, type='bw', invert = false) {
+function canvas2bytes(canvas, step = 'bw', invert = false) {
   const ctx = canvas.getContext("2d");
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
@@ -92,7 +92,7 @@ function canvas2bytes(canvas, type='bw', invert = false) {
   for (let y = 0; y < canvas.height; y++) {
     for (let x = 0; x < canvas.width; x++) {
       const i = (canvas.width * y + x) * 4;
-      if (type !== 'red') {
+      if (step === 'bw') {
         buffer.push(imageData.data[i] === 0 && imageData.data[i+1] === 0 && imageData.data[i+2] === 0 ? 0 : 1);
       } else {
         buffer.push(imageData.data[i] > 0 && imageData.data[i+1] === 0 && imageData.data[i+2] === 0 ? 0 : 1);

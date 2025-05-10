@@ -230,6 +230,8 @@ static epd_driver_t epd_drv_uc8176 = {
     .sleep = UC8176_Sleep,
     .read_temp = UC8176_Read_Temp,
     .force_temp = UC8176_Force_Temp,
+    .cmd_write_ram1 = CMD_DTM1,
+    .cmd_write_ram2 = CMD_DTM2,
 };
 
 // UC8176 400x300 Black/White

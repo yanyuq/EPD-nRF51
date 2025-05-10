@@ -72,6 +72,8 @@ enum EPD_CMDS
 
 	EPD_CMD_SET_TIME     = 0x20,                        /** < set time with unix timestamp */
 
+    EPD_CMD_WRITE_IMAGE  = 0x30,                        /** < write image data to EPD ram */
+
     EPD_CMD_SET_CONFIG   = 0x90,                        /**< set full EPD config */
     EPD_CMD_SYS_RESET    = 0x91,                        /**< MCU reset */
     EPD_CMD_SYS_SLEEP    = 0x92,                        /**< MCU enter sleep mode */
