@@ -319,14 +319,12 @@ extern epd_model_t epd_uc8176_420_bw;
 extern epd_model_t epd_uc8176_420_bwr;
 extern epd_model_t epd_ssd1619_420_bwr;
 extern epd_model_t epd_ssd1619_420_bw;
-extern epd_model_t epd_uc8276_420_bwr;
 
 static epd_model_t *epd_models[] = {
     &epd_uc8176_420_bw,
     &epd_uc8176_420_bwr,
     &epd_ssd1619_420_bwr,
     &epd_ssd1619_420_bw,
-    &epd_uc8276_420_bwr,
 };
 
 // EPD model

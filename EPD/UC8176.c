@@ -131,10 +131,8 @@ void UC8176_Init()
     EPD_WriteCommand(CMD_PSR);
     EPD_WriteByte(psr);
 
-    if (!EPD->bwr) {
-        EPD_WriteCommand(CMD_CDI);
-        EPD_WriteByte(0x97);
-    }
+    EPD_WriteCommand(CMD_CDI);
+    EPD_WriteByte(EPD->bwr ? 0x77 : 0x97);
 }
 
 static void UC8176_Write_RAM(uint8_t cmd, uint8_t value)
@@ -157,9 +155,8 @@ parameter:
 ******************************************************************************/
 void UC8176_Clear(void)
 {
-    epd_model_t *EPD = epd_get();
     UC8176_Write_RAM(CMD_DTM1, 0xFF);
-    UC8176_Write_RAM(CMD_DTM2, EPD->invert_color ? 0x00 : 0xFF);
+    UC8176_Write_RAM(CMD_DTM2, 0xFF);
     UC8176_Refresh();
 }
 
@@ -203,8 +200,7 @@ void UC8176_Write_Image(uint8_t *black, uint8_t *color, uint16_t x, uint16_t y, 
     for (uint16_t i = 0; i < h; i++) {
         for (uint16_t j = 0; j < w / 8; j++) {
             if (EPD->bwr) {
-                uint8_t data = color ? color[j + i * wb] : 0xFF;
-                EPD_WriteByte(EPD->invert_color ? ~data : data);
+                EPD_WriteByte(color ? color[j + i * wb] : 0xFF);
             } else {
                 EPD_WriteByte(black[j + i * wb]);
             }
@@ -243,7 +239,6 @@ const epd_model_t epd_uc8176_420_bw = {
     .width = 400,
     .height = 300,
     .bwr = false,
-    .invert_color = false,
 };
 
 // UC8176 400x300 Black/White/Red
@@ -253,15 +248,4 @@ const epd_model_t epd_uc8176_420_bwr = {
     .width = 400,
     .height = 300,
     .bwr = true,
-    .invert_color = false,
-};
-
-// UC8276 400x300 Black/White/Red
-const epd_model_t epd_uc8276_420_bwr = {
-    .id = EPD_UC8276_420_BWR,
-    .drv = &epd_drv_uc8176,
-    .width = 400,
-    .height = 300,
-    .bwr = true,
-    .invert_color = true,
 };

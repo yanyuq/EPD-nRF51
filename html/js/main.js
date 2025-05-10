@@ -124,7 +124,7 @@ async function sendimg() {
   status.parentElement.style.display = "block";
 
   if (mode.startsWith('bwr')) {
-    const invert = (driver === '02') || (driver === '05');
+    const invert = (appVersion < 0x16) ? (driver === '02') : false;
     await epdWrite(driver === "02" ? 0x24 : 0x10, canvas2bytes(canvas, 'bw'));
     await epdWrite(driver === "02" ? 0x26 : 0x13, canvas2bytes(canvas, 'red', invert));
   } else {
@@ -219,11 +219,11 @@ async function connect() {
   try {
     addLog("正在连接: " + bleDevice.name);
     gattServer = await bleDevice.gatt.connect();
-    addLog('  找到 GATT Server');
+    addLog('&nbsp;&nbsp;找到 GATT Server');
     epdService = await gattServer.getPrimaryService('62750001-d828-918d-fb46-b6c11c675aec');
-    addLog('  找到 EPD Service');
+    addLog('&nbsp;&nbsp;找到 EPD Service');
     epdCharacteristic = await epdService.getCharacteristic('62750002-d828-918d-fb46-b6c11c675aec');
-    addLog('  找到 Characteristic');
+    addLog('&nbsp;&nbsp;找到 Characteristic');
   } catch (e) {
     console.error(e);
     if (e.message) addLog("connect: " + e.message);

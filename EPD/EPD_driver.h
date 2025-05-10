@@ -45,7 +45,6 @@ typedef enum
     EPD_UC8176_420_BWR = 3,
     EPD_SSD1619_420_BWR = 2,
     EPD_SSD1619_420_BW = 4,
-    EPD_UC8276_420_BWR = 5,
 } epd_model_id_t;
 
 typedef struct
@@ -55,7 +54,6 @@ typedef struct
     uint16_t width;
     uint16_t height;
     bool bwr;
-    bool invert_color;
 } epd_model_t;
 
 #define LOW             (0x0)
