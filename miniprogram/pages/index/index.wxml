@@ -1,0 +1,133 @@
+<!--index.wxml-->
+<view class="container">
+  <view class="card">
+    <view class="card-title">蓝牙连接</view>
+    <view class="flex-container">
+      <button class="primary" bindtap="startScan">{{scanText}}</button>
+      <button class="secondary" bindtap="disconnectDevice" disabled="{{!deviceConnected}}">{{deviceConnected ? '断开' : '重连'}}</button>
+      <button class="secondary" bindtap="clearLog">清空日志</button>
+    </view>
+    
+    <!-- 设备列表，使用固定高度确保不会导致页面跳动 -->
+    <view class="device-list-container">
+      <block wx:if="{{deviceList.length > 0}}">
+        <view class="device-list">
+          <block wx:for="{{deviceList}}" wx:key="deviceId">
+            <view class="device-item" bindtap="connectDevice" data-deviceid="{{item.deviceId}}" data-name="{{item.name || item.localName}}">
+              <text class="device-name">设备名称: {{item.name || item.localName || 'Unknown'}}</text>
+              <text class="device-id">设备ID: {{item.deviceId}}</text>
+              <text class="device-rssi">信号强度RSSI: {{item.RSSI}}</text>
+              <text class="device-arrow">›</text>
+            </view>
+            <view class="separator" wx:if="{{index < deviceList.length - 1}}"></view>
+          </block>
+        </view>
+      </block>
+      <view wx:elif="{{scanning}}" class="empty-list">
+        正在搜索设备...
+      </view>
+      <view wx:else class="empty-list">
+        点击"扫描"开始搜索蓝牙设备
+      </view>
+    </view>
+    
+    <!-- 驱动设置 -->
+    <view class="flex-container" wx:if="{{connected}}">
+      <view class="flex-group">
+        <view class="label">驱动：</view>
+        <picker bindchange="driverChange" value="{{epdDriverIndex}}" range="{{driverOptions}}" range-key="name">
+          <view class="picker">
+            {{epdDriver === '01' ? 'UC8176（黑白屏）' : epdDriver === '02' ? 'SSD1619（三色屏）' : epdDriver === '03' ? 'UC8176（三色屏）' : epdDriver === '04' ? 'SSD1619（黑白屏）' : epdDriver === '05' ? 'UC8276（三色屏）' : epdDriver}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="flex-group">
+        <view class="label">引脚：</view>
+        <input type="text" bindinput="inputPins" value="{{epdPins}}" placeholder="引脚配置" />
+        <button class="primary" bindtap="setDriver" disabled="{{!connected}}">确认</button>
+      </view>
+
+      <view class="flex-group">
+        <button class="primary" bindtap="syncTime" data-mode="1" disabled="{{!connected}}">日历模式</button>
+        <button class="primary" bindtap="syncTime" data-mode="2" disabled="{{!connected}}">时钟模式</button>
+        <button class="secondary" bindtap="clearScreen" disabled="{{!connected}}">清除屏幕</button>
+      </view>
+
+      <view class="flex-group">
+        <input type="text" bindinput="inputCommand" placeholder="输入命令" />
+        <button class="primary" bindtap="sendCmd" disabled="{{!connected}}">发送命令</button>
+      </view>
+    </view>
+    
+    <!-- 日志区域，使用固定高度确保不会导致页面跳动 -->
+    <scroll-view class="log-container" scroll-y="true" scroll-with-animation="true" scroll-top="{{logScrollTop}}">
+      <view class="log-item" wx:for="{{logs}}" wx:key="index">
+        <text class="time">[{{item.time}}]</text> <rich-text nodes="{{item.text}}"></rich-text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 蓝牙传图 -->
+  <view class="card">
+    <view class="card-title">蓝牙传图</view>
+    
+    <view class="flex-container">
+      <button bindtap="chooseImage" disabled="{{processingImage}}">选择图片</button>
+    </view>
+    
+    <view class="flex-container">
+      <view class="flex-group">
+        <view class="label">取模算法：</view>
+        <picker bindchange="ditheringChange" value="{{ditheringIndex}}" range="{{epdDriver === '01' || epdDriver === '04' ? bwDitheringOptions : bwrDitheringOptions}}" range-key="name" header-text="选择取模算法" disabled="{{processingImage}}">
+          <view class="picker">
+            {{dithering === 'none' ? '二值化' : dithering === 'bayer' ? 'Bayer抖动' : dithering === 'floydsteinberg' ? 'Floyd-Steinberg抖动' : dithering === 'Atkinson' ? 'Atkinson抖动' : dithering === 'bwr_floydsteinberg' ? '黑白红Floyd-Steinberg' : dithering === 'bwr_Atkinson' ? '黑白红Atkinson' : '请选择'}}
+          </view>
+        </picker>
+      </view>
+      
+      <view class="flex-group">
+        <view class="label">阈值：</view>
+        <input type="number" bindinput="inputThreshold" bindblur="thresholdBlur" value="{{threshold}}" min="0" max="255" disabled="{{processingImage || dithering.startsWith('bwr_')}}" />
+      </view>
+      
+      <view class="flex-group">
+        <view class="label">MTU：</view>
+        <input type="number" bindinput="inputMTU" value="{{mtuSize}}" min="1" max="255" />
+        <view class="label">确认间隔：</view>
+        <input type="number" bindinput="inputInterleaved" value="{{interleavedCount}}" min="1" max="500" />
+      </view>
+    </view>
+    
+    <!-- 状态栏 - 始终保持占位，避免页面跳动 -->
+    <view wx:if="{{showStatus}}" class="status-bar"><text class="bold">状态：</text>{{statusText}}</view>
+    <view wx:else class="status-placeholder"></view>
+    
+    <view class="flex-container">
+      <view class="flex-group">
+        <button class="secondary" bindtap="clearCanvas" disabled="{{processingImage}}">清除画布</button>
+        <button class="secondary" bindtap="reprocessImage" disabled="{{processingImage || !image}}">重新渲染</button>
+        <button class="primary" bindtap="sendImage" disabled="{{!connected || processingImage || !image}}">发送图片</button>
+      </view>
+    </view>
+    
+    <!-- 画布 -->
+    <view class="canvas-container">
+      <canvas type="2d" id="canvas" class="canvas"></canvas>
+      <!-- 处理中显示加载遮罩 -->
+      <view class="loading-overlay" wx:if="{{processingImage}}">
+        <text>图像处理中...</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 页脚 -->
+  <view class="footer">
+    <text class="copy">© 2025 yanyuq.</text>
+    <view class="links">
+      <navigator url="/pages/logs/logs" hover-class="navigator-hover">日志</navigator>
+      <!-- <navigator target="miniProgram" open-type="navigate" app-id="wx123456789" version="release" hover-class="navigator-hover">交流群</navigator> -->
+      <navigator url="https://github.com/yanyuq/EPD-nRF51" hover-class="navigator-hover">开源地址</navigator>
+    </view>
+  </view>
+</view> 

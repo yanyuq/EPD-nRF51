@@ -1,0 +1,62 @@
+.container {
+  padding: 20rpx;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #eee;
+  margin-bottom: 20rpx;
+}
+
+.page-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.clear-btn {
+  font-size: 28rpx;
+  color: #2080e9;
+  padding: 10rpx 20rpx;
+}
+
+.log-list {
+  width: 100%;
+}
+
+.log-item {
+  padding: 20rpx;
+  margin-bottom: 15rpx;
+  background-color: #f9f9f9;
+  border-radius: 10rpx;
+  border-left: 8rpx solid #2080e9;
+  box-shadow: 0 2rpx 5rpx rgba(0,0,0,0.05);
+}
+
+.log-time {
+  font-size: 24rpx;
+  color: #999;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.log-message {
+  font-size: 28rpx;
+  color: #333;
+  display: block;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.empty-logs {
+  width: 100%;
+  height: 200rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #999;
+  font-size: 28rpx;
+} 

@@ -1,0 +1,29 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/logs/logs"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#0066cc",
+    "navigationBarTitleText": "4.2寸电子墨水屏蓝牙控制器",
+    "navigationBarTextStyle": "white"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "requiredPrivateInfos": [
+    "getLocation",
+    "onLocationChange",
+    "startLocationUpdate",
+    "chooseAddress"
+  ],
+  "permission": {
+    "scope.bluetooth": {
+      "desc": "蓝牙功能用于连接并控制电子墨水屏设备"
+    },
+    "scope.userLocation": {
+      "desc": "位置信息用于搜索附近的蓝牙设备"
+    }
+  },
+  "lazyCodeLoading": "requiredComponents"
+}

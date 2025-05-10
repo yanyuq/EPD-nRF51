@@ -1,0 +1,288 @@
+/**index.wxss**/
+.container {
+  padding: 0;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.card {
+  margin: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  color: #333;
+  border-left: 4px solid #0066cc;
+  padding-left: 8px;
+}
+
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.flex-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* 设备列表容器 */
+.device-list-container {
+  width: 100%;
+  height: 250px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  overflow-y: auto;
+  position: relative; /* 添加相对定位 */
+  background-color: #f9f9f9;
+}
+
+.device-list {
+  margin: 0;
+  border-radius: 0;
+  background-color: #fff;
+}
+
+.device-item {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.device-item:active {
+  background-color: #f5f5f5;
+}
+
+.device-name {
+  font-size: 16px;
+  font-weight: normal;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.device-id {
+  font-size: 12px;
+  color: #999;
+  word-break: break-all;
+  margin-bottom: 3px;
+}
+
+.device-rssi {
+  font-size: 12px;
+  color: #999;
+}
+
+.device-arrow {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #0066cc;
+  font-size: 24px;
+  font-weight: normal;
+}
+
+.separator {
+  height: 1px;
+  background-color: #eee;
+  margin: 0 15px;
+}
+
+.empty-list {
+  padding: 30px 0;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 按钮样式 */
+button {
+  font-size: 14px;
+  padding: 6px 12px;
+  line-height: 1.5;
+  border-radius: 4px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+button.primary {
+  background-color: #0066cc;
+  color: white;
+}
+
+button.secondary {
+  background-color: #eee;
+  color: #333;
+}
+
+button[disabled] {
+  opacity: 0.5;
+}
+
+/* 标签样式 */
+.label {
+  margin-right: 5px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* 画布容器 */
+.canvas-container {
+  width: 100%;
+  margin-top: 10px;
+  height: 300px; /* 固定高度 */
+  position: relative;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  box-sizing: border-box;
+}
+
+/* 选择器样式 */
+.picker {
+  padding: 8px 15px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-size: 14px;
+  flex: 1;
+  min-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 输入框样式 */
+input {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px 8px;
+  height: 1.4rem;
+  line-height: 1.4rem;
+  font-size: 14px;
+}
+
+input[type="number"] {
+  width: 60px;
+}
+
+input[type="text"] {
+  min-width: 100px;
+}
+
+/* 日志区域 */
+.log-container {
+  width: 100%;
+  height: 200px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow-y: auto;
+  padding-left: 10px;
+  background-color: #f9f9f9;
+  margin-top: 10px;
+  padding-right: 0px;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+}
+
+.log-item {
+  margin-bottom: 3px;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.time {
+  color: #999;
+  margin-right: 5px;
+}
+
+/* 状态栏 */
+.status-bar {
+  background-color: #f0f8ff;
+  padding: 10px;
+  border-radius: 4px;
+  margin: 10px 0;
+  font-size: 14px;
+  border-left: 3px solid #0066cc;
+  min-height: 20px; /* 设置最小高度 */
+}
+
+/* 状态占位符 - 当不显示状态时保持空间，防止页面跳动 */
+.status-placeholder {
+  height: 44px; /* 与状态栏高度一致 */
+  margin: 10px 0;
+  opacity: 0;
+}
+
+/* 页脚 */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  font-size: 12px;
+  color: #999;
+}
+
+.copy {
+  flex: 1;
+}
+
+.links {
+  display: flex;
+  gap: 15px;
+}
+
+.links navigator {
+  color: #0066cc;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+/* 加载提示 */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.action {
+  color: #0066cc;
+  font-weight: bold;
+} 

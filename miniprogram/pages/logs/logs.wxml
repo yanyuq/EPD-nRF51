@@ -1,0 +1,20 @@
+<!--logs.wxml-->
+<view class="container">
+  <view class="page-header">
+    <view class="page-title">操作日志</view>
+    <view class="clear-btn" bindtap="clearAllLogs">清空日志</view>
+  </view>
+  
+  <view class="log-list">
+    <block wx:for="{{logs}}" wx:key="timestamp" wx:for-item="log">
+      <view class="log-item">
+        <text class="log-time">{{log.date}}</text>
+        <text class="log-message">{{log.message}}</text>
+      </view>
+    </block>
+  </view>
+  
+  <view class="empty-logs" wx:if="{{logs.length === 0}}">
+    <text>暂无日志记录</text>
+  </view>
+</view> 
