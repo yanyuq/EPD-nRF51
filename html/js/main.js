@@ -1,6 +1,6 @@
 let bleDevice, gattServer;
 let epdService, epdCharacteristic;
-let startTime, msgIndex;
+let startTime, msgIndex, appVersion;
 let canvas, ctx, textDecoder;
 
 const EpdCmd = {
@@ -13,6 +13,8 @@ const EpdCmd = {
   SLEEP:     0x06,
 
   SET_TIME:  0x20,
+
+  WRITE_IMG: 0x30, // v1.6
 
   SET_CONFIG: 0x90,
   SYS_RESET:  0x91,
@@ -39,7 +41,7 @@ async function write(cmd, data, withResponse=true) {
     if (data instanceof Uint8Array) data = Array.from(data);
     payload.push(...data)
   }
-  addLog(`<span class="action">⇑</span> ${bytes2hex(payload)}`);
+  addLog(bytes2hex(payload), '⇑');
   try {
     if (withResponse)
       await epdCharacteristic.writeValueWithResponse(Uint8Array.from(payload));
@@ -71,6 +73,32 @@ async function epdWrite(cmd, data) {
       noReplyCount--;
     } else {
       await write(EpdCmd.SEND_DATA, data.slice(i, i + chunkSize), true);
+      noReplyCount = interleavedCount;
+    }
+    chunkIdx++;
+  }
+}
+
+async function epdWriteImage(step = 'bw') {
+  const data = canvas2bytes(canvas, step);
+  const chunkSize = document.getElementById('mtusize').value - 2;
+  const interleavedCount = document.getElementById('interleavedcount').value;
+  const count = Math.round(data.length / chunkSize);
+  let chunkIdx = 0;
+  let noReplyCount = interleavedCount;
+
+  for (let i = 0; i < data.length; i += chunkSize) {
+    let currentTime = (new Date().getTime() - startTime) / 1000.0;
+    setStatus(`${step == 'bw' ? '黑白' : '红色'}块: ${chunkIdx+1}/${count+1}, 总用时: ${currentTime}s`);
+    const payload = [
+      (step == 'bw' ? 0x0F : 0x00) | ( i == 0 ? 0x00 : 0xF0),
+      ...data.slice(i, i + chunkSize),
+    ];
+    if (noReplyCount > 0) {
+      await write(EpdCmd.WRITE_IMG, payload, false);
+      noReplyCount--;
+    } else {
+      await write(EpdCmd.WRITE_IMG, payload, true);
       noReplyCount = interleavedCount;
     }
     chunkIdx++;
@@ -123,12 +151,16 @@ async function sendimg() {
   startTime = new Date().getTime();
   status.parentElement.style.display = "block";
 
-  if (mode.startsWith('bwr')) {
-    const invert = (driver === '02') || (driver === '05');
-    await epdWrite(driver === "02" ? 0x24 : 0x10, canvas2bytes(canvas, 'bw'));
-    await epdWrite(driver === "02" ? 0x26 : 0x13, canvas2bytes(canvas, 'red', invert));
+  if (appVersion < 0x16) {
+    if (mode.startsWith('bwr')) {
+      await epdWrite(driver === "02" ? 0x24 : 0x10, canvas2bytes(canvas, 'bw'));
+      await epdWrite(driver === "02" ? 0x26 : 0x13, canvas2bytes(canvas, 'red', driver === '02'));
+    } else {
+      await epdWrite(driver === "04" ? 0x24 : 0x13, canvas2bytes(canvas, 'bw'));
+    }
   } else {
-    await epdWrite(driver === "04" ? 0x24 : 0x13, canvas2bytes(canvas, 'bw'));
+    await epdWriteImage('bw');
+    if (mode.startsWith('bwr')) await epdWriteImage('red');
   }
 
   await write(EpdCmd.REFRESH);
@@ -208,8 +240,7 @@ function handleNotify(value, idx) {
     filterDitheringOptions();
   } else {
     if (textDecoder == null) textDecoder = new TextDecoder();
-    const msg = textDecoder.decode(data);
-    addLog(`<span class="action">⇓</span> ${msg}`);
+    addLog(textDecoder.decode(data), '⇓');
   }
 }
 
@@ -232,6 +263,16 @@ async function connect() {
   }
 
   try {
+    const versionCharacteristic = await epdService.getCharacteristic('62750003-d828-918d-fb46-b6c11c675aec');
+    const versionData = await versionCharacteristic.readValue();
+    appVersion = versionData.getUint8(0);
+    addLog(`固件版本: 0x${appVersion.toString(16)}`);
+  } catch (e) {
+    console.error(e);
+    appVersion = 0x15;
+  }
+
+  try {
     await epdCharacteristic.startNotifications();
     epdCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
       handleNotify(event.target.value, msgIndex++);
@@ -251,18 +292,32 @@ function setStatus(statusText) {
   document.getElementById("status").innerHTML = statusText;
 }
 
-function addLog(logTXT) {
+function addLog(logTXT, action = '') {
   const log = document.getElementById("log");
   const now = new Date();
   const time = String(now.getHours()).padStart(2, '0') + ":" +
          String(now.getMinutes()).padStart(2, '0') + ":" +
          String(now.getSeconds()).padStart(2, '0') + " ";
-  log.innerHTML += '<span class="time">' + time + '</span>' + logTXT + '<br>';
+
+  const logEntry = document.createElement('div');
+  const timeSpan = document.createElement('span');
+  timeSpan.className = 'time';
+  timeSpan.textContent = time;
+  logEntry.appendChild(timeSpan);
+  
+  if (action !== '') {
+    const actionSpan = document.createElement('span');
+    actionSpan.className = 'action';
+    actionSpan.innerHTML = action;
+    logEntry.appendChild(actionSpan);
+  }
+  logEntry.appendChild(document.createTextNode(logTXT));
+
+  log.appendChild(logEntry);
   log.scrollTop = log.scrollHeight;
-  while ((log.innerHTML.match(/<br>/g) || []).length > 20) {
-    var logs_br_position = log.innerHTML.search("<br>");
-    log.innerHTML = log.innerHTML.substring(logs_br_position + 4);
-    log.scrollTop = log.scrollHeight;
+  
+  while (log.childNodes.length > 20) {
+    log.removeChild(log.firstChild);
   }
 }
 
@@ -326,17 +381,21 @@ function convert_dithering() {
 function filterDitheringOptions() {
   const driver = document.getElementById('epddriver').value;
   const dithering = document.getElementById('dithering');
+  let currentOptionStillValid = false;
+
   for (let optgroup of dithering.getElementsByTagName('optgroup')) {
     const drivers = optgroup.getAttribute('data-driver').split('|');
     const show = drivers.includes(driver);
     for (option of optgroup.getElementsByTagName('option')) {
-      if (show)
+      if (show) {
         option.removeAttribute('disabled');
-      else
+        if (option.value == dithering.value) currentOptionStillValid = true;
+      } else {
         option.setAttribute('disabled', 'disabled');
+      }
     }
   }
-  dithering.value = '';
+  if (!currentOptionStillValid) dithering.value = '';
 }
 
 function checkDebugMode() {

@@ -43,10 +43,13 @@ void ble_epd_evt_handler(ble_evt_t const * p_ble_evt, void * p_context);
 #define BLE_EPD_DEF(_name) static ble_epd_t _name;
 #endif
 
+#define APP_VERSION 0x16
+
 #define BLE_UUID_EPD_SVC_BASE              {{0XEC, 0X5A, 0X67, 0X1C, 0XC1, 0XB6, 0X46, 0XFB, \
                                              0X8D, 0X91, 0X28, 0XD8, 0X22, 0X36, 0X75, 0X62}}
 #define BLE_UUID_EPD_SVC                   0x0001
 #define BLE_UUID_EPD_CHAR                  0x0002
+#define BLE_UUID_APP_VER                   0x0003
 
 #define EPD_SVC_UUID_TYPE BLE_UUID_TYPE_VENDOR_BEGIN
 
@@ -59,20 +62,22 @@ void ble_epd_evt_handler(ble_evt_t const * p_ble_evt, void * p_context);
 /**< EPD Service command IDs. */
 enum EPD_CMDS
 {
-    EPD_CMD_SET_PINS,                                 /**< set EPD pin mapping. */
-    EPD_CMD_INIT,                                     /**< init EPD display driver */
-    EPD_CMD_CLEAR,                                    /**< clear EPD screen */
-    EPD_CMD_SEND_COMMAND,                             /**< send command to EPD */
-    EPD_CMD_SEND_DATA,                                /**< send data to EPD */
-    EPD_CMD_REFRESH,                                  /**< diaplay EPD ram on screen */
-    EPD_CMD_SLEEP,                                    /**< EPD enter sleep mode */
-	
-	EPD_CMD_SET_TIME = 0x20,                          /** < set time with unix timestamp */
+    EPD_CMD_SET_PINS     = 0x00,                        /**< set EPD pin mapping. */
+    EPD_CMD_INIT         = 0x01,                        /**< init EPD display driver */
+    EPD_CMD_CLEAR        = 0x02,                        /**< clear EPD screen */
+    EPD_CMD_SEND_COMMAND = 0x03,                        /**< send command to EPD */
+    EPD_CMD_SEND_DATA    = 0x04,                        /**< send data to EPD */
+    EPD_CMD_REFRESH      = 0x05,                        /**< diaplay EPD ram on screen */
+    EPD_CMD_SLEEP        = 0x06,                        /**< EPD enter sleep mode */
 
-    EPD_CMD_SET_CONFIG = 0x90,                        /**< set full EPD config */
-    EPD_CMD_SYS_RESET  = 0x91,                        /**< MCU reset */
-    EPD_CMD_SYS_SLEEP  = 0x92,                        /**< MCU enter sleep mode */
-    EPD_CMD_CFG_ERASE  = 0x99,                        /**< Erase config and reset */
+	EPD_CMD_SET_TIME     = 0x20,                        /** < set time with unix timestamp */
+
+    EPD_CMD_WRITE_IMAGE  = 0x30,                        /** < write image data to EPD ram */
+
+    EPD_CMD_SET_CONFIG   = 0x90,                        /**< set full EPD config */
+    EPD_CMD_SYS_RESET    = 0x91,                        /**< MCU reset */
+    EPD_CMD_SYS_SLEEP    = 0x92,                        /**< MCU enter sleep mode */
+    EPD_CMD_CFG_ERASE    = 0x99,                        /**< Erase config and reset */
 };
 
 /**@brief EPD Service structure.
@@ -83,6 +88,7 @@ typedef struct
 {
     uint16_t                 service_handle;          /**< Handle of EPD Service (as provided by the S110 SoftDevice). */
     ble_gatts_char_handles_t char_handles;            /**< Handles related to the EPD characteristic (as provided by the SoftDevice). */
+    ble_gatts_char_handles_t app_ver_handles;         /**< Handles related to the APP version characteristic (as provided by the SoftDevice). */
     uint16_t                 conn_handle;             /**< Handle of the current connection (as provided by the SoftDevice). BLE_CONN_HANDLE_INVALID if not in a connection. */
     uint16_t                 max_data_len;            /**< Maximum length of data (in bytes) that can be transmitted to the peer */
     bool                     is_notification_enabled; /**< Variable to indicate if the peer has enabled notification of the RX characteristic.*/

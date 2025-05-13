@@ -306,6 +306,7 @@ float EPD_ReadVoltage(void)
                       (ADC_CONFIG_EXTREFSEL_None << ADC_CONFIG_EXTREFSEL_Pos);
     NRF_ADC->TASKS_START = 1;
     while(!NRF_ADC->EVENTS_END);
+    NRF_ADC->EVENTS_END = 0;
     uint16_t value = NRF_ADC->RESULT;
     NRF_ADC->TASKS_STOP = 1;
     NRF_ADC->ENABLE = 0;
@@ -319,14 +320,12 @@ extern epd_model_t epd_uc8176_420_bw;
 extern epd_model_t epd_uc8176_420_bwr;
 extern epd_model_t epd_ssd1619_420_bwr;
 extern epd_model_t epd_ssd1619_420_bw;
-extern epd_model_t epd_uc8276_420_bwr;
 
 static epd_model_t *epd_models[] = {
     &epd_uc8176_420_bw,
     &epd_uc8176_420_bwr,
     &epd_ssd1619_420_bwr,
     &epd_ssd1619_420_bw,
-    &epd_uc8276_420_bwr,
 };
 
 // EPD model

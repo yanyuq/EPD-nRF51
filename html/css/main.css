@@ -106,6 +106,7 @@ body.debug-mode fieldset legend {
     font-weight: 400;
     line-height: 1.5;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 .footer {
@@ -214,17 +215,31 @@ code {
     margin: 0;
     padding: 5px;
     background: #DDD;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
     box-sizing: border-box;
+    word-break: break-word;
+}
+
+#log div {
+    padding: 2px 0;
+}
+
+#log .time,
+#log .action {
+    display: inline-block;
+    white-space: nowrap;
 }
 
 #log .time {
     color: #333;
+    margin-right: 0.5em;
 }
 
 #log .action {
     color: #666;
+    margin-right: 0.5em;
 }
 
 #canvas-box {
