@@ -306,6 +306,7 @@ float EPD_ReadVoltage(void)
                       (ADC_CONFIG_EXTREFSEL_None << ADC_CONFIG_EXTREFSEL_Pos);
     NRF_ADC->TASKS_START = 1;
     while(!NRF_ADC->EVENTS_END);
+    NRF_ADC->EVENTS_END = 0;
     uint16_t value = NRF_ADC->RESULT;
     NRF_ADC->TASKS_STOP = 1;
     NRF_ADC->ENABLE = 0;
