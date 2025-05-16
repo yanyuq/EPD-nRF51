@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -70,7 +70,7 @@ extern "C" {
 #define SD_MAJOR_VERSION  (7)
 
 /** @brief The minor version for the SoftDevice binary distributed with this header file. */
-#define SD_MINOR_VERSION  (2)
+#define SD_MINOR_VERSION  (3)
 
 /** @brief The bugfix version for the SoftDevice binary distributed with this header file. */
 #define SD_BUGFIX_VERSION (0)

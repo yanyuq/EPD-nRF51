@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 - 2020, Nordic Semiconductor ASA
+ * Copyright (c) Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -555,6 +555,20 @@ enum BLE_GAP_TX_POWER_ROLES
  * @{ */
 #define BLE_GAP_PPCP_INCL_CONFIG_DEFAULT     (BLE_GAP_CHAR_INCL_CONFIG_INCLUDE) /**< Included by default. */
 #define BLE_GAP_CAR_INCL_CONFIG_DEFAULT      (BLE_GAP_CHAR_INCL_CONFIG_INCLUDE) /**< Included by default. */
+/**@} */
+
+/** @defgroup BLE_GAP_SLAVE_LATENCY Slave latency configuration options
+ * @{ */
+#define BLE_GAP_SLAVE_LATENCY_ENABLE         (0) /**< Slave latency is enabled. When slave latency is enabled,
+                                                      the slave will wake up every time it has data to send,
+                                                      and/or every slave latency number of connection events. */
+#define BLE_GAP_SLAVE_LATENCY_DISABLE        (1) /**< Disable slave latency. The slave will wake up every connection event
+                                                      regardless of the requested slave latency.
+                                                      This option consumes the most power. */
+#define BLE_GAP_SLAVE_LATENCY_WAIT_FOR_ACK   (2) /**< The slave will wake up every connection event if it has not received
+                                                      an ACK from the master for at least slave latency events. This
+                                                      configuration may increase the power consumption in environments
+                                                      with a lot of radio activity. */
 /**@} */
 
 /**@addtogroup BLE_GAP_STRUCTURES Structures
@@ -1255,7 +1269,7 @@ typedef struct
 typedef struct
 {
   uint16_t   conn_handle;    /**< Connection Handle */
-  uint8_t    disable : 1;    /**< Set to 1 to disable slave latency. Set to 0 enable it again.*/
+  uint8_t    disable;        /**< For allowed values see @ref BLE_GAP_SLAVE_LATENCY */
 } ble_gap_opt_slave_latency_disable_t;
 
 /**@brief Passkey Option.
