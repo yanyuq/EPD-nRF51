@@ -49,7 +49,7 @@ Page({
     dithering: 'none',
     threshold: 125,
     mtuSize: 20, // 默认MTU大小为20
-    interleavedCount: 50,
+    interleavedCount: 20,
     deviceConnected: false,
     scanning: false,
     scanText: '扫描',
@@ -579,6 +579,7 @@ Page({
         
         // 连接设备
         wx.createBLEConnection({
+          // connectionPriority: 9999999,
           deviceId: deviceId,
           timeout: 10000,
           success: (res) => {
@@ -768,20 +769,41 @@ Page({
         this.addLog(`发送刷新命令，参数: ${data ? this.bytesToHex(new Uint8Array(data)) : '无'}`);
       }
       
-      // 写入数据
-      wx.writeBLECharacteristicValue({
-        deviceId: this.data.deviceId,
-        serviceId: this.data.currentServiceId,
-        characteristicId: this.data.currentCharacteristicId,
-        value: new Uint8Array(payload).buffer,
-        success: (res) => {
-          resolve(res);
-        },
-        fail: (err) => {
-          this.addLog('写入失败: ' + JSON.stringify(err));
-          reject(err);
-        }
-      });
+      // 优化写入方式，根据是否需要响应选择合适的写入方法
+      if (withResponse) {
+        // 需要响应的写入方式
+        wx.writeBLECharacteristicValue({
+          deviceId: this.data.deviceId,
+          serviceId: this.data.currentServiceId,
+          characteristicId: this.data.currentCharacteristicId,
+          value: new Uint8Array(payload).buffer,
+          success: (res) => {
+            resolve(res);
+          },
+          fail: (err) => {
+            this.addLog('写入失败: ' + JSON.stringify(err));
+            reject(err);
+          }
+        });
+      } else {
+        // 无需响应的写入方式 - 使用无响应模式可以显著加快速度
+        wx.writeBLECharacteristicValue({
+          deviceId: this.data.deviceId,
+          serviceId: this.data.currentServiceId,
+          characteristicId: this.data.currentCharacteristicId,
+          value: new Uint8Array(payload).buffer,
+          // 不等待成功回调即视为完成
+          complete: (res) => {
+            if (res.errCode) {
+              // 出错时记录日志
+              this.addLog('写入无响应模式失败: ' + JSON.stringify(res));
+              reject(res);
+            } else {
+              resolve(res);
+            }
+          }
+        });
+      }
     });
   },
 
@@ -1020,7 +1042,7 @@ Page({
         }
         
         // 刷新显示
-        this.setData({ statusText: '刷新显示，请等待...' });
+        this.setData({ statusText: '正在刷新显示，请勿关闭...' });
         
         // 根据不同的驱动型号添加特定刷新参数
         let refreshParam = null;
@@ -1032,20 +1054,21 @@ Page({
           refreshParam = [0x03]; // 质量模式，但速度更快
         }
         
-        // 发送刷新命令
-        await this.write(EpdCmd.REFRESH, refreshParam);
+        // 发送刷新命令，确保等待完成
+        await this.write(EpdCmd.REFRESH, refreshParam, true);
         
         // 计算并显示发送时间
         const sendTime = (Date.now() - this.startTime) / 1000.0;
         this.addLog(`指令发送完成！耗时: ${sendTime.toFixed(2)}s，等待屏幕刷新...`);
         this.setData({
-          statusText: `指令发送完成！耗时: ${sendTime.toFixed(2)}s，等待屏幕刷新...`
+          statusText: `指令发送完成！等待墨水屏刷新，可能需要3-5秒...`
         });
         
         // 设置刷新超时检查
         this.refreshTimeout = setTimeout(() => {
           if (!this.refreshCompleted) {
             this.addLog('刷新超时，墨水屏可能已经更新但未收到确认');
+            this.refreshCompleted = true; // 标记为已完成，避免重复处理
             this.setData({
               statusText: '刷新可能已完成，但未收到确认',
               showStatus: false // 无论如何，5秒后隐藏状态显示
@@ -1170,46 +1193,48 @@ Page({
       const count = Math.ceil(data.length / chunkSize);
       let chunkIdx = 0;
       
-      // 使用Promise.all批量处理，提高传输效率
-      const batchSize = Math.min(10, interleavedCount); // 每批最多10个包
+      // 使用计数器跟踪进度
+      let lastProgressUpdate = 0;
+      const updateInterval = Math.max(50, Math.floor(count / 20)); // 至少每50个块或5%进度更新一次
+      
+      // 优化：直接顺序发送，而不是使用Promise.all
+      // 这样可以避免创建大量并发请求导致的蓝牙堆栈不稳定
+      let confirmInterval = Math.min(interleavedCount, 50); // 限制最大确认间隔
+      let confirmedChunks = 0;
       
       while (chunkIdx < count) {
-        let currentTime = (Date.now() - this.startTime) / 1000.0;
-        this.setData({
-          statusText: `命令：0x${cmd.toString(16)}, 数据块: ${chunkIdx+1}/${count}, 总用时: ${currentTime.toFixed(2)}s`
-        });
+        // 更新当前进度
+        const currentTime = (Date.now() - this.startTime) / 1000.0;
+        const progress = Math.floor((chunkIdx / count) * 100);
         
-        // 批量发送多个数据包
-        const promises = [];
-        const startChunk = chunkIdx;
+        if (chunkIdx - lastProgressUpdate >= updateInterval) {
+          this.setData({
+            statusText: `命令：0x${cmd.toString(16)}, 进度: ${progress}%, 数据块: ${chunkIdx}/${count}, 用时: ${currentTime.toFixed(1)}s`
+          });
+          lastProgressUpdate = chunkIdx;
+        }
         
-        // 决定本批次发送多少包
-        const batchReqCount = Math.min(batchSize, count - chunkIdx);
+        const chunk = data.slice(chunkIdx * chunkSize, (chunkIdx + 1) * chunkSize);
+        const needConfirm = (chunkIdx - confirmedChunks >= confirmInterval - 1) || (chunkIdx === count - 1);
         
-        // 批量发送前面的包不需要响应
-        for (let i = 0; i < batchReqCount - 1; i++) {
-          if (chunkIdx < count) {
-            const chunk = data.slice(chunkIdx * chunkSize, (chunkIdx + 1) * chunkSize);
-            promises.push(this.write(EpdCmd.SEND_DATA, chunk, false));
-            chunkIdx++;
+        if (needConfirm) {
+          // 每隔confirmInterval个块或最后一个块需要确认
+          await this.write(EpdCmd.SEND_DATA, chunk, true);
+          confirmedChunks = chunkIdx + 1;
+          
+          // 大量数据时每确认点记录一次日志
+          if (count > 200 && (chunkIdx % (confirmInterval * 5) === 0 || chunkIdx === count - 1)) {
+            this.addLog(`数据块进度: ${chunkIdx+1}/${count} (${progress}%)`);
           }
+        } else {
+          // 普通数据块无需等待响应
+          this.write(EpdCmd.SEND_DATA, chunk, false).catch(err => {
+            console.error('无响应模式写入失败:', err);
+            // 但我们不中断主流程，继续发送
+          });
         }
         
-        // 最后一个包需要响应，以确保前面的都发送成功
-        if (chunkIdx < count) {
-          const chunk = data.slice(chunkIdx * chunkSize, (chunkIdx + 1) * chunkSize);
-          promises.push(this.write(EpdCmd.SEND_DATA, chunk, true));
-          chunkIdx++;
-        }
-        
-        // 等待本批次所有传输完成
-        await Promise.all(promises);
-        
-        // 更新状态显示批次进度
-        if (count > 100 && startChunk !== chunkIdx - 1) {
-          // 如果数据量很大，每完成一个批次就更新一次日志
-          this.addLog(`已发送数据块 ${startChunk+1}-${chunkIdx}/${count}`);
-        }
+        chunkIdx++;
       }
       
       // 发送完成后显示总用时
