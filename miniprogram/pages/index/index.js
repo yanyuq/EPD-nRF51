@@ -68,7 +68,16 @@ Page({
       { value: '02', name: 'SSD1619（三色屏）' },
       { value: '04', name: 'SSD1683（黑白屏）' },
       { value: '02', name: 'SSD1619（三色屏）' }
-    ]
+    ],
+    // 文字渲染相关属性
+    showTextInput: false,        // 是否显示文本输入框
+    textContent: '',             // 文本内容
+    textSize: 30,                // 文本大小
+    textColor: '#000000',        // 文本颜色
+    textX: 200,                  // 文本X坐标，默认居中
+    textY: 150,                  // 文本Y坐标，默认居中
+    isDragging: false,           // 是否正在拖动文本
+    textAddedToCanvas: false     // 文本是否已添加到画布
   },
 
   // 页面加载
@@ -94,9 +103,11 @@ Page({
         });
         
         this.addLog('画布尺寸设置为400x300像素，与墨水屏匹配');
+        
+        // 确保在系统信息获取后初始化画布
+        this.initCanvas();
       }
     });
-    this.initCanvas();
     
     // 设置取模算法选项
     this.setDitheringOptions();
@@ -165,14 +176,17 @@ Page({
 
   // 初始化画布
   initCanvas: function() {
+    console.log('开始初始化画布');
     const query = wx.createSelectorQuery();
     query.select('#canvas').fields({ node: true, size: true }).exec((res) => {
       if (!res || !res[0] || !res[0].node) {
+        console.error('获取画布节点失败，将在500ms后重试', res);
         this.addLog('获取画布节点失败，将在500ms后重试');
         setTimeout(() => this.initCanvas(), 500);
         return;
       }
 
+      console.log('画布节点获取成功', res[0]);
       const canvas = res[0].node;
       const ctx = canvas.getContext('2d');
       
@@ -183,6 +197,12 @@ Page({
       this.canvas = canvas;
       this.ctx = ctx;
       
+      console.log('画布初始化完成', {
+        canvas: this.canvas, 
+        ctx: this.ctx,
+        width: canvas.width, 
+        height: canvas.height
+      });
       this.addLog(`画布初始化完成，实际尺寸: ${canvas.width}x${canvas.height}`);
       
       // 设置默认背景为白色
@@ -1401,19 +1421,97 @@ Page({
     }
   },
 
+  // 重绘画布和文本
+  redrawCanvasWithText: function(x, y) {
+    if (!this.canvas || !this.ctx) return;
+    
+    // 保存原始图像数据（如果有图像）
+    let originalImageData = null;
+    if (this.imageInfo && this.imageInfo.img) {
+      // 清空画布
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      
+      // 绘制原始图像
+      this.ctx.drawImage(
+        this.imageInfo.img,
+        this.imageInfo.offsetX,
+        this.imageInfo.offsetY,
+        this.imageInfo.drawWidth,
+        this.imageInfo.drawHeight
+      );
+      
+      try {
+        // 获取当前画布状态（处理后的图像）
+        originalImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+      } catch (e) {
+        console.error('获取画布图像数据失败', e);
+      }
+      
+      // 如果已应用图像处理，则重新应用
+      if (this.data.dithering !== 'none') {
+        // 重新应用图像处理
+        this.processImage(false); // 传入false表示不更新UI状态，只处理图像
+        
+        // 等待处理完成后再添加文字
+        setTimeout(() => {
+          this.drawTextAtPosition(x, y);
+        }, 50);
+        return;
+      }
+    } else {
+      // 如果没有图像，直接清空画布
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      
+      // 确保有一个干净的画布
+      try {
+        originalImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+      } catch (e) {
+        console.error('获取空白画布数据失败', e);
+      }
+    }
+    
+    // 如果获取了原始图像数据，使用它重绘画布
+    if (originalImageData) {
+      this.ctx.putImageData(originalImageData, 0, 0);
+    }
+    
+    // 在最后绘制文字
+    this.drawTextAtPosition(x, y);
+  },
+
+  // 在指定位置绘制文本
+  drawTextAtPosition: function(x, y) {
+    // 更新文本位置
+    this.setData({
+      textX: x,
+      textY: y
+    });
+    
+    // 绘制文本
+    this.ctx.font = `${this.data.textSize}px sans-serif`;
+    this.ctx.fillStyle = this.data.textColor;
+    this.ctx.textBaseline = 'middle';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText(this.data.textContent, x, y);
+  },
+
   // 处理图像
-  processImage: function() {
+  processImage: function(updateUI = true) {
     if (!this.canvas) {
       this.addLog('画布未初始化');
       return;
     }
 
-    // 显示状态提示
-    this.setData({
-      showStatus: true,
-      statusText: '正在处理图像...',
-      processingImage: true
-    });
+    // 显示状态提示（仅当updateUI为true时）
+    if (updateUI) {
+      this.setData({
+        showStatus: true,
+        statusText: '正在处理图像...',
+        processingImage: true
+      });
+    }
 
     const ctx = this.ctx;
     const dithering = this.data.dithering;
@@ -1463,19 +1561,30 @@ Page({
           // 更新画布
           ctx.putImageData(newImageData, 0, 0);
           
-          this.setData({
-            processingImage: false,
-            showStatus: false
-          });
+          // 如果有文字已添加，在处理完图像后重新添加文字
+          if (this.data.textAddedToCanvas) {
+            this.drawTextAtPosition(this.data.textX, this.data.textY);
+          }
           
-          this.addLog('图像处理完成');
+          // 仅当updateUI为true时更新UI状态
+          if (updateUI) {
+            this.setData({
+              processingImage: false,
+              showStatus: false
+            });
+            
+            this.addLog('图像处理完成');
+          }
         } catch (e) {
           this.addLog('处理图像失败: ' + e.message);
           console.error('处理图像失败:', e);
-          this.setData({
-            processingImage: false,
-            showStatus: false
-          });
+          
+          if (updateUI) {
+            this.setData({
+              processingImage: false,
+              showStatus: false
+            });
+          }
           
           // 如果原始图像信息还在，尝试重绘原始图像
           if (this.imageInfo && this.imageInfo.img) {
@@ -1489,25 +1598,36 @@ Page({
               this.imageInfo.drawWidth, 
               this.imageInfo.drawHeight
             );
+            
+            // 如果有文字已添加，重新添加文字
+            if (this.data.textAddedToCanvas) {
+              this.drawTextAtPosition(this.data.textX, this.data.textY);
+            }
           }
           
-          wx.showToast({
-            title: '图像处理失败',
-            icon: 'none'
-          });
+          if (updateUI) {
+            wx.showToast({
+              title: '图像处理失败',
+              icon: 'none'
+            });
+          }
         }
       }, 50);
     } catch (e) {
       this.addLog('获取图像数据失败: ' + e.message);
       console.error('获取图像数据失败:', e);
-      this.setData({
-        processingImage: false,
-        showStatus: false
-      });
-      wx.showToast({
-        title: '获取图像数据失败',
-        icon: 'none'
-      });
+      
+      if (updateUI) {
+        this.setData({
+          processingImage: false,
+          showStatus: false
+        });
+        
+        wx.showToast({
+          title: '获取图像数据失败',
+          icon: 'none'
+        });
+      }
     }
   },
 
@@ -1779,5 +1899,199 @@ Page({
         this.addLog('获取蓝牙状态失败，请检查权限设置');
       }
     });
+  },
+
+  // 显示文本输入界面
+  showTextInput: function() {
+    console.log('显示文本输入面板');
+    this.setData({
+      showTextInput: true
+    });
+    
+    // 检查画布是否已初始化
+    if (!this.canvas || !this.ctx) {
+      console.warn('画布尚未初始化，尝试初始化画布');
+      this.initCanvas();
+    } else {
+      console.log('画布已初始化', this.canvas, this.ctx);
+    }
+  },
+
+  // 隐藏文本输入界面
+  hideTextInput: function() {
+    this.setData({
+      showTextInput: false
+    });
+  },
+
+  // 处理文本内容输入
+  inputTextContent: function(e) {
+    this.setData({
+      textContent: e.detail.value
+    });
+  },
+
+  // 处理文本大小输入
+  inputTextSize: function(e) {
+    const size = parseInt(e.detail.value);
+    if (!isNaN(size) && size > 0 && size <= 100) {
+      this.setData({
+        textSize: size
+      });
+    }
+  },
+
+  // 处理文本颜色选择
+  inputTextColor: function(e) {
+    this.setData({
+      textColor: e.detail.value
+    });
+  },
+
+  // 添加文本到画布
+  addTextToCanvas: function() {
+    if (!this.canvas || !this.ctx) {
+      this.addLog('画布未初始化');
+      console.error('画布未初始化', this.canvas, this.ctx);
+      return;
+    }
+
+    const text = this.data.textContent.trim();
+    if (!text) {
+      wx.showToast({
+        title: '请输入文本内容',
+        icon: 'none'
+      });
+      return;
+    }
+
+    // 打印调试信息
+    console.log('添加文字到画布', {
+      text: text,
+      size: this.data.textSize,
+      color: this.data.textColor,
+      position: [this.data.textX, this.data.textY]
+    });
+    this.addLog(`添加文字: "${text}", 大小: ${this.data.textSize}, 位置: (${this.data.textX}, ${this.data.textY})`);
+
+    // 保存当前画布内容
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+    const imageData = this.ctx.getImageData(0, 0, width, height);
+
+    // 准备绘制文本
+    this.ctx.font = `${this.data.textSize}px sans-serif`;
+    this.ctx.fillStyle = this.data.textColor;
+    this.ctx.textBaseline = 'middle';
+    this.ctx.textAlign = 'center';
+    
+    // 绘制文本
+    this.ctx.fillText(text, this.data.textX, this.data.textY);
+    
+    // 关闭文本输入面板
+    this.setData({
+      showTextInput: false,
+      textAddedToCanvas: true
+    });
+    
+    this.addLog('文本已添加到画布');
+  },
+
+  // 处理画布触摸开始事件
+  handleTouchStart: function(e) {
+    if (!this.data.textAddedToCanvas) return;
+    
+    const touch = e.touches[0];
+    
+    // 使用createSelectorQuery来获取画布位置
+    const query = wx.createSelectorQuery();
+    query.select('#canvas').boundingClientRect().exec(res => {
+      if (!res || !res[0]) return;
+      
+      const rect = res[0];
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      
+      // 转换为画布坐标系中的位置（考虑缩放比例）
+      const canvasX = (x / rect.width) * this.canvas.width;
+      const canvasY = (y / rect.height) * this.canvas.height;
+      
+      console.log('触摸坐标', {
+        clientX: touch.clientX, 
+        clientY: touch.clientY, 
+        rectLeft: rect.left, 
+        rectTop: rect.top,
+        canvasX: canvasX,
+        canvasY: canvasY
+      });
+      
+      // 判断触摸点是否在文本附近
+      const textWidth = this.ctx.measureText(this.data.textContent).width;
+      const textHeight = this.data.textSize;
+      
+      // 检查触摸点是否在文本区域内
+      if (Math.abs(canvasX - this.data.textX) < textWidth / 2 + 20 && 
+          Math.abs(canvasY - this.data.textY) < textHeight / 2 + 20) {
+        this.setData({
+          isDragging: true
+        });
+        
+        // 记录触摸点与文本中心的偏移
+        this.touchOffsetX = this.data.textX - canvasX;
+        this.touchOffsetY = this.data.textY - canvasY;
+        
+        // 记录触摸的起始坐标和矩形信息，用于后续移动计算
+        this.touchInfo = {
+          startX: touch.clientX,
+          startY: touch.clientY,
+          rect: rect
+        };
+        
+        console.log('开始拖动文字', {
+          isDragging: true,
+          textPos: [this.data.textX, this.data.textY],
+          offset: [this.touchOffsetX, this.touchOffsetY]
+        });
+      }
+    });
+  },
+
+  // 处理画布触摸移动事件
+  handleTouchMove: function(e) {
+    if (!this.data.isDragging || !this.touchInfo) return;
+    
+    const touch = e.touches[0];
+    const rect = this.touchInfo.rect;
+    
+    // 计算在画布上的位置
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    // 转换为画布坐标系中的位置
+    const canvasX = (x / rect.width) * this.canvas.width;
+    const canvasY = (y / rect.height) * this.canvas.height;
+    
+    // 计算新位置（考虑偏移）
+    const newX = canvasX + this.touchOffsetX;
+    const newY = canvasY + this.touchOffsetY;
+    
+    // 重绘画布和文本
+    this.redrawCanvasWithText(newX, newY);
+  },
+
+  // 处理画布触摸结束事件
+  handleTouchEnd: function() {
+    if (this.data.isDragging) {
+      console.log('结束拖动文字', {
+        finalPos: [this.data.textX, this.data.textY]
+      });
+      
+      this.setData({
+        isDragging: false
+      });
+      
+      // 清除触摸信息
+      this.touchInfo = null;
+    }
   },
 }); 
