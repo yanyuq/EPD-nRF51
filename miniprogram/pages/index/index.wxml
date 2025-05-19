@@ -141,7 +141,16 @@
       </view>
       <view class="flex-group">
         <view class="label">文字颜色：</view>
-        <input type="color" bindinput="inputTextColor" value="{{textColor}}" />
+        <radio-group class="color-radio-group" bindchange="inputTextColor">
+          <label class="color-option">
+            <radio value="#000000" checked="{{textColor === '#000000'}}" color="#000000"/>
+            <text>黑色</text>
+          </label>
+          <label class="color-option">
+            <radio value="#FF0000" checked="{{textColor === '#FF0000'}}" color="#FF0000"/>
+            <text>红色</text>
+          </label>
+        </radio-group>
       </view>
       <view class="flex-group button-group">
         <button class="secondary" bindtap="hideTextInput">取消</button>

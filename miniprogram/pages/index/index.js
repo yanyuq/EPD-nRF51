@@ -1943,6 +1943,7 @@ Page({
 
   // 处理文本颜色选择
   inputTextColor: function(e) {
+    console.log('选择了文字颜色:', e.detail.value);
     this.setData({
       textColor: e.detail.value
     });

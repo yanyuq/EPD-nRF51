@@ -373,4 +373,21 @@ input[type="text"] {
   cursor: move;
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* 文字颜色单选按钮样式 */
+.color-radio-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.color-option {
+  display: flex;
+  align-items: center;
+  margin-right: 20rpx;
+}
+
+.color-option text {
+  margin-left: 8rpx;
 } 

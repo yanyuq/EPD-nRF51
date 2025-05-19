@@ -81,11 +81,38 @@
 			<div class="flex-container">
 				<div class="flex-group">
 					<button id="clearcanvasbutton" type="button" class="secondary" onclick="clear_canvas()">清除画布</button>
+					<button id="addtextbutton" type="button" class="secondary" onclick="showTextInput()">添加文字</button>
 					<button id="sendimgbutton" type="button" class="primary" onclick="sendimg()">发送图片</button>
 				</div>
 			</div>
 			<canvas id="canvas" width="400" height="300"></canvas>
         </fieldset>
+		
+		<!-- 文本输入面板 -->
+		<div id="textInputPanel" class="text-input-overlay" style="display: none;">
+			<div class="text-input-panel">
+				<div class="text-input-title">添加文字</div>
+				<div class="flex-group">
+					<label for="textContent">文本内容：</label>
+					<input type="text" id="textContent" placeholder="请输入文字内容">
+				</div>
+				<div class="flex-group">
+					<label for="textSize">文字大小：</label>
+					<input type="number" id="textSize" min="12" max="72" value="30">
+				</div>
+				<div class="flex-group">
+					<label for="textColor">文字颜色：</label>
+					<select id="textColor">
+						<option value="#000000">黑色</option>
+						<option value="#FF0000">红色</option>
+					</select>
+				</div>
+				<div class="flex-group buttons">
+					<button type="button" class="primary" onclick="addTextToCanvas()">确定</button>
+					<button type="button" class="secondary" onclick="hideTextInput()">取消</button>
+				</div>
+			</div>
+		</div>
 		<div class="footer">
 			<span class="copy">&copy; 2025 tsl0922.</span>
 			<span class="links">

@@ -2,6 +2,18 @@ let bleDevice, gattServer;
 let epdService, epdCharacteristic;
 let startTime, msgIndex, appVersion;
 let canvas, ctx, textDecoder;
+// 文字相关变量
+let textAddedToCanvas = false;
+let textContent = '';
+let textSize = 30;
+let textColor = '#000000';
+let textX = 0;
+let textY = 0;
+let textDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
+// 记录原始画布内容的变量，用于拖拽时恢复
+let originalImageData = null;
 
 const EpdCmd = {
   SET_PINS:  0x00,
@@ -362,8 +374,14 @@ async function update_image() {
 
 function clear_canvas() {
   if(confirm('确认清除画布内容?')) {
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (ctx) {
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // 重置文字状态
+      textAddedToCanvas = false;
+      // 保存新的画布状态
+      saveCanvasState();
+    }
   }
 }
 
@@ -425,4 +443,192 @@ document.body.onload = () => {
   filterDitheringOptions();
 
   checkDebugMode();
+}
+
+// 显示文本输入面板
+function showTextInput() {
+  document.getElementById('textInputPanel').style.display = 'flex';
+  document.getElementById('textContent').value = textContent;
+  document.getElementById('textSize').value = textSize;
+  document.getElementById('textColor').value = textColor;
+}
+
+// 隐藏文本输入面板
+function hideTextInput() {
+  document.getElementById('textInputPanel').style.display = 'none';
+}
+
+// 添加文本到画布
+function addTextToCanvas() {
+  textContent = document.getElementById('textContent').value.trim();
+  if (!textContent) {
+    alert('请输入文本内容');
+    return;
+  }
+  
+  textSize = parseInt(document.getElementById('textSize').value);
+  textColor = document.getElementById('textColor').value;
+  
+  // 默认将文字放在画布中心
+  textX = canvas.width / 2;
+  textY = canvas.height / 2;
+  
+  // 保存当前画布状态
+  saveCanvasState();
+  
+  // 渲染文字
+  drawTextOnCanvas();
+  
+  // 隐藏面板
+  hideTextInput();
+  
+  // 添加拖动事件
+  addDragEvents();
+  
+  textAddedToCanvas = true;
+  
+  addLog('已添加文字: "' + textContent + '"');
+}
+
+// 保存画布当前状态
+function saveCanvasState() {
+  try {
+    originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  } catch (e) {
+    console.error('保存画布状态失败', e);
+    addLog('保存画布状态失败: ' + e.message);
+  }
+}
+
+// 绘制文字到画布
+function drawTextOnCanvas() {
+  // 确保有原始图像数据，如果没有就直接在当前画布上绘制
+  if (originalImageData) {
+    // 恢复原始画布内容
+    ctx.putImageData(originalImageData, 0, 0);
+  }
+  
+  // 设置文字样式
+  ctx.font = textSize + 'px Arial';
+  ctx.fillStyle = textColor;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  // 绘制文字
+  ctx.fillText(textContent, textX, textY);
+}
+
+// 添加拖动事件监听器
+function addDragEvents() {
+  canvas.classList.add('text-dragging');
+  
+  // 鼠标按下事件
+  canvas.addEventListener('mousedown', handleMouseDown);
+  
+  // 鼠标移动事件
+  canvas.addEventListener('mousemove', handleMouseMove);
+  
+  // 鼠标释放事件
+  canvas.addEventListener('mouseup', handleMouseUp);
+  
+  // 触摸事件（移动设备）
+  canvas.addEventListener('touchstart', handleTouchStart);
+  canvas.addEventListener('touchmove', handleTouchMove);
+  canvas.addEventListener('touchend', handleTouchEnd);
+}
+
+// 处理鼠标按下事件
+function handleMouseDown(e) {
+  if (!textAddedToCanvas) return;
+  
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  
+  const textWidth = ctx.measureText(textContent).width;
+  const textHeight = textSize;
+  
+  // 检查点击位置是否在文字范围内
+  if (Math.abs(x - textX) < textWidth / 2 + 10 && 
+      Math.abs(y - textY) < textHeight / 2 + 10) {
+    textDragging = true;
+    dragStartX = x;
+    dragStartY = y;
+  }
+}
+
+// 处理鼠标移动事件
+function handleMouseMove(e) {
+  if (!textDragging) return;
+  
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  
+  const deltaX = x - dragStartX;
+  const deltaY = y - dragStartY;
+  
+  textX += deltaX;
+  textY += deltaY;
+  
+  dragStartX = x;
+  dragStartY = y;
+  
+  // 重绘画布
+  drawTextOnCanvas();
+}
+
+// 处理鼠标释放事件
+function handleMouseUp() {
+  textDragging = false;
+}
+
+// 处理触摸开始事件（移动设备）
+function handleTouchStart(e) {
+  if (!textAddedToCanvas) return;
+  
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  
+  const textWidth = ctx.measureText(textContent).width;
+  const textHeight = textSize;
+  
+  // 检查触摸位置是否在文字范围内
+  if (Math.abs(x - textX) < textWidth / 2 + 20 && 
+      Math.abs(y - textY) < textHeight / 2 + 20) {
+    textDragging = true;
+    dragStartX = x;
+    dragStartY = y;
+  }
+}
+
+// 处理触摸移动事件（移动设备）
+function handleTouchMove(e) {
+  if (!textDragging) return;
+  
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  
+  const deltaX = x - dragStartX;
+  const deltaY = y - dragStartY;
+  
+  textX += deltaX;
+  textY += deltaY;
+  
+  dragStartX = x;
+  dragStartY = y;
+  
+  // 重绘画布
+  drawTextOnCanvas();
+}
+
+// 处理触摸结束事件（移动设备）
+function handleTouchEnd() {
+  textDragging = false;
 }
